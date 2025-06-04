@@ -1,7 +1,10 @@
+// src/App.js
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import Dashboard from './Dashboard.js';
-import Analytics from './Analytics.js';
+// Notice: no “.js” or “.jsx” in the path—React will resolve either
+import Dashboard from './Dashboard';
+import Analytics from './Analytics';
 
 function App() {
   return (
