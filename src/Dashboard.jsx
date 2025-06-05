@@ -1,4 +1,7 @@
+// src/Dashboard.jsx
+
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';  // ← import useNavigate
 import styles from './styles/Dashboard.module.css';
 
 import {
@@ -18,6 +21,9 @@ export default function Dashboard() {
   // Filter states
   const [showActiveOnly, setShowActiveOnly] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState('All');
+
+  // React Router’s navigation hook
+  const navigate = useNavigate();
 
   // Fetch all requests from the API
   const fetchAll = useCallback(async () => {
@@ -59,6 +65,12 @@ export default function Dashboard() {
       });
   }, [requests, showActiveOnly, selectedDepartment]);
 
+  // ← New: Handler to run when a row is clicked
+  const handleRowClick = (id) => {
+    // For example, navigate to a detail page:
+    navigate(`/request/${id}`);
+  };
+
   return (
     <div className={styles.container}>
       <h1>📋 Hotel Request Dashboard</h1>
@@ -66,7 +78,6 @@ export default function Dashboard() {
       {/** Show an error banner if there’s an error */}
       {error && (
         <div className={styles.errorBanner}>
-          {/* You can replace <p> with an icon + text if you want */}
           <p>Error: {error}</p>
         </div>
       )}
@@ -105,6 +116,7 @@ export default function Dashboard() {
               alert('Completion failed: ' + err.message);
             }
           }}
+          onRowClick={handleRowClick}  // ← Pass the handler here
         />
       )}
     </div>
