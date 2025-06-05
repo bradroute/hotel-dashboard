@@ -18,7 +18,7 @@ export async function acknowledgeRequest(id) {
     method: 'POST',
   });
   if (!res.ok) {
-    const err = await res.json();
+    const err = await res.json().catch(() => ({}));
     throw new Error(err.message || 'acknowledgeRequest failed');
   }
   return res.json();
@@ -29,7 +29,7 @@ export async function completeRequest(id) {
     method: 'POST',
   });
   if (!res.ok) {
-    const err = await res.json();
+    const err = await res.json().catch(() => ({}));
     throw new Error(err.message || 'completeRequest failed');
   }
   return res.json();
