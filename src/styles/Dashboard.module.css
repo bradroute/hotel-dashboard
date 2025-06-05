@@ -151,3 +151,39 @@
   outline-offset: 2px;
 }
 
+/* src/styles/Dashboard.module.css */
+
+/* … existing rules … */
+
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Priority badges (background + text color) */
+
+.priorityUrgent {
+  background-color: #fee2e2;   /* light red */
+  color: #b91c1c;             /* dark red text */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: bold;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+}
+
+.priorityNormal {
+  background-color: #fef3c7;   /* light amber */
+  color: #92400e;             /* dark amber text */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: bold;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+}
+
+.priorityLow {
+  background-color: #dcfce7;   /* light green */
+  color: #15803d;             /* dark green text */
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-weight: bold;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+}
