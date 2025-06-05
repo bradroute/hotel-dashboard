@@ -1,6 +1,6 @@
 // src/components/RequestRow.jsx
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from '../styles/Dashboard.module.css';
 
 /**
@@ -23,16 +23,36 @@ export default function RequestRow({ request, onAcknowledge, onComplete, onRowCl
     priorityClass = styles.priorityLow;
   }
 
-  // Format created_at in Central Time (America/Chicago)
-  const createdAtCentral = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'America/Chicago',
-    year: 'numeric',
-    month: 'numeric',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: 'numeric',
-    second: 'numeric',
-  }).format(new Date(created_at));
+  // State to hold the formatted Central Time string
+  const [createdAtCentral, setCreatedAtCentral] = useState('');
+
+  useEffect(() => {
+    if (created_at) {
+      // Log the raw timestamp for debugging
+      console.log('Raw created_at:', created_at);
+
+      // Parse the UTC timestamp string into a Date object
+      const dateObj = new Date(created_at);
+      if (isNaN(dateObj.getTime())) {
+        console.warn('Invalid date:', created_at);
+        setCreatedAtCentral(created_at); // fallback to raw if invalid
+        return;
+      }
+
+      // Format with explicit America/Chicago timezone
+      const formatted = dateObj.toLocaleString('en-US', {
+        timeZone: 'America/Chicago',
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        second: 'numeric',
+      });
+
+      setCreatedAtCentral(formatted);
+    }
+  }, [created_at]);
 
   return (
     <tr
@@ -46,7 +66,7 @@ export default function RequestRow({ request, onAcknowledge, onComplete, onRowCl
         }
       }}
     >
-      <td>{createdAtCentral}</td>
+      <td>{createdAtCentral || '—'}</td>
       <td>{from}</td>
       <td>{department}</td>
       <td>
