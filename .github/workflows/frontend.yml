@@ -17,10 +17,10 @@ jobs:
         uses: actions/checkout@v3
 
       # 2) Use Node.js (v16 or later)
-      - name: Use Node.js 16
+      - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
 
       # 3) Install dependencies
       - name: Install dependencies
