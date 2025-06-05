@@ -35,7 +35,17 @@ export default function RequestRow({ request, onAcknowledge, onComplete, onRowCl
         }
       }}
     >
-      <td>{new Date(created_at).toLocaleString()}</td>
+      <td>
+        {new Date(created_at).toLocaleString('en-US', {
+          timeZone: 'America/Chicago',
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          second: 'numeric',
+        })}
+      </td>
       <td>{from}</td>
       <td>{department}</td>
       <td>
