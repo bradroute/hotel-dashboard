@@ -1,7 +1,7 @@
 // src/Dashboard.jsx
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';  // ← import useNavigate
+import { useNavigate } from 'react-router-dom';
 import styles from './styles/Dashboard.module.css';
 
 import {
@@ -94,7 +94,7 @@ export default function Dashboard() {
       {/** Inline loading state */}
       {loading ? (
         <div className={styles.overlay}>
-          <div className={styles.spinner} />
+          <div className={styles.spinner} role="status" />
           <span>Loading requests…</span>
         </div>
       ) : (
