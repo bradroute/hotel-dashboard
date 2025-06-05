@@ -63,9 +63,8 @@
   color: #10b981;
 }
 
-
 /* ────────────────────────────────────────────────────────────────────────── */
-/* Add these at the bottom to handle loading spinner and error banner */
+/* Loading spinner & error banner */
 
 .overlay {
   display: flex;
@@ -104,3 +103,51 @@
   margin: 0;
   font-weight: bold;
 }
+
+/* ────────────────────────────────────────────────────────────────────────── */
+/* Responsive & Accessibility */
+
+@media (max-width: 768px) {
+  /* Stack filters vertically */
+  .filterBar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  /* Make select and checkbox full-width */
+  .filterSelect,
+  .filterCheckbox {
+    width: 100%;
+  }
+
+  /* Table container still scrolls, but reduce padding */
+  .requestsTable th,
+  .requestsTable td {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  /* Further reduce padding and font-size on very small screens */
+  .requestsTable th,
+  .requestsTable td {
+    padding: 0.4rem;
+    font-size: 0.875rem;
+  }
+
+  .ackBtn,
+  .completeBtn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Focus outlines for accessibility */
+.ackBtn:focus,
+.completeBtn:focus,
+.filterSelect:focus,
+.filterCheckbox:focus {
+  outline: 2px solid #2563eb; /* blue-600 */
+  outline-offset: 2px;
+}
+
