@@ -13,7 +13,7 @@ import styles from '../styles/Dashboard.module.css';
 export default function RequestRow({ request, onAcknowledge, onComplete, onRowClick }) {
   const { id, from, message, department, priority, created_at, acknowledged, completed } = request;
 
-  // Map priority value to the corresponding CSS class
+  // Determine CSS class based on priority
   let priorityClass = '';
   if (priority.toLowerCase() === 'urgent') {
     priorityClass = styles.priorityUrgent;
@@ -22,6 +22,17 @@ export default function RequestRow({ request, onAcknowledge, onComplete, onRowCl
   } else if (priority.toLowerCase() === 'low') {
     priorityClass = styles.priorityLow;
   }
+
+  // Format created_at in Central Time (America/Chicago)
+  const createdAtCentral = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/Chicago',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+  }).format(new Date(created_at));
 
   return (
     <tr
@@ -35,21 +46,10 @@ export default function RequestRow({ request, onAcknowledge, onComplete, onRowCl
         }
       }}
     >
-      <td>
-        {new Date(created_at).toLocaleString('en-US', {
-          timeZone: 'America/Chicago',
-          year: 'numeric',
-          month: 'numeric',
-          day: 'numeric',
-          hour: 'numeric',
-          minute: 'numeric',
-          second: 'numeric',
-        })}
-      </td>
+      <td>{createdAtCentral}</td>
       <td>{from}</td>
       <td>{department}</td>
       <td>
-        {/* Color‐coded priority badge */}
         <span className={priorityClass}>{priority}</span>
       </td>
       <td>{message}</td>
@@ -63,7 +63,7 @@ export default function RequestRow({ request, onAcknowledge, onComplete, onRowCl
             className={styles.ackBtn}
             aria-label="Acknowledge request"
             onClick={(e) => {
-              e.stopPropagation(); // prevent row click
+              e.stopPropagation();
               onAcknowledge(id);
             }}
           >
@@ -81,7 +81,7 @@ export default function RequestRow({ request, onAcknowledge, onComplete, onRowCl
             className={styles.completeBtn}
             aria-label="Complete request"
             onClick={(e) => {
-              e.stopPropagation(); // prevent row click
+              e.stopPropagation();
               onComplete(id);
             }}
           >
