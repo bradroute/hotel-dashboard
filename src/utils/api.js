@@ -8,14 +8,14 @@ const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
  * ---- Requests API ----
  */
 export async function getRequests() {
-  const res = await fetch(`${BASE_URL}/sms`);
+  const res = await fetch(`${BASE_URL}/requests`);
   if (!res.ok) throw new Error(`getRequests failed: ${res.status}`);
   return res.json();
 }
 
 export async function acknowledgeRequest(id) {
-  const res = await fetch(`${BASE_URL}/sms/${id}/acknowledge`, {
-    method: 'PATCH',
+  const res = await fetch(`${BASE_URL}/requests/${id}/acknowledge`, {
+    method: 'POST',
   });
   if (!res.ok) {
     const err = await res.json();
@@ -25,8 +25,8 @@ export async function acknowledgeRequest(id) {
 }
 
 export async function completeRequest(id) {
-  const res = await fetch(`${BASE_URL}/sms/${id}/complete`, {
-    method: 'PATCH',
+  const res = await fetch(`${BASE_URL}/requests/${id}/complete`, {
+    method: 'POST',
   });
   if (!res.ok) {
     const err = await res.json();
