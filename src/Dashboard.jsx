@@ -23,10 +23,11 @@ export default function Dashboard() {
   const fetchAll = useCallback(async () => {
     try {
       setLoading(true);
+      setError(''); // clear any previous error
       const data = await getRequests();
       setRequests(data);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to fetch');
     } finally {
       setLoading(false);
     }
@@ -58,17 +59,19 @@ export default function Dashboard() {
       });
   }, [requests, showActiveOnly, selectedDepartment]);
 
-  if (loading) {
-    return <div className={styles.container}>Loading…</div>;
-  }
-  if (error) {
-    return <div className={styles.container}>Error: {error}</div>;
-  }
-
   return (
     <div className={styles.container}>
       <h1>📋 Hotel Request Dashboard</h1>
 
+      {/** Show an error banner if there’s an error */}
+      {error && (
+        <div className={styles.errorBanner}>
+          {/* You can replace <p> with an icon + text if you want */}
+          <p>Error: {error}</p>
+        </div>
+      )}
+
+      {/** Always show filters, even if loading or error */}
       <FiltersBar
         showActiveOnly={showActiveOnly}
         onToggleActive={(val) => setShowActiveOnly(val)}
@@ -77,25 +80,33 @@ export default function Dashboard() {
         departmentOptions={departmentOptions}
       />
 
-      <RequestsTable
-        requests={filteredRequests}
-        onAcknowledge={async (id) => {
-          try {
-            await acknowledgeRequest(id);
-            fetchAll();
-          } catch (err) {
-            alert('Acknowledgment failed: ' + err.message);
-          }
-        }}
-        onComplete={async (id) => {
-          try {
-            await completeRequest(id);
-            fetchAll();
-          } catch (err) {
-            alert('Completion failed: ' + err.message);
-          }
-        }}
-      />
+      {/** Inline loading state */}
+      {loading ? (
+        <div className={styles.overlay}>
+          <div className={styles.spinner} />
+          <span>Loading requests…</span>
+        </div>
+      ) : (
+        <RequestsTable
+          requests={filteredRequests}
+          onAcknowledge={async (id) => {
+            try {
+              await acknowledgeRequest(id);
+              fetchAll();
+            } catch (err) {
+              alert('Acknowledgment failed: ' + err.message);
+            }
+          }}
+          onComplete={async (id) => {
+            try {
+              await completeRequest(id);
+              fetchAll();
+            } catch (err) {
+              alert('Completion failed: ' + err.message);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
