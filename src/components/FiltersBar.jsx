@@ -37,7 +37,7 @@ export default function FiltersBar({
           value={selectedDepartment}
           onChange={(e) => onChangeDepartment(e.target.value)}
         >
-          <option value="All">All</option>
+          <option value="All">All Departments</option>
           {departmentOptions.map((dept) => (
             <option key={dept} value={dept}>
               {dept.charAt(0).toUpperCase() + dept.slice(1)}

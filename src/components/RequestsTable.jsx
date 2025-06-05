@@ -9,20 +9,21 @@ import RequestRow from './RequestRow';
  *  - requests: array of request objects
  *  - onAcknowledge: function(id)
  *  - onComplete: function(id)
+ *  - onRowClick: function(id)
  */
-export default function RequestsTable({ requests, onAcknowledge, onComplete }) {
+export default function RequestsTable({ requests, onAcknowledge, onComplete, onRowClick }) {
   return (
     <div className={styles.tableContainer}>
       <table className={styles.requestsTable}>
         <thead>
           <tr>
-            <th>Created At</th>
-            <th>From</th>
-            <th>Department</th>
-            <th>Priority</th>
-            <th>Message</th>
-            <th>Acknowledge</th>
-            <th>Complete</th>
+            <th scope="col">Created At</th>
+            <th scope="col">From</th>
+            <th scope="col">Department</th>
+            <th scope="col">Priority</th>
+            <th scope="col">Message</th>
+            <th scope="col">Acknowledge</th>
+            <th scope="col">Complete</th>
           </tr>
         </thead>
         <tbody>
@@ -32,6 +33,7 @@ export default function RequestsTable({ requests, onAcknowledge, onComplete }) {
               request={r}
               onAcknowledge={onAcknowledge}
               onComplete={onComplete}
+              onRowClick={onRowClick}
             />
           ))}
         </tbody>

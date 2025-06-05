@@ -8,8 +8,9 @@ import styles from '../styles/Dashboard.module.css';
  *  - request: { id, from, message, department, priority, created_at, acknowledged, completed }
  *  - onAcknowledge: function(id)
  *  - onComplete: function(id)
+ *  - onRowClick: function(id)
  */
-export default function RequestRow({ request, onAcknowledge, onComplete }) {
+export default function RequestRow({ request, onAcknowledge, onComplete, onRowClick }) {
   const { id, from, message, department, priority, created_at, acknowledged, completed } = request;
 
   // Map priority value to the corresponding CSS class
@@ -23,23 +24,38 @@ export default function RequestRow({ request, onAcknowledge, onComplete }) {
   }
 
   return (
-    <tr>
+    <tr
+      role="button"
+      tabIndex={0}
+      onClick={() => onRowClick(id)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onRowClick(id);
+        }
+      }}
+    >
       <td>{new Date(created_at).toLocaleString()}</td>
       <td>{from}</td>
       <td>{department}</td>
       <td>
-        {/* Wrap the priority text in a span with the matching class */}
+        {/* Color‐coded priority badge */}
         <span className={priorityClass}>{priority}</span>
       </td>
       <td>{message}</td>
       <td>
         {acknowledged ? (
-          <span className={styles.doneIcon}>✅</span>
+          <span className={styles.doneIcon} aria-label="Acknowledged">
+            ✅
+          </span>
         ) : (
           <button
             className={styles.ackBtn}
             aria-label="Acknowledge request"
-            onClick={() => onAcknowledge(id)}
+            onClick={(e) => {
+              e.stopPropagation(); // prevent row click
+              onAcknowledge(id);
+            }}
           >
             Acknowledge
           </button>
@@ -47,12 +63,17 @@ export default function RequestRow({ request, onAcknowledge, onComplete }) {
       </td>
       <td>
         {completed ? (
-          <span className={styles.doneIcon}>✅</span>
+          <span className={styles.doneIcon} aria-label="Completed">
+            ✅
+          </span>
         ) : (
           <button
             className={styles.completeBtn}
             aria-label="Complete request"
-            onClick={() => onComplete(id)}
+            onClick={(e) => {
+              e.stopPropagation(); // prevent row click
+              onComplete(id);
+            }}
           >
             Complete
           </button>

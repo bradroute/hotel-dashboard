@@ -187,3 +187,24 @@
   font-size: 0.875rem;
   text-transform: uppercase;
 }
+
+/* Buttons (white on colored background) */
+.ackBtn {
+  background-color: #10b981; /* emerald-500 */
+  color: #fff;
+}
+.completeBtn {
+  background-color: #3b82f6; /* blue-500 */
+  color: #fff;
+}
+
+/* In src/styles/Dashboard.module.css */
+
+tr[role="button"]:focus,
+.ackBtn:focus,
+.completeBtn:focus,
+.filterSelect:focus,
+.filterCheckbox:focus {
+  outline: 2px solid #2563eb; /* blue-600 */
+  outline-offset: 2px;
+}
