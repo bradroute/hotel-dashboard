@@ -1,0 +1,23 @@
+/* src/styles/App.module.css */
+
+/* 1. Container: padding around the entire router */
+.container {
+  padding: 1rem;
+}
+
+/* 2. Nav bar: space below the navigation */
+.nav {
+  margin-bottom: 1rem;
+}
+
+/* 3. Nav links: spacing between each Link */
+.navLink {
+  margin-right: 1rem;
+  text-decoration: none;
+  color: inherit; /* preserves default link color; remove if you want custom */
+}
+
+/* Optional: a hover effect on nav links */
+.navLink:hover {
+  text-decoration: underline;
+}
