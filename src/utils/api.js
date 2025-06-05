@@ -2,11 +2,9 @@
 
 // In .env you should have something like:
 //   REACT_APP_API_URL=http://localhost:3001
+
 const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
-/**
- * ---- Requests API ----
- */
 export async function getRequests() {
   const res = await fetch(`${BASE_URL}/requests`);
   if (!res.ok) throw new Error(`getRequests failed: ${res.status}`);
@@ -14,8 +12,8 @@ export async function getRequests() {
 }
 
 export async function acknowledgeRequest(id) {
-  const res = await fetch(`${BASE_URL}/requests/${id}/acknowledge`, {
-    method: 'POST',
+  const res = await fetch(`${BASE_URL}/sms/${id}/acknowledge`, {
+    method: 'PATCH',
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -34,6 +32,8 @@ export async function completeRequest(id) {
   }
   return res.json();
 }
+
+// …and your analytics calls below…
 
 /**
  * ---- Analytics API ----
