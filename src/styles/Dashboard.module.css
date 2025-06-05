@@ -208,3 +208,12 @@ tr[role="button"]:focus,
   outline: 2px solid #2563eb; /* blue-600 */
   outline-offset: 2px;
 }
+
+/* src/styles/Dashboard.module.css */
+
+.emptyState {
+  padding: 2rem;
+  text-align: center;
+  color: #555;
+  font-size: 1.25rem;
+}

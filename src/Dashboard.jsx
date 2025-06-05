@@ -65,9 +65,8 @@ export default function Dashboard() {
       });
   }, [requests, showActiveOnly, selectedDepartment]);
 
-  // ← New: Handler to run when a row is clicked
+  // Handler to run when a row is clicked
   const handleRowClick = (id) => {
-    // For example, navigate to a detail page:
     navigate(`/request/${id}`);
   };
 
@@ -98,26 +97,35 @@ export default function Dashboard() {
           <span>Loading requests…</span>
         </div>
       ) : (
-        <RequestsTable
-          requests={filteredRequests}
-          onAcknowledge={async (id) => {
-            try {
-              await acknowledgeRequest(id);
-              fetchAll();
-            } catch (err) {
-              alert('Acknowledgment failed: ' + err.message);
-            }
-          }}
-          onComplete={async (id) => {
-            try {
-              await completeRequest(id);
-              fetchAll();
-            } catch (err) {
-              alert('Completion failed: ' + err.message);
-            }
-          }}
-          onRowClick={handleRowClick}  // ← Pass the handler here
-        />
+        // After loading completes, check for empty state
+        <>
+          {filteredRequests.length === 0 ? (
+            <div className={styles.emptyState}>
+              <p>No unresolved requests right now 🎉</p>
+            </div>
+          ) : (
+            <RequestsTable
+              requests={filteredRequests}
+              onAcknowledge={async (id) => {
+                try {
+                  await acknowledgeRequest(id);
+                  fetchAll();
+                } catch (err) {
+                  alert('Acknowledgment failed: ' + err.message);
+                }
+              }}
+              onComplete={async (id) => {
+                try {
+                  await completeRequest(id);
+                  fetchAll();
+                } catch (err) {
+                  alert('Completion failed: ' + err.message);
+                }
+              }}
+              onRowClick={handleRowClick}
+            />
+          )}
+        </>
       )}
     </div>
   );
