@@ -5,35 +5,54 @@ import { useNavigate } from 'react-router-dom';
 import styles from './styles/Dashboard.module.css';
 
 import {
-  getRequests,
   acknowledgeRequest,
   completeRequest,
 } from './utils/api';
 
 import FiltersBar from './components/FiltersBar';
 import RequestsTable from './components/RequestsTable';
+import { supabase } from './utils/supabaseClient';
 
 export default function Dashboard() {
   const [requests, setRequests] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [loading, setLoading]   = useState(true);
+  const [error, setError]       = useState('');
 
   // Filter states
-  const [showActiveOnly, setShowActiveOnly] = useState(false);
+  const [showActiveOnly, setShowActiveOnly]       = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState('All');
 
-  // React Router’s navigation hook
   const navigate = useNavigate();
 
-  // Fetch all requests from the API
+  // Fetch only this hotel’s requests
   const fetchAll = useCallback(async () => {
+    setLoading(true);
+    setError('');
     try {
-      setLoading(true);
-      setError(''); // clear any previous error
-      const data = await getRequests();
-      setRequests(data);
+      // 1) Get current user
+      const { data: { user }, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !user) throw new Error('Not authenticated');
+
+      // 2) Get their profile → hotel_id
+      const { data: profile, error: profErr } = await supabase
+        .from('profiles')
+        .select('hotel_id')
+        .eq('id', user.id)
+        .single();
+      if (profErr || !profile) throw new Error('Profile not found');
+
+      // 3) Fetch only this hotel’s requests
+      const { data, error: reqErr } = await supabase
+        .from('requests')
+        .select('*')
+        .eq('hotel_id', profile.hotel_id)
+        .order('created_at', { ascending: false });
+
+      if (reqErr) throw reqErr;
+
+      setRequests(data || []);
     } catch (err) {
-      setError(err.message || 'Failed to fetch');
+      setError(err.message || 'Failed to fetch requests');
     } finally {
       setLoading(false);
     }
@@ -41,31 +60,23 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchAll();
-    // Optional: auto-refresh every 60 seconds
     const interval = setInterval(fetchAll, 60_000);
     return () => clearInterval(interval);
   }, [fetchAll]);
 
-  // Pull out unique department names for the dropdown
+  // Department dropdown options
   const departmentOptions = useMemo(() => {
-    const allDeps = requests.map((r) => r.department || 'unknown');
-    return Array.from(new Set(allDeps));
+    const deps = requests.map((r) => r.department || 'General');
+    return ['All', ...Array.from(new Set(deps))];
   }, [requests]);
 
-  // Apply the two filters: showActiveOnly and department
+  // Apply filters
   const filteredRequests = useMemo(() => {
     return requests
-      .filter((r) => {
-        if (showActiveOnly && r.completed) return false;
-        return true;
-      })
-      .filter((r) => {
-        if (selectedDepartment === 'All') return true;
-        return r.department === selectedDepartment;
-      });
+      .filter((r) => (showActiveOnly ? !r.completed : true))
+      .filter((r) => (selectedDepartment === 'All' ? true : r.department === selectedDepartment));
   }, [requests, showActiveOnly, selectedDepartment]);
 
-  // Handler to run when a row is clicked
   const handleRowClick = (id) => {
     navigate(`/request/${id}`);
   };
@@ -74,30 +85,26 @@ export default function Dashboard() {
     <div className={styles.container}>
       <h1>📋 Hotel Request Dashboard</h1>
 
-      {/** Show an error banner if there’s an error */}
       {error && (
         <div className={styles.errorBanner}>
           <p>Error: {error}</p>
         </div>
       )}
 
-      {/** Always show filters, even if loading or error */}
       <FiltersBar
         showActiveOnly={showActiveOnly}
-        onToggleActive={(val) => setShowActiveOnly(val)}
+        onToggleActive={setShowActiveOnly}
         selectedDepartment={selectedDepartment}
-        onChangeDepartment={(val) => setSelectedDepartment(val)}
+        onChangeDepartment={setSelectedDepartment}
         departmentOptions={departmentOptions}
       />
 
-      {/** Inline loading state */}
       {loading ? (
         <div className={styles.overlay}>
           <div className={styles.spinner} role="status" />
           <span>Loading requests…</span>
         </div>
       ) : (
-        // After loading completes, check for empty state
         <>
           {filteredRequests.length === 0 ? (
             <div className={styles.emptyState}>
