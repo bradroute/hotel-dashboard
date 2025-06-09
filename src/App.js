@@ -11,6 +11,7 @@ import Dashboard      from './Dashboard';
 import Analytics      from './Analytics';
 import LoginPage      from './pages/LoginPage';
 import SignUp         from './pages/SignUp';
+import RequestForm    from './pages/RequestForm';
 import ProtectedRoute from './components/ProtectedRoute';
 import { supabase }   from './utils/supabaseClient';
 import styles         from './styles/App.module.css';
@@ -19,11 +20,11 @@ export default function App() {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
-    // fetch initial session
+    // Fetch initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
-    // subscribe to future auth changes
+    // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => setSession(session)
     );
@@ -48,25 +49,23 @@ export default function App() {
 
       <div className={styles.container}>
         <Routes>
-          {/* Public routes */}
+          {/* Public login/signup */}
           <Route
             path="/login"
-            element={
-              session
-                ? <Navigate to="/dashboard" replace />
-                : <LoginPage />
-            }
+            element={session ? <Navigate to="/dashboard" replace /> : <LoginPage />}
           />
           <Route
             path="/signup"
-            element={
-              session
-                ? <Navigate to="/dashboard" replace />
-                : <SignUp />
-            }
+            element={session ? <Navigate to="/dashboard" replace /> : <SignUp />}
           />
 
-          {/* Protected routes */}
+          {/* Public request form */}
+          <Route
+            path="/request/:hotelId"
+            element={<RequestForm />}
+          />
+
+          {/* Protected staff routes */}
           <Route
             path="/dashboard"
             element={
