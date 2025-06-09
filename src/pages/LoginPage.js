@@ -1,5 +1,6 @@
 // src/pages/LoginPage.js
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 
 export default function LoginPage() {
@@ -50,7 +51,11 @@ export default function LoginPage() {
           {loading ? 'Logging in...' : 'Login'}
         </button>
         {error && <p style={{ color: 'red', marginTop: 8 }}>{error}</p>}
+        <p style={{ marginTop: 16, fontSize: 14 }}>
+          Don’t have an account? <Link to="/signup">Sign up</Link>
+        </p>
       </form>
     </div>
   );
 }
+
