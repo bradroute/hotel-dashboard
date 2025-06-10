@@ -1,3 +1,5 @@
+/* src/styles/Dashboard.module.css */
+
 /* Container & Layout */
 .container {
   padding: 2rem;
@@ -41,16 +43,16 @@
 
 /* Priority badges */
 .priorityUrgent {
-  background-color: #fee2e2;
-  color: #b91c1c;
+  background-color: #fee2e2;   /* light red */
+  color: #b91c1c;              /* dark red */
 }
 .priorityNormal {
-  background-color: #fef3c7;
-  color: #92400e;
+  background-color: #fef3c7;   /* light yellow */
+  color: #92400e;              /* dark amber */
 }
 .priorityLow {
-  background-color: #dcfce7;
-  color: #15803d;
+  background-color: #dcfce7;   /* light green */
+  color: #15803d;              /* dark green */
 }
 .priorityUrgent,
 .priorityNormal,
@@ -73,6 +75,7 @@
   cursor: pointer;
   transition: background-color 0.2s ease, transform 0.1s ease;
 }
+
 .ackBtn {
   background-color: #10B981; /* emerald-500 */
 }
@@ -83,11 +86,12 @@
 .ackBtn:active {
   transform: translateY(1px);
 }
+
 .completeBtn {
-  background-color: #EF4444; /* red-500 */
+  background-color: #3B82F6; /* blue-500 */
 }
 .completeBtn:hover {
-  background-color: #DC2626; /* red-600 */
+  background-color: #2563EB; /* blue-600 */
   transform: translateY(-1px);
 }
 .completeBtn:active {
@@ -97,7 +101,7 @@
 /* Done icon (checkmark) */
 .doneIcon {
   font-size: 1rem;
-  color: #10B981;
+  color: #10B981; /* match ack green */
 }
 
 /* Loading spinner & error banner */
