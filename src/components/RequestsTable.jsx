@@ -2,7 +2,6 @@
 
 import React from 'react';
 import styles from '../styles/Dashboard.module.css';
-import RequestRow from './RequestRow';
 
 /**
  * Props:
@@ -11,30 +10,59 @@ import RequestRow from './RequestRow';
  *  - onComplete: function(id)
  *  - onRowClick: function(id)
  */
-export default function RequestsTable({ requests, onAcknowledge, onComplete, onRowClick }) {
+export default function RequestsTable({
+  requests,
+  onAcknowledge,
+  onComplete,
+  onRowClick,
+}) {
   return (
     <div className={styles.tableContainer}>
       <table className={styles.requestsTable}>
         <thead>
           <tr>
-            <th scope="col">Created At</th>
-            <th scope="col">From</th>
-            <th scope="col">Department</th>
-            <th scope="col">Priority</th>
-            <th scope="col">Message</th>
-            <th scope="col">Acknowledge</th>
-            <th scope="col">Complete</th>
+            <th>Created At</th>
+            <th>From</th>
+            <th>Department</th>
+            <th>Priority</th>
+            <th>Message</th>
+            <th>Acknowledge</th>
+            <th>Complete</th>
           </tr>
         </thead>
         <tbody>
           {requests.map((r) => (
-            <RequestRow
+            <tr
               key={r.id}
-              request={r}
-              onAcknowledge={onAcknowledge}
-              onComplete={onComplete}
-              onRowClick={onRowClick}
-            />
+              onClick={() => onRowClick(r.id)}
+              style={{ cursor: 'pointer' }}
+            >
+              <td>{new Date(r.created_at).toLocaleString()}</td>
+              <td>{r.from_phone}</td>
+              <td>{r.department}</td>
+              <td>{r.priority}</td>
+              <td>{r.message}</td>
+              <td>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAcknowledge(r.id);
+                  }}
+                >
+                  Acknowledge
+                </button>
+              </td>
+              <td>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onComplete(r.id);
+                  }}
+                >
+                  Complete
+                </button>
+              </td>
+            </tr>
           ))}
         </tbody>
       </table>

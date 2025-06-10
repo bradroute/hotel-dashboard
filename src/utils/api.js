@@ -23,8 +23,8 @@ export async function acknowledgeRequest(id) {
 }
 
 export async function completeRequest(id) {
-  const res = await fetch(`${BASE_URL}/requests/${id}/complete`, {
-    method: 'POST',
+  const res = await fetch(`${BASE_URL}/sms/${id}/complete`, {
+    method: 'PATCH',
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
@@ -33,34 +33,26 @@ export async function completeRequest(id) {
   return res.json();
 }
 
-// …and your analytics calls below…
+// ---- Analytics API ----
 
-/**
- * ---- Analytics API ----
- */
-
-// GET /analytics/summary
 export async function getSummary() {
   const res = await fetch(`${BASE_URL}/analytics/summary`);
   if (!res.ok) throw new Error(`getSummary failed: ${res.status}`);
   return res.json();
 }
 
-// GET /analytics/by-department
 export async function getByDepartment() {
   const res = await fetch(`${BASE_URL}/analytics/by-department`);
   if (!res.ok) throw new Error(`getByDepartment failed: ${res.status}`);
   return res.json();
 }
 
-// GET /analytics/avg-response-time
 export async function getAvgResponseTime() {
   const res = await fetch(`${BASE_URL}/analytics/avg-response-time`);
   if (!res.ok) throw new Error(`getAvgResponseTime failed: ${res.status}`);
   return res.json();
 }
 
-// GET /analytics/daily-response-times
 export async function getDailyResponseTimes() {
   const res = await fetch(`${BASE_URL}/analytics/daily-response-times`);
   if (!res.ok) throw new Error(`getDailyResponseTimes failed: ${res.status}`);

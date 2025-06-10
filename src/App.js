@@ -1,4 +1,5 @@
 // src/App.js
+
 import React, { useState, useEffect } from 'react';
 import {
   BrowserRouter as Router,
@@ -11,7 +12,7 @@ import Dashboard      from './Dashboard';
 import Analytics      from './Analytics';
 import LoginPage      from './pages/LoginPage';
 import SignUp         from './pages/SignUp';
-import RequestForm    from './pages/RequestForm';
+// import RequestForm  from './pages/RequestForm';  // removed
 import ProtectedRoute from './components/ProtectedRoute';
 import { supabase }   from './utils/supabaseClient';
 import styles         from './styles/App.module.css';
@@ -57,12 +58,6 @@ export default function App() {
           <Route
             path="/signup"
             element={session ? <Navigate to="/dashboard" replace /> : <SignUp />}
-          />
-
-          {/* Public request form */}
-          <Route
-            path="/request/:hotelId"
-            element={<RequestForm />}
           />
 
           {/* Protected staff routes */}
