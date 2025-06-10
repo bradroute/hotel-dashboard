@@ -1,5 +1,3 @@
-/* src/styles/Dashboard.module.css */
-
 /* Container & Layout */
 .container {
   padding: 2rem;
@@ -37,22 +35,22 @@
   padding: 0.75rem;
   border-bottom: 1px solid #e5e7eb;
 }
-.requestsTable tr:hover {
+.row:hover {
   background-color: #f9fafb;
 }
 
 /* Priority badges */
 .priorityUrgent {
-  background-color: #fee2e2;   /* light red */
-  color: #b91c1c;              /* dark red */
+  background-color: #fee2e2;
+  color: #b91c1c;
 }
 .priorityNormal {
-  background-color: #fef3c7;   /* light yellow */
-  color: #92400e;              /* dark amber */
+  background-color: #fef3c7;
+  color: #92400e;
 }
 .priorityLow {
-  background-color: #dcfce7;   /* light green */
-  color: #15803d;              /* dark green */
+  background-color: #dcfce7;
+  color: #15803d;
 }
 .priorityUrgent,
 .priorityNormal,
@@ -73,19 +71,33 @@
   border-radius: 4px;
   color: #fff;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s ease, transform 0.1s ease;
 }
 .ackBtn {
-  background-color: #10b981;   /* emerald-500 */
+  background-color: #10B981; /* emerald-500 */
 }
 .ackBtn:hover {
-  background-color: #059669;   /* emerald-600 */
+  background-color: #059669; /* emerald-600 */
+  transform: translateY(-1px);
+}
+.ackBtn:active {
+  transform: translateY(1px);
 }
 .completeBtn {
-  background-color: #3b82f6;   /* blue-500 */
+  background-color: #EF4444; /* red-500 */
 }
 .completeBtn:hover {
-  background-color: #2563eb;   /* blue-600 */
+  background-color: #DC2626; /* red-600 */
+  transform: translateY(-1px);
+}
+.completeBtn:active {
+  transform: translateY(1px);
+}
+
+/* Done icon (checkmark) */
+.doneIcon {
+  font-size: 1rem;
+  color: #10B981;
 }
 
 /* Loading spinner & error banner */

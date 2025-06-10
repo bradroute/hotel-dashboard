@@ -1,4 +1,3 @@
-// src/components/RequestsTable.jsx
 import React from 'react';
 import styles from '../styles/Dashboard.module.css';
 
@@ -55,10 +54,12 @@ export default function RequestsTable({
               <td>{r.message}</td>
               <td>
                 {r.acknowledged ? (
-                  <span className={styles.priorityLow}>✔️</span>
+                  <span className={styles.doneIcon} aria-label="acknowledged">
+                    ✔️
+                  </span>
                 ) : (
                   <button
-                    className={styles.btnAcknowledge}
+                    className={styles.ackBtn}
                     onClick={(e) => {
                       e.stopPropagation();
                       onAcknowledge(r.id);
@@ -70,10 +71,12 @@ export default function RequestsTable({
               </td>
               <td>
                 {r.completed ? (
-                  <span className={styles.priorityLow}>✔️</span>
+                  <span className={styles.doneIcon} aria-label="completed">
+                    ✔️
+                  </span>
                 ) : (
                   <button
-                    className={styles.btnComplete}
+                    className={styles.completeBtn}
                     onClick={(e) => {
                       e.stopPropagation();
                       onComplete(r.id);
