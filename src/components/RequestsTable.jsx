@@ -1,5 +1,4 @@
 // src/components/RequestsTable.jsx
-
 import React from 'react';
 import styles from '../styles/Dashboard.module.css';
 
@@ -35,18 +34,31 @@ export default function RequestsTable({
             <tr
               key={r.id}
               onClick={() => onRowClick(r.id)}
-              style={{ cursor: 'pointer' }}
+              className={styles.row}
             >
               <td>{new Date(r.created_at).toLocaleString()}</td>
               <td>{r.from_phone}</td>
               <td>{r.department}</td>
-              <td>{r.priority}</td>
+              <td>
+                <span
+                  className={
+                    r.priority.toLowerCase() === 'urgent'
+                      ? styles.priorityUrgent
+                      : r.priority.toLowerCase() === 'low'
+                      ? styles.priorityLow
+                      : styles.priorityNormal
+                  }
+                >
+                  {r.priority.toUpperCase()}
+                </span>
+              </td>
               <td>{r.message}</td>
               <td>
                 {r.acknowledged ? (
-                  <span role="img" aria-label="acknowledged">✔️</span>
+                  <span className={styles.priorityLow}>✔️</span>
                 ) : (
                   <button
+                    className={styles.btnAcknowledge}
                     onClick={(e) => {
                       e.stopPropagation();
                       onAcknowledge(r.id);
@@ -58,9 +70,10 @@ export default function RequestsTable({
               </td>
               <td>
                 {r.completed ? (
-                  <span role="img" aria-label="completed">✔️</span>
+                  <span className={styles.priorityLow}>✔️</span>
                 ) : (
                   <button
+                    className={styles.btnComplete}
                     onClick={(e) => {
                       e.stopPropagation();
                       onComplete(r.id);

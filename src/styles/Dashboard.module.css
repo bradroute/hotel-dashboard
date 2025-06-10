@@ -1,140 +1,153 @@
 /* src/styles/Dashboard.module.css */
 
+/* Container & Layout */
 .container {
   padding: 2rem;
   min-height: 100vh;
   background-color: #f4f4f5;
 }
 
+/* Filters */
 .filterBar {
   margin-bottom: 1rem;
   display: flex;
   gap: 1rem;
   align-items: center;
 }
-
 .filterCheckbox {
   margin-right: 0.5rem;
 }
-
 .filterSelect {
   padding: 0.5rem;
   border: 1px solid #d1d5db;
   border-radius: 4px;
 }
 
+/* Table */
 .tableContainer {
   overflow-x: auto;
 }
-
 .requestsTable {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
 }
-
 .requestsTable th,
 .requestsTable td {
   padding: 0.75rem;
   border-bottom: 1px solid #e5e7eb;
 }
+.requestsTable tr:hover {
+  background-color: #f9fafb;
+}
 
+/* Priority badges */
+.priorityUrgent {
+  background-color: #fee2e2;   /* light red */
+  color: #b91c1c;              /* dark red */
+}
+.priorityNormal {
+  background-color: #fef3c7;   /* light yellow */
+  color: #92400e;              /* dark amber */
+}
+.priorityLow {
+  background-color: #dcfce7;   /* light green */
+  color: #15803d;              /* dark green */
+}
+.priorityUrgent,
+.priorityNormal,
+.priorityLow {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: bold;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+}
+
+/* Action buttons */
 .ackBtn,
 .completeBtn {
-  padding: 0.375rem 0.75rem;
+  padding: 0.5rem 1rem;
   font-size: 0.875rem;
   border: none;
   border-radius: 4px;
+  color: #fff;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
-
 .ackBtn {
-  background-color: #10b981; /* emerald-500 */
-  color: #fff;
+  background-color: #10b981;   /* emerald-500 */
 }
-
+.ackBtn:hover {
+  background-color: #059669;   /* emerald-600 */
+}
 .completeBtn {
-  background-color: #3b82f6; /* blue-500 */
-  color: #fff;
+  background-color: #3b82f6;   /* blue-500 */
+}
+.completeBtn:hover {
+  background-color: #2563eb;   /* blue-600 */
 }
 
-.doneIcon {
-  font-size: 1rem;
-  color: #10b981;
-}
-
-/* ────────────────────────────────────────────────────────────────────────── */
 /* Loading spinner & error banner */
-
 .overlay {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 2rem;
 }
-
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid rgba(0, 0, 0, 0.1);
+  border: 4px solid rgba(0,0,0,0.1);
   border-left-color: #333;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-right: 1rem;
 }
-
 @keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
+  to { transform: rotate(360deg); }
 }
-
 .errorBanner {
   background-color: #ffe6e6;
   color: #b30000;
   padding: 1rem;
   border-radius: 4px;
   margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
 }
-
 .errorBanner > p {
   margin: 0;
   font-weight: bold;
 }
 
-/* ────────────────────────────────────────────────────────────────────────── */
-/* Responsive & Accessibility */
+/* Empty state */
+.emptyState {
+  padding: 2rem;
+  text-align: center;
+  color: #555;
+  font-size: 1.25rem;
+}
 
+/* Responsive tweaks */
 @media (max-width: 768px) {
-  /* Stack filters vertically */
   .filterBar {
     flex-direction: column;
     gap: 0.5rem;
   }
-
-  /* Make select and checkbox full-width */
   .filterSelect,
   .filterCheckbox {
     width: 100%;
   }
-
-  /* Table container still scrolls, but reduce padding */
   .requestsTable th,
   .requestsTable td {
     padding: 0.5rem;
   }
 }
-
 @media (max-width: 480px) {
-  /* Further reduce padding and font-size on very small screens */
   .requestsTable th,
   .requestsTable td {
     padding: 0.4rem;
     font-size: 0.875rem;
   }
-
   .ackBtn,
   .completeBtn {
     padding: 0.25rem 0.5rem;
@@ -142,78 +155,11 @@
   }
 }
 
-/* Focus outlines for accessibility */
+/* Accessibility outlines */
 .ackBtn:focus,
 .completeBtn:focus,
 .filterSelect:focus,
 .filterCheckbox:focus {
   outline: 2px solid #2563eb; /* blue-600 */
   outline-offset: 2px;
-}
-
-/* src/styles/Dashboard.module.css */
-
-/* … existing rules … */
-
-/* ────────────────────────────────────────────────────────────────────────── */
-/* Priority badges (background + text color) */
-
-.priorityUrgent {
-  background-color: #fee2e2;   /* light red */
-  color: #b91c1c;             /* dark red text */
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  font-weight: bold;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-}
-
-.priorityNormal {
-  background-color: #fef3c7;   /* light amber */
-  color: #92400e;             /* dark amber text */
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  font-weight: bold;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-}
-
-.priorityLow {
-  background-color: #dcfce7;   /* light green */
-  color: #15803d;             /* dark green text */
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.25rem;
-  font-weight: bold;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-}
-
-/* Buttons (white on colored background) */
-.ackBtn {
-  background-color: #10b981; /* emerald-500 */
-  color: #fff;
-}
-.completeBtn {
-  background-color: #3b82f6; /* blue-500 */
-  color: #fff;
-}
-
-/* In src/styles/Dashboard.module.css */
-
-tr[role="button"]:focus,
-.ackBtn:focus,
-.completeBtn:focus,
-.filterSelect:focus,
-.filterCheckbox:focus {
-  outline: 2px solid #2563eb; /* blue-600 */
-  outline-offset: 2px;
-}
-
-/* src/styles/Dashboard.module.css */
-
-.emptyState {
-  padding: 2rem;
-  text-align: center;
-  color: #555;
-  font-size: 1.25rem;
 }
