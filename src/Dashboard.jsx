@@ -3,12 +3,10 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './styles/Dashboard.module.css';
-
 import {
   acknowledgeRequest,
   completeRequest,
 } from './utils/api';
-
 import FiltersBar from './components/FiltersBar';
 import RequestsTable from './components/RequestsTable';
 import { supabase } from './utils/supabaseClient';
@@ -18,36 +16,31 @@ export default function Dashboard() {
   const [loading, setLoading]   = useState(true);
   const [error, setError]       = useState('');
 
-  // Filter states
-  const [showActiveOnly, setShowActiveOnly]       = useState(false);
+  // Hide completed by default
+  const [showActiveOnly, setShowActiveOnly] = useState(true);
   const [selectedDepartment, setSelectedDepartment] = useState('All');
 
   const navigate = useNavigate();
 
-  // Fetch only this hotel’s requests
   const fetchAll = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      // 1) Get current user
-      const { data: { user }, error: userErr } = await supabase.auth.getUser();
-      if (userErr || !user) throw new Error('Not authenticated');
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
 
-      // 2) Get their profile → hotel_id
-      const { data: profile, error: profErr } = await supabase
+      const { data: profile } = await supabase
         .from('profiles')
         .select('hotel_id')
         .eq('id', user.id)
         .single();
-      if (profErr || !profile) throw new Error('Profile not found');
+      if (!profile) throw new Error('Profile not found');
 
-      // 3) Fetch only this hotel’s requests
       const { data, error: reqErr } = await supabase
         .from('requests')
         .select('*')
         .eq('hotel_id', profile.hotel_id)
         .order('created_at', { ascending: false });
-
       if (reqErr) throw reqErr;
 
       setRequests(data || []);
@@ -64,32 +57,24 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [fetchAll]);
 
-  // Department dropdown options
   const departmentOptions = useMemo(() => {
     const deps = requests.map((r) => r.department || 'General');
     return ['All', ...Array.from(new Set(deps))];
   }, [requests]);
 
-  // Apply filters
   const filteredRequests = useMemo(() => {
     return requests
       .filter((r) => (showActiveOnly ? !r.completed : true))
       .filter((r) => (selectedDepartment === 'All' ? true : r.department === selectedDepartment));
   }, [requests, showActiveOnly, selectedDepartment]);
 
-  const handleRowClick = (id) => {
-    navigate(`/request/${id}`);
-  };
+  const handleRowClick = (id) => navigate(`/request/${id}`);
 
   return (
     <div className={styles.container}>
       <h1>📋 Hotel Request Dashboard</h1>
 
-      {error && (
-        <div className={styles.errorBanner}>
-          <p>Error: {error}</p>
-        </div>
-      )}
+      {error && <div className={styles.errorBanner}><p>Error: {error}</p></div>}
 
       <FiltersBar
         showActiveOnly={showActiveOnly}
@@ -105,35 +90,26 @@ export default function Dashboard() {
           <span>Loading requests…</span>
         </div>
       ) : (
-        <>
-          {filteredRequests.length === 0 ? (
-            <div className={styles.emptyState}>
-              <p>No unresolved requests right now 🎉</p>
-            </div>
-          ) : (
-            <RequestsTable
-              requests={filteredRequests}
-              onAcknowledge={async (id) => {
-                try {
-                  await acknowledgeRequest(id);
-                  fetchAll();
-                } catch (err) {
-                  alert('Acknowledgment failed: ' + err.message);
-                }
-              }}
-              onComplete={async (id) => {
-                try {
-                  await completeRequest(id);
-                  fetchAll();
-                } catch (err) {
-                  alert('Completion failed: ' + err.message);
-                }
-              }}
-              onRowClick={handleRowClick}
-            />
-          )}
-        </>
+        filteredRequests.length === 0 ? (
+          <div className={styles.emptyState}>
+            <p>No {showActiveOnly ? 'active' : ''} requests right now 🎉</p>
+          </div>
+        ) : (
+          <RequestsTable
+            requests={filteredRequests}
+            onAcknowledge={async (id) => {
+              await acknowledgeRequest(id);
+              fetchAll();
+            }}
+            onComplete={async (id) => {
+              await completeRequest(id);
+              fetchAll();
+            }}
+            onRowClick={handleRowClick}
+          />
+        )
       )}
     </div>
   );
 }
+

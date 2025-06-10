@@ -43,14 +43,18 @@ export default function RequestsTable({
               <td>{r.priority}</td>
               <td>{r.message}</td>
               <td>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAcknowledge(r.id);
-                  }}
-                >
-                  Acknowledge
-                </button>
+                {r.acknowledged ? (
+                  <span role="img" aria-label="acknowledged">✔️</span>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onAcknowledge(r.id);
+                    }}
+                  >
+                    Acknowledge
+                  </button>
+                )}
               </td>
               <td>
                 <button
