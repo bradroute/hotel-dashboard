@@ -57,14 +57,18 @@ export default function RequestsTable({
                 )}
               </td>
               <td>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onComplete(r.id);
-                  }}
-                >
-                  Complete
-                </button>
+                {r.completed ? (
+                  <span role="img" aria-label="completed">✔️</span>
+                ) : (
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onComplete(r.id);
+                    }}
+                  >
+                    Complete
+                  </button>
+                )}
               </td>
             </tr>
           ))}
