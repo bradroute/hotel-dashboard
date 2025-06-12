@@ -92,7 +92,6 @@ export default function Dashboard() {
   };
 
   const departmentOptions = [
-    'All',
     'Front Desk',
     'Housekeeping',
     'Maintenance',
@@ -100,7 +99,7 @@ export default function Dashboard() {
     'Valet',
   ];
 
-  const priorityOptions = ['All', 'Normal', 'Urgent', 'Low'];
+  const priorityOptions = ['Normal', 'Urgent', 'Low'];
 
   const filtered = useMemo(() => {
     let result = [...requests];
