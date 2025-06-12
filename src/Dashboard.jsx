@@ -15,24 +15,25 @@ import RequestsTable from './components/RequestsTable';
 import RequestNotes from './components/RequestNotes';
 
 export default function Dashboard() {
-  const [requests, setRequests]     = useState([]);
-  const [loading, setLoading]       = useState(true);
-  const [error, setError]           = useState('');
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Filters state
-  const [showActiveOnly, setShowActiveOnly]       = useState(true);
+  const [showActiveOnly, setShowActiveOnly] = useState(true);
   const [selectedDepartment, setSelectedDepartment] = useState('All');
+  const [selectedPriority, setSelectedPriority] = useState('All');
+  const [showUnacknowledgedOnly, setShowUnacknowledgedOnly] = useState(false);
+  const [searchText, setSearchText] = useState('');
+  const [sortOrder, setSortOrder] = useState('desc');
 
-  // Notes modal state
-  const [notesModalOpen, setNotesModalOpen]       = useState(false);
-  const [currentRequestId, setCurrentRequestId]   = useState(null);
-  const [notes, setNotes]                         = useState([]);
-  const [notesLoading, setNotesLoading]           = useState(false);
-  const [notesError, setNotesError]               = useState('');
+  const [notesModalOpen, setNotesModalOpen] = useState(false);
+  const [currentRequestId, setCurrentRequestId] = useState(null);
+  const [notes, setNotes] = useState([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [notesError, setNotesError] = useState('');
 
   const navigate = useNavigate();
 
-  // Fetch all requests
   const fetchRequests = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -52,7 +53,6 @@ export default function Dashboard() {
     return () => clearInterval(iv);
   }, [fetchRequests]);
 
-  // Notes handlers
   const openNotesModal = async (requestId) => {
     setCurrentRequestId(requestId);
     setNotesLoading(true);
@@ -71,26 +71,44 @@ export default function Dashboard() {
   const handleAddNote = async (content) => {
     try {
       await addNote(currentRequestId, content);
-      // re-load
       const updated = await getNotes(currentRequestId);
       setNotes(updated);
     } catch (err) {
-      // bubble up to RequestNotes form
       throw err;
     }
   };
 
-  // Table data + filters
-  const departmentOptions = useMemo(() => {
-    const deps = requests.map((r) => r.department || 'General');
-    return ['All', ...Array.from(new Set(deps))];
-  }, [requests]);
+  const departmentOptions = ['Valet', 'Room Service', 'Maintenance', 'Housekeeping', 'Front Desk'];
+  const priorityOptions = ['Low', 'Normal', 'Urgent'];
 
   const filtered = useMemo(() => {
     return requests
       .filter((r) => (showActiveOnly ? !r.completed : true))
-      .filter((r) => (selectedDepartment === 'All' ? true : r.department === selectedDepartment));
-  }, [requests, showActiveOnly, selectedDepartment]);
+      .filter((r) => (selectedDepartment === 'All' ? true : r.department === selectedDepartment))
+      .filter((r) => (selectedPriority === 'All' ? true : r.priority === selectedPriority))
+      .filter((r) => (showUnacknowledgedOnly ? !r.acknowledged : true))
+      .filter((r) => {
+        const keyword = searchText.trim().toLowerCase();
+        return (
+          keyword === '' ||
+          r.message.toLowerCase().includes(keyword) ||
+          (r.from_phone && r.from_phone.toLowerCase().includes(keyword))
+        );
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.created_at);
+        const dateB = new Date(b.created_at);
+        return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+      });
+  }, [
+    requests,
+    showActiveOnly,
+    selectedDepartment,
+    selectedPriority,
+    showUnacknowledgedOnly,
+    searchText,
+    sortOrder,
+  ]);
 
   return (
     <div className={styles.container}>
@@ -104,6 +122,15 @@ export default function Dashboard() {
         selectedDepartment={selectedDepartment}
         onChangeDepartment={setSelectedDepartment}
         departmentOptions={departmentOptions}
+        selectedPriority={selectedPriority}
+        onChangePriority={setSelectedPriority}
+        priorityOptions={priorityOptions}
+        showUnacknowledgedOnly={showUnacknowledgedOnly}
+        onToggleUnacknowledged={setShowUnacknowledgedOnly}
+        searchText={searchText}
+        onSearchChange={setSearchText}
+        sortOrder={sortOrder}
+        onSortOrderChange={setSortOrder}
       />
 
       {loading ? (
@@ -127,7 +154,7 @@ export default function Dashboard() {
             fetchRequests();
           }}
           onRowClick={(id) => navigate(`/request/${id}`)}
-          onOpenNotes={openNotesModal}        // << new prop
+          onOpenNotes={openNotesModal}
         />
       )}
 
