@@ -9,6 +9,7 @@ import {
   completeRequest,
   getNotes,
   addNote,
+  deleteNote,
 } from './utils/api';
 import FiltersBar from './components/FiltersBar';
 import RequestsTable from './components/RequestsTable';
@@ -19,13 +20,15 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
+  // Filters state
   const [showActiveOnly, setShowActiveOnly] = useState(true);
+  const [unacknowledgedOnly, setUnacknowledgedOnly] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState('All');
   const [selectedPriority, setSelectedPriority] = useState('All');
-  const [showUnacknowledgedOnly, setShowUnacknowledgedOnly] = useState(false);
-  const [searchText, setSearchText] = useState('');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [sortOrder, setSortOrder] = useState('newest');
+  const [searchTerm, setSearchTerm] = useState('');
 
+  // Notes state
   const [notesModalOpen, setNotesModalOpen] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState(null);
   const [notes, setNotes] = useState([]);
@@ -78,59 +81,83 @@ export default function Dashboard() {
     }
   };
 
-  const departmentOptions = ['Valet', 'Room Service', 'Maintenance', 'Housekeeping', 'Front Desk'];
-  const priorityOptions = ['Low', 'Normal', 'Urgent'];
+  const handleDeleteNote = async (noteId) => {
+    try {
+      await deleteNote(currentRequestId, noteId);
+      const updated = await getNotes(currentRequestId);
+      setNotes(updated);
+    } catch (err) {
+      throw err;
+    }
+  };
+
+  const departmentOptions = [
+    'All',
+    'Front Desk',
+    'Housekeeping',
+    'Maintenance',
+    'Room Service',
+    'Valet',
+  ];
+
+  const priorityOptions = ['All', 'Normal', 'Urgent', 'Low'];
 
   const filtered = useMemo(() => {
-    return requests
-      .filter((r) => (showActiveOnly ? !r.completed : true))
-      .filter((r) => (selectedDepartment === 'All' ? true : r.department === selectedDepartment))
-      .filter((r) => (selectedPriority === 'All' ? true : r.priority === selectedPriority))
-      .filter((r) => (showUnacknowledgedOnly ? !r.acknowledged : true))
-      .filter((r) => {
-        const keyword = searchText.trim().toLowerCase();
-        return (
-          keyword === '' ||
-          r.message.toLowerCase().includes(keyword) ||
-          (r.from_phone && r.from_phone.toLowerCase().includes(keyword))
-        );
-      })
-      .sort((a, b) => {
-        const dateA = new Date(a.created_at);
-        const dateB = new Date(b.created_at);
-        return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
-      });
+    let result = [...requests];
+    if (showActiveOnly) result = result.filter((r) => !r.completed);
+    if (unacknowledgedOnly) result = result.filter((r) => !r.acknowledged);
+    if (selectedDepartment !== 'All')
+      result = result.filter((r) => r.department === selectedDepartment);
+    if (selectedPriority !== 'All')
+      result = result.filter((r) => r.priority.toLowerCase() === selectedPriority.toLowerCase());
+    if (searchTerm.trim()) {
+      result = result.filter(
+        (r) =>
+          r.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          r.from_phone.includes(searchTerm)
+      );
+    }
+    if (sortOrder === 'oldest') {
+      result.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    } else {
+      result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+    return result;
   }, [
     requests,
     showActiveOnly,
+    unacknowledgedOnly,
     selectedDepartment,
     selectedPriority,
-    showUnacknowledgedOnly,
-    searchText,
     sortOrder,
+    searchTerm,
   ]);
 
   return (
     <div className={styles.container}>
       <h1>📋 Hotel Request Dashboard</h1>
 
-      {error && <div className={styles.errorBanner}><p>Error: {error}</p></div>}
+      {error && (
+        <div className={styles.errorBanner}>
+          <p>Error: {error}</p>
+        </div>
+      )}
 
       <FiltersBar
         showActiveOnly={showActiveOnly}
         onToggleActive={setShowActiveOnly}
+        unacknowledgedOnly={unacknowledgedOnly}
+        onToggleUnacknowledged={setUnacknowledgedOnly}
         selectedDepartment={selectedDepartment}
         onChangeDepartment={setSelectedDepartment}
         departmentOptions={departmentOptions}
         selectedPriority={selectedPriority}
         onChangePriority={setSelectedPriority}
         priorityOptions={priorityOptions}
-        showUnacknowledgedOnly={showUnacknowledgedOnly}
-        onToggleUnacknowledged={setShowUnacknowledgedOnly}
-        searchText={searchText}
-        onSearchChange={setSearchText}
         sortOrder={sortOrder}
-        onSortOrderChange={setSortOrder}
+        onChangeSort={setSortOrder}
+        searchTerm={searchTerm}
+        onChangeSearch={setSearchTerm}
       />
 
       {loading ? (
@@ -165,6 +192,7 @@ export default function Dashboard() {
           loading={notesLoading}
           error={notesError}
           onAddNote={handleAddNote}
+          onDeleteNote={handleDeleteNote}
           onClose={() => setNotesModalOpen(false)}
         />
       )}

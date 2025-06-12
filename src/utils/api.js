@@ -81,3 +81,14 @@ export async function addNote(requestId, content) {
   }
   return res.json();
 }
+
+export async function deleteNote(requestId, noteId) {
+  const res = await fetch(`${BASE_URL}/requests/${requestId}/notes/${noteId}`, {
+    method: 'DELETE',
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'deleteNote failed');
+  }
+  return res.json();
+}
