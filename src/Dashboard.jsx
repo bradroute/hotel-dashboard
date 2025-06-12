@@ -4,46 +4,41 @@ import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from './styles/Dashboard.module.css';
 import {
+  getAllRequests,
   acknowledgeRequest,
   completeRequest,
+  getNotes,
+  addNote,
 } from './utils/api';
 import FiltersBar from './components/FiltersBar';
 import RequestsTable from './components/RequestsTable';
-import { supabase } from './utils/supabaseClient';
+import RequestNotes from './components/RequestNotes';
 
 export default function Dashboard() {
-  const [requests, setRequests] = useState([]);
-  const [loading, setLoading]   = useState(true);
-  const [error, setError]       = useState('');
+  const [requests, setRequests]     = useState([]);
+  const [loading, setLoading]       = useState(true);
+  const [error, setError]           = useState('');
 
-  // Hide completed by default
-  const [showActiveOnly, setShowActiveOnly] = useState(true);
+  // Filters state
+  const [showActiveOnly, setShowActiveOnly]       = useState(true);
   const [selectedDepartment, setSelectedDepartment] = useState('All');
+
+  // Notes modal state
+  const [notesModalOpen, setNotesModalOpen]       = useState(false);
+  const [currentRequestId, setCurrentRequestId]   = useState(null);
+  const [notes, setNotes]                         = useState([]);
+  const [notesLoading, setNotesLoading]           = useState(false);
+  const [notesError, setNotesError]               = useState('');
 
   const navigate = useNavigate();
 
-  const fetchAll = useCallback(async () => {
+  // Fetch all requests
+  const fetchRequests = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('hotel_id')
-        .eq('id', user.id)
-        .single();
-      if (!profile) throw new Error('Profile not found');
-
-      const { data, error: reqErr } = await supabase
-        .from('requests')
-        .select('*')
-        .eq('hotel_id', profile.hotel_id)
-        .order('created_at', { ascending: false });
-      if (reqErr) throw reqErr;
-
-      setRequests(data || []);
+      const data = await getAllRequests();
+      setRequests(data);
     } catch (err) {
       setError(err.message || 'Failed to fetch requests');
     } finally {
@@ -52,23 +47,50 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    fetchAll();
-    const interval = setInterval(fetchAll, 60_000);
-    return () => clearInterval(interval);
-  }, [fetchAll]);
+    fetchRequests();
+    const iv = setInterval(fetchRequests, 60_000);
+    return () => clearInterval(iv);
+  }, [fetchRequests]);
 
+  // Notes handlers
+  const openNotesModal = async (requestId) => {
+    setCurrentRequestId(requestId);
+    setNotesLoading(true);
+    setNotesError('');
+    try {
+      const data = await getNotes(requestId);
+      setNotes(data);
+      setNotesModalOpen(true);
+    } catch (err) {
+      setNotesError(err.message || 'Failed to load notes');
+    } finally {
+      setNotesLoading(false);
+    }
+  };
+
+  const handleAddNote = async (content) => {
+    try {
+      await addNote(currentRequestId, content);
+      // re-load
+      const updated = await getNotes(currentRequestId);
+      setNotes(updated);
+    } catch (err) {
+      // bubble up to RequestNotes form
+      throw err;
+    }
+  };
+
+  // Table data + filters
   const departmentOptions = useMemo(() => {
     const deps = requests.map((r) => r.department || 'General');
     return ['All', ...Array.from(new Set(deps))];
   }, [requests]);
 
-  const filteredRequests = useMemo(() => {
+  const filtered = useMemo(() => {
     return requests
       .filter((r) => (showActiveOnly ? !r.completed : true))
       .filter((r) => (selectedDepartment === 'All' ? true : r.department === selectedDepartment));
   }, [requests, showActiveOnly, selectedDepartment]);
-
-  const handleRowClick = (id) => navigate(`/request/${id}`);
 
   return (
     <div className={styles.container}>
@@ -89,27 +111,36 @@ export default function Dashboard() {
           <div className={styles.spinner} role="status" />
           <span>Loading requests…</span>
         </div>
+      ) : filtered.length === 0 ? (
+        <div className={styles.emptyState}>
+          <p>No {showActiveOnly ? 'active' : ''} requests right now 🎉</p>
+        </div>
       ) : (
-        filteredRequests.length === 0 ? (
-          <div className={styles.emptyState}>
-            <p>No {showActiveOnly ? 'active' : ''} requests right now 🎉</p>
-          </div>
-        ) : (
-          <RequestsTable
-            requests={filteredRequests}
-            onAcknowledge={async (id) => {
-              await acknowledgeRequest(id);
-              fetchAll();
-            }}
-            onComplete={async (id) => {
-              await completeRequest(id);
-              fetchAll();
-            }}
-            onRowClick={handleRowClick}
-          />
-        )
+        <RequestsTable
+          requests={filtered}
+          onAcknowledge={async (id) => {
+            await acknowledgeRequest(id);
+            fetchRequests();
+          }}
+          onComplete={async (id) => {
+            await completeRequest(id);
+            fetchRequests();
+          }}
+          onRowClick={(id) => navigate(`/request/${id}`)}
+          onOpenNotes={openNotesModal}        // << new prop
+        />
+      )}
+
+      {notesModalOpen && (
+        <RequestNotes
+          requestId={currentRequestId}
+          notes={notes}
+          loading={notesLoading}
+          error={notesError}
+          onAddNote={handleAddNote}
+          onClose={() => setNotesModalOpen(false)}
+        />
       )}
     </div>
   );
 }
-

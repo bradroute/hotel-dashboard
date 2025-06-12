@@ -43,16 +43,16 @@
 
 /* Priority badges */
 .priorityUrgent {
-  background-color: #fee2e2;   /* light red */
-  color: #b91c1c;              /* dark red */
+  background-color: #fee2e2;
+  color: #b91c1c;
 }
 .priorityNormal {
-  background-color: #fef3c7;   /* light yellow */
-  color: #92400e;              /* dark amber */
+  background-color: #fef3c7;
+  color: #92400e;
 }
 .priorityLow {
-  background-color: #dcfce7;   /* light green */
-  color: #15803d;              /* dark green */
+  background-color: #dcfce7;
+  color: #15803d;
 }
 .priorityUrgent,
 .priorityNormal,
@@ -66,7 +66,8 @@
 
 /* Action buttons */
 .ackBtn,
-.completeBtn {
+.completeBtn,
+.notesBtn {
   padding: 0.5rem 1rem;
   font-size: 0.875rem;
   border: none;
@@ -77,10 +78,10 @@
 }
 
 .ackBtn {
-  background-color: #10B981; /* emerald-500 */
+  background-color: #10B981;
 }
 .ackBtn:hover {
-  background-color: #059669; /* emerald-600 */
+  background-color: #059669;
   transform: translateY(-1px);
 }
 .ackBtn:active {
@@ -88,20 +89,121 @@
 }
 
 .completeBtn {
-  background-color: #3B82F6; /* blue-500 */
+  background-color: #3B82F6;
 }
 .completeBtn:hover {
-  background-color: #2563EB; /* blue-600 */
+  background-color: #2563EB;
   transform: translateY(-1px);
 }
 .completeBtn:active {
   transform: translateY(1px);
 }
 
+/* Notes button */
+.notesBtn {
+  background-color: #8B5CF6; /* violet-500 */
+}
+.notesBtn:hover {
+  background-color: #7C3AED; /* violet-600 */
+  transform: translateY(-1px);
+}
+.notesBtn:active {
+  transform: translateY(1px);
+}
+
 /* Done icon (checkmark) */
 .doneIcon {
   font-size: 1rem;
-  color: #10B981; /* match ack green */
+  color: #10B981;
+}
+
+/* Modal (notes thread) */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalContent {
+  background-color: #fff;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+.modalHeader h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.closeBtn {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+}
+
+/* Notes list */
+.notesList {
+  max-height: 300px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 0.5rem;
+  background-color: #f9fafb;
+}
+.noteItem {
+  padding: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+.noteItem:last-child {
+  border-bottom: none;
+}
+.noteTimestamp {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* New-note form */
+.newNoteForm {
+  display: flex;
+  gap: 0.5rem;
+}
+.newNoteInput {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+}
+.newNoteBtn {
+  padding: 0.5rem 1rem;
+  background-color: #8B5CF6;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.newNoteBtn:hover {
+  background-color: #7C3AED;
+  transform: translateY(-1px);
+}
+.newNoteBtn:active {
+  transform: translateY(1px);
 }
 
 /* Loading spinner & error banner */
@@ -165,7 +267,8 @@
     font-size: 0.875rem;
   }
   .ackBtn,
-  .completeBtn {
+  .completeBtn,
+  .notesBtn {
     padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
   }
@@ -174,8 +277,9 @@
 /* Accessibility outlines */
 .ackBtn:focus,
 .completeBtn:focus,
+.notesBtn:focus,
 .filterSelect:focus,
 .filterCheckbox:focus {
-  outline: 2px solid #2563eb; /* blue-600 */
+  outline: 2px solid #2563eb;
   outline-offset: 2px;
 }

@@ -1,3 +1,5 @@
+// src/components/RequestsTable.jsx
+
 import React from 'react';
 import styles from '../styles/Dashboard.module.css';
 
@@ -7,12 +9,14 @@ import styles from '../styles/Dashboard.module.css';
  *  - onAcknowledge: function(id)
  *  - onComplete: function(id)
  *  - onRowClick: function(id)
+ *  - onOpenNotes: function(id)
  */
 export default function RequestsTable({
   requests,
   onAcknowledge,
   onComplete,
   onRowClick,
+  onOpenNotes,
 }) {
   return (
     <div className={styles.tableContainer}>
@@ -24,6 +28,7 @@ export default function RequestsTable({
             <th>Department</th>
             <th>Priority</th>
             <th>Message</th>
+            <th>Notes</th>        {/* New column header */}
             <th>Acknowledge</th>
             <th>Complete</th>
           </tr>
@@ -52,6 +57,17 @@ export default function RequestsTable({
                 </span>
               </td>
               <td>{r.message}</td>
+              <td>
+                <button
+                  className={styles.notesBtn}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onOpenNotes(r.id);
+                  }}
+                >
+                  📝 Notes
+                </button>
+              </td>
               <td>
                 {r.acknowledged ? (
                   <span className={styles.doneIcon} aria-label="acknowledged">
