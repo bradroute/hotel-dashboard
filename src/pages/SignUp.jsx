@@ -1,4 +1,5 @@
 // src/pages/SignUp.jsx
+
 import React, { useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { useNavigate } from 'react-router-dom';
@@ -17,32 +18,31 @@ export default function SignUp() {
     setError('');
     setMsg('');
 
-    try {
-      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
-      if (signUpError) return setError(signUpError.message);
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
+    if (signUpError) return setError(signUpError.message);
 
-      const userId = signUpData.user.id;
+    const userId = signUpData.user.id;
 
-      const { data: hotelData, error: hotelError } =
-        await supabase.from('hotels').insert({ name: hotelName }).select('id').single();
-      if (hotelError) return setError(hotelError.message);
+    const { data: hotelData, error: hotelError } = await supabase
+      .from('hotels')
+      .insert({ name: hotelName })
+      .select('id')
+      .single();
+    if (hotelError) return setError(hotelError.message);
 
-      const { error: profileError } = await supabase.from('profiles').insert({ id: userId, hotel_id: hotelData.id });
-      if (profileError) return setError(profileError.message);
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .insert({ id: userId, hotel_id: hotelData.id });
+    if (profileError) return setError(profileError.message);
 
-      setMsg('✅ Sign-up successful! Please check your email for confirmation.');
-      setTimeout(() => navigate('/login'), 2000);
-    } catch (err) {
-      setError('An unexpected error occurred.');
-    }
+    setMsg('✅ Sign-up successful! Please check your email for confirmation.');
+    setTimeout(() => navigate('/login'), 2000);
   };
 
   return (
     <div className={styles.container}>
       <div className={styles.card}>
         <h2>Create Hotel Account</h2>
-        {error && <div className={styles.error}>{error}</div>}
-        {msg && <div className={styles.success}>{msg}</div>}
         <form onSubmit={handleSignUp}>
           <input
             type="text"
@@ -65,8 +65,12 @@ export default function SignUp() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <button type="submit">Sign Up</button>
+          <button type="submit" className={styles.button}>
+            Sign Up
+          </button>
         </form>
+        {error && <p className={styles.error}>{error}</p>}
+        {msg && <p>{msg}</p>}
       </div>
     </div>
   );
