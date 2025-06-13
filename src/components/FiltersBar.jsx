@@ -3,21 +3,38 @@
 import React from 'react';
 import styles from '../styles/Dashboard.module.css';
 
+/**
+ * Props:
+ *  - showActiveOnly (boolean)
+ *  - onToggleActive (function)
+ *  - unacknowledgedOnly (boolean)
+ *  - onToggleUnacknowledged (function)
+ *  - selectedDepartment (string)
+ *  - onChangeDepartment (function)
+ *  - departmentOptions (array of strings)
+ *  - selectedPriority (string)
+ *  - onChangePriority (function)
+ *  - priorityOptions (array of strings)
+ *  - sortOrder (string)
+ *  - onChangeSort (function)
+ *  - searchTerm (string)
+ *  - onChangeSearch (function)
+ */
 export default function FiltersBar({
   showActiveOnly,
   onToggleActive,
+  unacknowledgedOnly,
+  onToggleUnacknowledged,
   selectedDepartment,
   onChangeDepartment,
   departmentOptions,
   selectedPriority,
   onChangePriority,
   priorityOptions,
-  showUnacknowledgedOnly,
-  onToggleUnacknowledged,
-  searchText,
-  onSearchChange,
   sortOrder,
-  onSortOrderChange
+  onChangeSort,
+  searchTerm,
+  onChangeSearch
 }) {
   return (
     <div className={styles.filterBar}>
@@ -35,7 +52,7 @@ export default function FiltersBar({
         <input
           type="checkbox"
           className={styles.filterCheckbox}
-          checked={showUnacknowledgedOnly}
+          checked={unacknowledgedOnly}
           onChange={(e) => onToggleUnacknowledged(e.target.checked)}
         />
         Unacknowledged Only
@@ -50,7 +67,9 @@ export default function FiltersBar({
         >
           <option value="All">All Departments</option>
           {departmentOptions.map((dept) => (
-            <option key={dept} value={dept}>{dept}</option>
+            <option key={dept} value={dept}>
+              {dept}
+            </option>
           ))}
         </select>
       </label>
@@ -63,8 +82,10 @@ export default function FiltersBar({
           onChange={(e) => onChangePriority(e.target.value)}
         >
           <option value="All">All Priorities</option>
-          {priorityOptions.map((prio) => (
-            <option key={prio} value={prio}>{prio}</option>
+          {priorityOptions.map((priority) => (
+            <option key={priority} value={priority}>
+              {priority}
+            </option>
           ))}
         </select>
       </label>
@@ -74,19 +95,19 @@ export default function FiltersBar({
         <select
           className={styles.filterSelect}
           value={sortOrder}
-          onChange={(e) => onSortOrderChange(e.target.value)}
+          onChange={(e) => onChangeSort(e.target.value)}
         >
-          <option value="desc">Newest → Oldest</option>
-          <option value="asc">Oldest → Newest</option>
+          <option value="newest">Newest → Oldest</option>
+          <option value="oldest">Oldest → Newest</option>
         </select>
       </label>
 
       <input
         type="text"
-        className={styles.filterSearch}
         placeholder="Search message or phone..."
-        value={searchText}
-        onChange={(e) => onSearchChange(e.target.value)}
+        className={styles.filterSearch}
+        value={searchTerm}
+        onChange={(e) => onChangeSearch(e.target.value)}
       />
     </div>
   );
