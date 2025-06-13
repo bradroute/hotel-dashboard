@@ -12,7 +12,6 @@ import Dashboard      from './Dashboard';
 import Analytics      from './Analytics';
 import LoginPage      from './pages/LoginPage';
 import SignUp         from './pages/SignUp';
-// import RequestForm  from './pages/RequestForm';  // removed
 import ProtectedRoute from './components/ProtectedRoute';
 import { supabase }   from './utils/supabaseClient';
 import styles         from './styles/App.module.css';
@@ -21,11 +20,10 @@ export default function App() {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
-    // Fetch initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
-    // Listen for auth changes
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => setSession(session)
     );
@@ -42,7 +40,7 @@ export default function App() {
         <nav className={styles.nav}>
           <Link to="/dashboard" className={styles.navLink}>Dashboard</Link>
           <Link to="/analytics" className={styles.navLink}>Analytics</Link>
-          <button onClick={handleLogout} className={styles.navLink}>
+          <button onClick={handleLogout} className={styles.logoutButton}>
             Logout
           </button>
         </nav>
@@ -50,7 +48,6 @@ export default function App() {
 
       <div className={styles.container}>
         <Routes>
-          {/* Public login/signup */}
           <Route
             path="/login"
             element={session ? <Navigate to="/dashboard" replace /> : <LoginPage />}
@@ -59,8 +56,6 @@ export default function App() {
             path="/signup"
             element={session ? <Navigate to="/dashboard" replace /> : <SignUp />}
           />
-
-          {/* Protected staff routes */}
           <Route
             path="/dashboard"
             element={
@@ -77,8 +72,6 @@ export default function App() {
               </ProtectedRoute>
             }
           />
-
-          {/* Fallback */}
           <Route
             path="*"
             element={

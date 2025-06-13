@@ -269,3 +269,25 @@
   outline: 2px solid #2563eb;
   outline-offset: 2px;
 }
+
+.logoutBtn {
+  background-color: #3B82F6; /* blue-500 */
+  color: #fff;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.logoutBtn:hover {
+  background-color: #2563EB; /* blue-600 */
+  transform: translateY(-1px);
+}
+
+.logoutBtn:active {
+  transform: translateY(1px);
+}
