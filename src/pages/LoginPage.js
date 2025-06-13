@@ -30,7 +30,7 @@ export default function LoginPage() {
   return (
     <div style={{ display: 'flex', height: '100vh', justifyContent: 'center', alignItems: 'center' }}>
       <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', width: 300 }}>
-        <h2>Hotel Crosby Staff Login</h2>
+        <h2>Hotel Operations Login</h2>
         <input
           type="email"
           placeholder="Enter Email"
