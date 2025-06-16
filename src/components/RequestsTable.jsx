@@ -3,14 +3,6 @@
 import React from 'react';
 import styles from '../styles/Dashboard.module.css';
 
-/**
- * Props:
- *  - requests: array of request objects
- *  - onAcknowledge: function(id)
- *  - onComplete: function(id)
- *  - onRowClick: function(id)
- *  - onOpenNotes: function(id)
- */
 export default function RequestsTable({
   requests,
   onAcknowledge,
@@ -24,11 +16,12 @@ export default function RequestsTable({
         <thead>
           <tr>
             <th>Created At</th>
+            <th>Room</th>
             <th>From</th>
             <th>Department</th>
             <th>Priority</th>
             <th>Message</th>
-            <th>Notes</th>        {/* New column header */}
+            <th>Notes</th>
             <th>Acknowledge</th>
             <th>Complete</th>
           </tr>
@@ -41,6 +34,7 @@ export default function RequestsTable({
               className={styles.row}
             >
               <td>{new Date(r.created_at).toLocaleString()}</td>
+              <td>{r.room_number ? r.room_number : '—'}</td>
               <td>{r.from_phone}</td>
               <td>{r.department}</td>
               <td>

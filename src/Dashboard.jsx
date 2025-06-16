@@ -20,7 +20,6 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Filters state
   const [showActiveOnly, setShowActiveOnly] = useState(true);
   const [unacknowledgedOnly, setUnacknowledgedOnly] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState('All');
@@ -28,7 +27,6 @@ export default function Dashboard() {
   const [sortOrder, setSortOrder] = useState('newest');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Notes state
   const [notesModalOpen, setNotesModalOpen] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState(null);
   const [notes, setNotes] = useState([]);
@@ -91,14 +89,7 @@ export default function Dashboard() {
     }
   };
 
-  const departmentOptions = [
-    'Front Desk',
-    'Housekeeping',
-    'Maintenance',
-    'Room Service',
-    'Valet',
-  ];
-
+  const departmentOptions = ['Front Desk', 'Housekeeping', 'Maintenance', 'Room Service', 'Valet'];
   const priorityOptions = ['Normal', 'Urgent', 'Low'];
 
   const filtered = useMemo(() => {
@@ -113,7 +104,8 @@ export default function Dashboard() {
       result = result.filter(
         (r) =>
           r.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          r.from_phone.includes(searchTerm)
+          (r.from_phone && r.from_phone.includes(searchTerm)) ||
+          (r.room_number && r.room_number.toString().includes(searchTerm))
       );
     }
     if (sortOrder === 'oldest') {

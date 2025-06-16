@@ -8,13 +8,12 @@ import {
   Navigate,
   Link
 } from 'react-router-dom';
-import Dashboard      from './Dashboard';
-import Analytics      from './Analytics';
-import LoginPage      from './pages/LoginPage';
-import SignUp         from './pages/SignUp';
+import Dashboard from './Dashboard';
+import Analytics from './pages/Analytics';
+import LoginPage from './pages/LoginPage';
+import SignUp from './pages/SignUp';
 import ProtectedRoute from './components/ProtectedRoute';
-import { supabase }   from './utils/supabaseClient';
-import styles         from './styles/App.module.css';
+import { supabase } from './utils/supabaseClient';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -37,16 +36,21 @@ export default function App() {
   return (
     <Router>
       {session && (
-        <nav className={styles.nav}>
-          <Link to="/dashboard" className={styles.navLink}>Dashboard</Link>
-          <Link to="/analytics" className={styles.navLink}>Analytics</Link>
-          <button onClick={handleLogout} className={styles.logoutButton}>
+        <nav className="flex justify-between items-center bg-white px-6 py-4 shadow-md mb-6">
+          <div className="flex gap-4">
+            <Link to="/dashboard" className="text-blue-600 font-semibold hover:underline">Dashboard</Link>
+            <Link to="/analytics" className="text-blue-600 font-semibold hover:underline">Analytics</Link>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+          >
             Logout
           </button>
         </nav>
       )}
 
-      <div className={styles.container}>
+      <div className="max-w-7xl mx-auto px-4">
         <Routes>
           <Route
             path="/login"
