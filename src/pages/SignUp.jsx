@@ -1,77 +1,89 @@
-// src/pages/SignUp.jsx
+import React, { useState } from 'react'
+import styles from '../styles/Login.module.css'    // reuse the login CSS
+import { supabase } from '../utils/supabaseClient'
+import { useNavigate } from 'react-router-dom'
 
-import React, { useState } from 'react';
-import { supabase } from '../utils/supabaseClient';
-import { useNavigate } from 'react-router-dom';
-import styles from '../styles/Login.module.css';
+export default function SignUpPage() {
+  const [hotelName, setHotelName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState(null)
+  const navigate = useNavigate()
 
-export default function SignUp() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [hotelName, setHotelName] = useState('');
-  const [error, setError] = useState('');
-  const [msg, setMsg] = useState('');
-  const navigate = useNavigate();
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError(null)
 
-  const handleSignUp = async (e) => {
-    e.preventDefault();
-    setError('');
-    setMsg('');
+    // 1) create the user
+    const { data: authData, error: authErr } = await supabase.auth.signUp({
+      email,
+      password
+    })
+    if (authErr) {
+      setError(authErr.message)
+      return
+    }
 
-    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ email, password });
-    if (signUpError) return setError(signUpError.message);
-
-    const userId = signUpData.user.id;
-
-    const { data: hotelData, error: hotelError } = await supabase
-      .from('hotels')
-      .insert({ name: hotelName })
-      .select('id')
-      .single();
-    if (hotelError) return setError(hotelError.message);
-
-    const { error: profileError } = await supabase
+    // 2) insert your hotel profile
+    //    adjust the profile table & fields as needed
+    const { error: profileErr } = await supabase
       .from('profiles')
-      .insert({ id: userId, hotel_id: hotelData.id });
-    if (profileError) return setError(profileError.message);
+      .insert([{ 
+        id: authData.user.id,
+        hotel_name: hotelName,
+        // you may need to generate or pass a hotel_id here
+      }])
+    if (profileErr) {
+      setError(profileErr.message)
+      return
+    }
 
-    setMsg('✅ Sign-up successful! Please check your email for confirmation.');
-    setTimeout(() => navigate('/login'), 2000);
-  };
+    // 3) navigate into the app
+    navigate('/dashboard')
+  }
 
   return (
     <div className={styles.container}>
-      <div className={styles.card}>
-        <h2>Create Hotel Account</h2>
-        <form onSubmit={handleSignUp}>
-          <input
-            type="text"
-            placeholder="Hotel Name"
-            value={hotelName}
-            onChange={(e) => setHotelName(e.target.value)}
-            required
-          />
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-          <button type="submit" className={styles.button}>
-            Sign Up
-          </button>
-        </form>
+      <form onSubmit={handleSubmit} className={styles.loginForm}>
+        <h1 className={styles.title}>Create Hotel Account</h1>
+
+        <input
+          type="text"
+          placeholder="Hotel Name"
+          value={hotelName}
+          onChange={e => setHotelName(e.target.value)}
+          className={styles.input}
+          required
+        />
+
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          className={styles.input}
+          required
+        />
+
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          className={styles.input}
+          required
+        />
+
         {error && <p className={styles.error}>{error}</p>}
-        {msg && <p>{msg}</p>}
-      </div>
+
+        <button type="submit" className={styles.loginBtn}>
+          Sign Up
+        </button>
+
+        <p className={styles.signup}>
+          Already have an account? <a href="/login">Login</a>
+        </p>
+      </form>
     </div>
-  );
+  )
 }
