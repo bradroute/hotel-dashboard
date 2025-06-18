@@ -1,4 +1,3 @@
-// Updated: unified Tailwind styling & modal overlay
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -11,7 +10,6 @@ import {
 } from './utils/api';
 import FiltersBar from './components/FiltersBar';
 import RequestsTable from './components/RequestsTable';
-import RequestNotes from './components/RequestNotes';
 
 export default function Dashboard() {
   const [requests, setRequests] = useState([]);
@@ -30,6 +28,7 @@ export default function Dashboard() {
   const [notes, setNotes] = useState([]);
   const [notesLoading, setNotesLoading] = useState(false);
   const [notesError, setNotesError] = useState('');
+  const [newNote, setNewNote] = useState('');
 
   const navigate = useNavigate();
 
@@ -67,10 +66,12 @@ export default function Dashboard() {
     }
   };
 
-  const handleAddNote = async (content) => {
-    await addNote(currentRequestId, content);
+  const handleAddNote = async () => {
+    if (!newNote.trim()) return;
+    await addNote(currentRequestId, newNote.trim());
     const updated = await getNotes(currentRequestId);
     setNotes(updated);
+    setNewNote('');
   };
 
   const handleDeleteNote = async (noteId) => {
@@ -153,17 +154,52 @@ export default function Dashboard() {
       </div>
 
       {notesModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 max-w-md">
-            <RequestNotes
-              requestId={currentRequestId}
-              notes={notes}
-              loading={notesLoading}
-              error={notesError}
-              onAddNote={handleAddNote}
-              onDeleteNote={handleDeleteNote}
-              onClose={() => setNotesModalOpen(false)}
-            />
+        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">📝 Request Notes</h2>
+              <button
+                onClick={() => setNotesModalOpen(false)}
+                className="text-gray-500 hover:text-gray-800 text-2xl leading-none"
+                aria-label="Close notes modal"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
+              {notesLoading && <p className="text-gray-600">Loading...</p>}
+              {notesError && <p className="text-red-600">{notesError}</p>}
+              {!notesLoading && notes.length === 0 && <p className="text-gray-500">No notes yet.</p>}
+              {!notesLoading && notes.map(note => (
+                <div key={note.id} className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                  <span className="text-gray-800">{note.content}</span>
+                  <button
+                    onClick={() => handleDeleteNote(note.id)}
+                    className="text-red-500 hover:text-red-700 ml-2"
+                    aria-label="Delete note"
+                  >
+                    &times;
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <input
+                type="text"
+                placeholder="Add a new note..."
+                value={newNote}
+                onChange={e => setNewNote(e.target.value)}
+                className="flex-grow border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              />
+              <button
+                onClick={handleAddNote}
+                className="bg-indigo-600 text-white rounded px-4 py-2 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              >
+                Add
+              </button>
+            </div>
           </div>
         </div>
       )}
