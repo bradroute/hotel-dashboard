@@ -24,11 +24,20 @@ export function useAnalytics(startDate, endDate) {
 
         const hotelId = profile.hotel_id
 
-        const url = `${process.env.REACT_APP_API_URL}/analytics/full?hotelId=${hotelId}&startDate=${startDate}&endDate=${endDate}`
-        const res = await fetch(url)
-        if (!res.ok) throw new Error('API error')
-        const json = await res.json()
+        // Extend endDate by one day to include the full current day
+        const endApi = new Date(endDate)
+        endApi.setDate(endApi.getDate() + 1)
+        const endParam = endApi.toISOString().slice(0, 10)
 
+        const url = `${process.env.REACT_APP_API_URL}/analytics/full?hotelId=${encodeURIComponent(
+          hotelId
+        )}&startDate=${startDate}&endDate=${endParam}`
+        const res = await fetch(url)
+        if (!res.ok) {
+          const text = await res.text()
+          throw new Error(`Analytics API ${res.status}: ${text}`)
+        }
+        const json = await res.json()
         setData(json)
       } catch (err) {
         setError(err.message)

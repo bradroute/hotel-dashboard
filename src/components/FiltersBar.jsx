@@ -3,23 +3,6 @@
 import React from 'react';
 import styles from '../styles/Dashboard.module.css';
 
-/**
- * Props:
- *  - showActiveOnly (boolean)
- *  - onToggleActive (function)
- *  - unacknowledgedOnly (boolean)
- *  - onToggleUnacknowledged (function)
- *  - selectedDepartment (string)
- *  - onChangeDepartment (function)
- *  - departmentOptions (array of strings)
- *  - selectedPriority (string)
- *  - onChangePriority (function)
- *  - priorityOptions (array of strings)
- *  - sortOrder (string)
- *  - onChangeSort (function)
- *  - searchTerm (string)
- *  - onChangeSearch (function)
- */
 export default function FiltersBar({
   showActiveOnly,
   onToggleActive,
@@ -104,7 +87,7 @@ export default function FiltersBar({
 
       <input
         type="text"
-        placeholder="Search message or phone..."
+        placeholder="Search..."
         className={styles.filterSearch}
         value={searchTerm}
         onChange={(e) => onChangeSearch(e.target.value)}

@@ -126,7 +126,9 @@ export default function Dashboard() {
 
   return (
     <div className={styles.container}>
-      <h1>📋 Hotel Request Dashboard</h1>
+      <h1>
+        <span role="img" aria-label="clipboard">📋</span> Hotel Request Dashboard
+      </h1>
 
       {error && (
         <div className={styles.errorBanner}>

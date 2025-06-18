@@ -1,5 +1,3 @@
-// src/components/RequestsTable.jsx
-
 import React from 'react';
 import styles from '../styles/Dashboard.module.css';
 
@@ -31,11 +29,18 @@ export default function RequestsTable({
             <tr
               key={r.id}
               onClick={() => onRowClick(r.id)}
-              className={styles.row}
+              className={`${styles.row} ${r.is_vip ? styles.vipRow : ''}`}
             >
               <td>{new Date(r.created_at).toLocaleString()}</td>
               <td>{r.room_number ? r.room_number : '—'}</td>
-              <td>{r.from_phone}</td>
+              <td>
+                {r.from_phone}
+                {r.is_vip && (
+                  <span className={styles.vipBadge}>
+                    ⭐ VIP
+                  </span>
+                )}
+              </td>
               <td>{r.department}</td>
               <td>
                 <span
@@ -59,7 +64,7 @@ export default function RequestsTable({
                     onOpenNotes(r.id);
                   }}
                 >
-                  📝 Notes
+                  Notes
                 </button>
               </td>
               <td>
