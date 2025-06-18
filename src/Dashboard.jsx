@@ -1,8 +1,5 @@
-// src/Dashboard.jsx
-
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styles from './styles/Dashboard.module.css';
 import {
   getAllRequests,
   acknowledgeRequest,
@@ -50,7 +47,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchRequests();
-    const iv = setInterval(fetchRequests, 60_000);
+    const iv = setInterval(fetchRequests, 60000);
     return () => clearInterval(iv);
   }, [fetchRequests]);
 
@@ -99,7 +96,9 @@ export default function Dashboard() {
     if (selectedDepartment !== 'All')
       result = result.filter((r) => r.department === selectedDepartment);
     if (selectedPriority !== 'All')
-      result = result.filter((r) => r.priority.toLowerCase() === selectedPriority.toLowerCase());
+      result = result.filter(
+        (r) => r.priority.toLowerCase() === selectedPriority.toLowerCase()
+      );
     if (searchTerm.trim()) {
       result = result.filter(
         (r) =>
@@ -125,18 +124,19 @@ export default function Dashboard() {
   ]);
 
   return (
-    <div className={styles.container}>
-      <h1>
+    <div className="p-6 min-h-screen bg-gray-100 space-y-6">
+      <h1 className="text-2xl font-semibold flex items-center gap-2">
         <span role="img" aria-label="clipboard">📋</span> Hotel Request Dashboard
       </h1>
 
       {error && (
-        <div className={styles.errorBanner}>
-          <p>Error: {error}</p>
+        <div className="bg-red-100 text-red-700 p-4 rounded mb-4 font-bold">
+          Error: {error}
         </div>
       )}
 
       <FiltersBar
+        className="flex flex-wrap gap-4 mb-6 items-center"
         showActiveOnly={showActiveOnly}
         onToggleActive={setShowActiveOnly}
         unacknowledgedOnly={unacknowledgedOnly}
@@ -154,28 +154,30 @@ export default function Dashboard() {
       />
 
       {loading ? (
-        <div className={styles.overlay}>
-          <div className={styles.spinner} role="status" />
+        <div className="flex items-center justify-center p-6">
+          <div className="animate-spin h-10 w-10 border-4 border-gray-200 border-t-blue-500 rounded-full mr-4" role="status" />
           <span>Loading requests…</span>
         </div>
       ) : filtered.length === 0 ? (
-        <div className={styles.emptyState}>
-          <p>No {showActiveOnly ? 'active' : ''} requests right now 🎉</p>
+        <div className="p-6 text-center text-gray-600 text-lg">
+          No {showActiveOnly ? 'active' : ''} requests right now 🎉
         </div>
       ) : (
-        <RequestsTable
-          requests={filtered}
-          onAcknowledge={async (id) => {
-            await acknowledgeRequest(id);
-            fetchRequests();
-          }}
-          onComplete={async (id) => {
-            await completeRequest(id);
-            fetchRequests();
-          }}
-          onRowClick={(id) => navigate(`/request/${id}`)}
-          onOpenNotes={openNotesModal}
-        />
+        <div className="overflow-x-auto">
+          <RequestsTable
+            requests={filtered}
+            onAcknowledge={async (id) => {
+              await acknowledgeRequest(id);
+              fetchRequests();
+            }}
+            onComplete={async (id) => {
+              await completeRequest(id);
+              fetchRequests();
+            }}
+            onRowClick={(id) => navigate(`/request/${id}`)}
+            onOpenNotes={openNotesModal}
+          />
+        </div>
       )}
 
       {notesModalOpen && (
