@@ -1,5 +1,3 @@
-// src/components/Analytics.jsx
-
 import React, { useState } from 'react'
 import { useAnalytics } from '../hooks/useAnalytics'
 import {
@@ -19,7 +17,7 @@ export default function Analytics() {
   if (loading) return <div className="p-6 text-lg font-medium">Loading analytics…</div>
   if (error)   return <div className="p-6 text-lg text-red-600">Error: {error}</div>
 
-  // Pull out the new percent-complete metrics
+  // Destructure core metrics and chart data
   const {
     total,
     avgAck,
@@ -31,7 +29,6 @@ export default function Analytics() {
     enhancedLaborTimeSaved,
     serviceScoreEstimate,
 
-    // chart data
     requestsPerDay,
     topDepartments,
     commonWords,
@@ -41,23 +38,25 @@ export default function Analytics() {
     requestsPerOccupiedRoom,
     topEscalationReasons,
 
-    // our new object from the backend
-    percentComplete: {
-      day: dailyPct,
-      week: weeklyPct,
-      month: monthlyPct
-    } = { day: 0, week: 0, month: 0 }
+    dailyCompletionRate = [],
+    weeklyCompletionRate = [],
+    monthlyCompletionRate = []
   } = data
 
-  // transform for recharts
-  const dailyData   = requestsPerDay.map(d => ({ date: d.date, count: d.count }))
-  const deptData    = topDepartments
-  const commonData  = commonWords.map(w => ({ name: w.word, value: w.count }))
-  const priorityData = priorityBreakdown
-  const serviceScoreData = serviceScoreTrend.map(d => ({ period: d.period, score: d.avgServiceScore }))
-  const repeatData = repeatGuestTrend.map(d => ({ period: d.period, repeatPct: d.repeatPct }))
-  const perRoomData = requestsPerOccupiedRoom.map(d => ({ date: d.date, value: d.requestsPerRoom }))
-  const escalationData = topEscalationReasons.map(d => ({ reason: d.reason, count: d.count }))
+  // Get latest percent complete values
+  const dailyPct   = dailyCompletionRate.length   ? dailyCompletionRate[dailyCompletionRate.length - 1].completionRate   : 0
+  const weeklyPct  = weeklyCompletionRate.length  ? weeklyCompletionRate[weeklyCompletionRate.length - 1].completionRate : 0
+  const monthlyPct = monthlyCompletionRate.length ? monthlyCompletionRate[monthlyCompletionRate.length - 1].completionRate : 0
+
+  // Transform data for charts
+  const dailyData      = requestsPerDay.map(d => ({ date: d.date, count: d.count }))
+  const deptData       = topDepartments
+  const commonData     = commonWords.map(w => ({ name: w.word, value: w.count }))
+  const priorityData   = priorityBreakdown
+  const scoreTrendData = serviceScoreTrend.map(d => ({ period: d.period, score: d.avgServiceScore }))
+  const repeatTrendData= repeatGuestTrend.map(d => ({ period: d.period, repeatPct: d.repeatPct }))
+  const perRoomData    = requestsPerOccupiedRoom.map(d => ({ date: d.date, value: d.requestsPerRoom }))
+  const escData        = topEscalationReasons.map(d => ({ reason: d.reason, count: d.count }))
 
   const COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
 
@@ -84,21 +83,20 @@ export default function Analytics() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-        <StatCard title="Total Requests"      value={total} />
-        <StatCard title="Avg Acknowledge (min)"  value={avgAck} />
-        <StatCard title="Missed SLAs"         value={missedSLAs} />
-        <StatCard title="Requests Per Day" value={data.requestsPerDay.length} />
-        <StatCard title="Avg Completion (min)" value={avgCompletion} />
-        <StatCard title="VIP Guests"          value={vipCount} />
-        <StatCard title="Repeat Request %"     value={`${repeatPercent}%`} />
-        <StatCard title="Revenue"             value={`$${estimatedRevenue}`} />
-        <StatCard title="Labor Saved (min)"   value={`${enhancedLaborTimeSaved}`} />
-        <StatCard title="Service Score"       value={serviceScoreEstimate} />
+        <StatCard title="Total Requests"       value={total} />
+        <StatCard title="Avg Acknowledge (min)" value={avgAck} />
+        <StatCard title="Missed SLAs"           value={missedSLAs} />
+        <StatCard title="Requests Per Day"      value={requestsPerDay.length} />
+        <StatCard title="Avg Completion (min)"  value={avgCompletion} />
+        <StatCard title="VIP Guests"            value={vipCount} />
+        <StatCard title="Repeat Request %"      value={`${repeatPercent}%`} />
+        <StatCard title="Revenue"               value={`$${estimatedRevenue}`} />
+        <StatCard title="Labor Saved (min)"     value={`${enhancedLaborTimeSaved}`} />
+        <StatCard title="Service Score"         value={serviceScoreEstimate} />
       </div>
 
-      {/* Charts + New Percent-Complete Card */}
+      {/* Charts + Percent Complete Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-
         {/* Requests per Day */}
         <ChartSection title="Requests Per Day">
           <ResponsiveContainer width="100%" height={250}>
@@ -151,7 +149,7 @@ export default function Analytics() {
         {/* Service Score Trend */}
         <ChartSection title="Service Score Trend">
           <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={serviceScoreData}>
+            <LineChart data={scoreTrendData}>
               <XAxis dataKey="period" />
               <YAxis />
               <CartesianGrid strokeDasharray="3 3" />
@@ -164,7 +162,7 @@ export default function Analytics() {
         {/* Repeat Guest Trend */}
         <ChartSection title="Repeat Guest Trend">
           <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={repeatData}>
+            <LineChart data={repeatTrendData}>
               <XAxis dataKey="period" />
               <YAxis />
               <CartesianGrid strokeDasharray="3 3" />
@@ -190,7 +188,7 @@ export default function Analytics() {
         {/* Top Escalation Reasons */}
         <ChartSection title="Top Escalation Reasons">
           <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={escalationData} layout="vertical">
+            <BarChart data={escData} layout="vertical">
               <XAxis type="number" />
               <YAxis dataKey="reason" type="category" />
               <Tooltip />
