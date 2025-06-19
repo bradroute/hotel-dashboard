@@ -1,3 +1,5 @@
+// src/components/Analytics.jsx
+
 import React, { useState } from 'react'
 import { useAnalytics } from '../hooks/useAnalytics'
 import {
@@ -43,20 +45,23 @@ export default function Analytics() {
     monthlyCompletionRate = []
   } = data
 
+  // Calculate "Requests Today"
+  const todayCount = requestsPerDay.find(d => d.date === range.end)?.count || 0
+
   // Get latest percent complete values
   const dailyPct   = dailyCompletionRate.length   ? dailyCompletionRate[dailyCompletionRate.length - 1].completionRate   : 0
   const weeklyPct  = weeklyCompletionRate.length  ? weeklyCompletionRate[weeklyCompletionRate.length - 1].completionRate : 0
   const monthlyPct = monthlyCompletionRate.length ? monthlyCompletionRate[monthlyCompletionRate.length - 1].completionRate : 0
 
   // Transform data for charts
-  const dailyData      = requestsPerDay.map(d => ({ date: d.date, count: d.count }))
-  const deptData       = topDepartments
-  const commonData     = commonWords.map(w => ({ name: w.word, value: w.count }))
-  const priorityData   = priorityBreakdown
-  const scoreTrendData = serviceScoreTrend.map(d => ({ period: d.period, score: d.avgServiceScore }))
-  const repeatTrendData= repeatGuestTrend.map(d => ({ period: d.period, repeatPct: d.repeatPct }))
-  const perRoomData    = requestsPerOccupiedRoom.map(d => ({ date: d.date, value: d.requestsPerRoom }))
-  const escData        = topEscalationReasons.map(d => ({ reason: d.reason, count: d.count }))
+  const dailyData       = requestsPerDay.map(d => ({ date: d.date, count: d.count }))
+  const deptData        = topDepartments
+  const commonData      = commonWords.map(w => ({ name: w.word, value: w.count }))
+  const priorityData    = priorityBreakdown
+  const scoreTrendData  = serviceScoreTrend.map(d => ({ period: d.period, score: d.avgServiceScore }))
+  const repeatTrendData = repeatGuestTrend.map(d => ({ period: d.period, repeatPct: d.repeatPct }))
+  const perRoomData     = requestsPerOccupiedRoom.map(d => ({ date: d.date, value: d.requestsPerRoom }))
+  const escData         = topEscalationReasons.map(d => ({ reason: d.reason, count: d.count }))
 
   const COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
 
@@ -84,20 +89,20 @@ export default function Analytics() {
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
         <StatCard title="Total Requests"       value={total} />
-        <StatCard title="Avg Acknowledge (min)" value={avgAck} />
-        <StatCard title="Missed SLAs"           value={missedSLAs} />
-        <StatCard title="Requests Per Day"      value={requestsPerDay.length} />
-        <StatCard title="Avg Completion (min)"  value={avgCompletion} />
-        <StatCard title="VIP Guests"            value={vipCount} />
-        <StatCard title="Repeat Request %"      value={`${repeatPercent}%`} />
-        <StatCard title="Revenue"               value={`$${estimatedRevenue}`} />
-        <StatCard title="Labor Saved (min)"     value={`${enhancedLaborTimeSaved}`} />
-        <StatCard title="Service Score"         value={serviceScoreEstimate} />
+        <StatCard title="Requests Today"       value={todayCount} />
+        <StatCard title="Missed SLAs"          value={missedSLAs} />
+        <StatCard title="Avg Ack Time (min)"   value={avgAck} />
+        <StatCard title="Avg Completion (min)" value={avgCompletion} />
+        <StatCard title="Revenue"              value={`$${estimatedRevenue}`} />
+        <StatCard title="Labor Saved (min)"    value={`${enhancedLaborTimeSaved}`} />
+        <StatCard title="VIP Guests"           value={vipCount} />
+        <StatCard title="Repeat Request %"     value={`${repeatPercent}%`} />
+        <StatCard title="Service Score"        value={serviceScoreEstimate} />
       </div>
 
       {/* Charts + Percent Complete Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Requests per Day */}
+        {/* Requests per Day Chart */}
         <ChartSection title="Requests Per Day">
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={dailyData}>
@@ -122,6 +127,29 @@ export default function Analytics() {
           </ResponsiveContainer>
         </ChartSection>
 
+        {/* Priority Breakdown */}
+        <ChartSection title="Priority Breakdown">
+          <ResponsiveContainer width="100%" height={250}>
+            <PieChart>
+              <Pie data={priorityData} dataKey="value" nameKey="name" outerRadius={80} label>
+                {priorityData.map((_, i) => (
+                  <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                ))}
+              </Pie>
+              <Tooltip />
+            </PieChart>
+          </ResponsiveContainer>
+        </ChartSection>
+
+        {/* Percent Complete */}
+        <ChartSection title="Percent Complete">
+          <div className="h-full flex flex-col items-center justify-center space-y-2">
+            <p className="text-xl font-semibold">Per Day: {dailyPct}%</p>
+            <p className="text-xl font-semibold">Per Week: {weeklyPct}%</p>
+            <p className="text-xl font-semibold">Per Month: {monthlyPct}%</p>
+          </div>
+        </ChartSection>
+
         {/* Common Request Words */}
         <ChartSection title="Common Request Words">
           <ResponsiveContainer width="100%" height={250}>
@@ -131,18 +159,6 @@ export default function Analytics() {
               <Tooltip />
               <Bar dataKey="value" fill={COLORS[2]} />
             </BarChart>
-          </ResponsiveContainer>
-        </ChartSection>
-
-        {/* Priority Breakdown */}
-        <ChartSection title="Priority Breakdown">
-          <ResponsiveContainer width="100%" height={250}>
-            <PieChart>
-              <Pie data={priorityData} dataKey="value" nameKey="name" outerRadius={80} label>
-                {priorityData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-              </Pie>
-              <Tooltip />
-            </PieChart>
           </ResponsiveContainer>
         </ChartSection>
 
@@ -173,7 +189,7 @@ export default function Analytics() {
         </ChartSection>
 
         {/* Requests per Occupied Room */}
-        <ChartSection title="Requests per Occupied Room">
+        <ChartSection title="Requests per Occupied Room">  
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={perRoomData}>
               <XAxis dataKey="date" />
@@ -196,16 +212,6 @@ export default function Analytics() {
             </BarChart>
           </ResponsiveContainer>
         </ChartSection>
-
-        {/* Percent Complete (chart-sized) */}
-        <ChartSection title="Percent Complete">
-          <div className="h-full flex flex-col items-center justify-center space-y-2">
-            <p className="text-xl font-semibold">Per Day: {dailyPct}%</p>
-            <p className="text-xl font-semibold">Per Week: {weeklyPct}%</p>
-            <p className="text-xl font-semibold">Per Month: {monthlyPct}%</p>
-          </div>
-        </ChartSection>
-
       </div>
     </div>
   )
