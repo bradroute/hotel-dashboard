@@ -9,19 +9,19 @@ export default function RequestsTable({
   onOpenNotes,
 }) {
   return (
-    <div className={styles.tableContainer}>
-      <table className={styles.requestsTable}>
+    <div className={styles.tableContainer} style={{ overflowX: 'auto' }}>
+      <table className={styles.requestsTable} style={{ width: '100%' }}>
         <thead>
           <tr>
-            <th>Created At</th>
-            <th>Room</th>
-            <th>From</th>
-            <th>Department</th>
-            <th>Priority</th>
-            <th>Message</th>
-            <th>Notes</th>
-            <th>Acknowledge</th>
-            <th>Complete</th>
+            <th style={{ width: '150px', whiteSpace: 'nowrap' }}>Created At</th>
+            <th style={{ width: '70px', whiteSpace: 'nowrap' }}>Room</th>
+            <th style={{ minWidth: '160px', whiteSpace: 'nowrap' }}>From</th>
+            <th style={{ whiteSpace: 'nowrap' }}>Department</th>
+            <th style={{ width: '100px', whiteSpace: 'nowrap' }}>Priority</th>
+            <th className={styles.messageCol} style={{ minWidth: '300px' }}>Message</th>
+            <th style={{ width: '90px', whiteSpace: 'nowrap' }}>Notes</th>
+            <th style={{ width: '130px', whiteSpace: 'nowrap' }}>Acknowledge</th>
+            <th style={{ width: '100px', whiteSpace: 'nowrap' }}>Complete</th>
           </tr>
         </thead>
         <tbody>
@@ -32,14 +32,10 @@ export default function RequestsTable({
               className={`${styles.row} ${r.is_vip ? styles.vipRow : ''}`}
             >
               <td>{new Date(r.created_at).toLocaleString()}</td>
-              <td>{r.room_number ? r.room_number : '—'}</td>
+              <td>{r.room_number || '—'}</td>
               <td>
                 {r.from_phone}
-                {r.is_vip && (
-                  <span className={styles.vipBadge}>
-                    ⭐ VIP
-                  </span>
-                )}
+                {r.is_vip && <span className={styles.vipBadge}>⭐ VIP</span>}
               </td>
               <td>{r.department}</td>
               <td>
@@ -55,7 +51,9 @@ export default function RequestsTable({
                   {r.priority.toUpperCase()}
                 </span>
               </td>
-              <td>{r.message}</td>
+              <td className={styles.messageCol} style={{ wordBreak: 'break-word' }}>
+                {r.message}
+              </td>
               <td>
                 <button
                   className={styles.notesBtn}

@@ -1,5 +1,3 @@
-// src/components/FiltersBar.jsx
-
 import React from 'react';
 import styles from '../styles/Dashboard.module.css';
 
@@ -21,25 +19,27 @@ export default function FiltersBar({
 }) {
   return (
     <div className={styles.filterBar}>
-      <label>
-        <input
-          type="checkbox"
-          className={styles.filterCheckbox}
-          checked={showActiveOnly}
-          onChange={(e) => onToggleActive(e.target.checked)}
-        />
-        Show Active Only
-      </label>
+      <div className={styles.checkboxGroup}>
+        <label>
+          <input
+            type="checkbox"
+            className={styles.filterCheckbox}
+            checked={showActiveOnly}
+            onChange={(e) => onToggleActive(e.target.checked)}
+          />
+          Show Active Only
+        </label>
 
-      <label>
-        <input
-          type="checkbox"
-          className={styles.filterCheckbox}
-          checked={unacknowledgedOnly}
-          onChange={(e) => onToggleUnacknowledged(e.target.checked)}
-        />
-        Unacknowledged Only
-      </label>
+        <label>
+          <input
+            type="checkbox"
+            className={styles.filterCheckbox}
+            checked={unacknowledgedOnly}
+            onChange={(e) => onToggleUnacknowledged(e.target.checked)}
+          />
+          Unacknowledged Only
+        </label>
+      </div>
 
       <label>
         Department:{' '}

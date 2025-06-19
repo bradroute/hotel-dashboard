@@ -1,3 +1,5 @@
+// src/Dashboard.jsx
+
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -115,41 +117,42 @@ export default function Dashboard() {
   ]);
 
   if (loading) return <div className="p-6 text-lg font-medium">Loading requests…</div>;
-  if (error)   return <div className="p-6 text-lg text-red-600">Error: {error}</div>;
+  if (error) return <div className="p-6 text-lg text-red-600">Error: {error}</div>;
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50 p-6 space-y-10">
-        <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-2">
-          <span role="img" aria-label="clipboard">📋</span> Hotel Request Dashboard
-        </h1>
+      <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center">
+        <div className="container max-w-6xl w-full">
+          <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-2 mb-6">
+            <span role="img" aria-label="clipboard">📋</span> Hotel Request Dashboard
+          </h1>
 
-        <FiltersBar
-          className="flex flex-wrap gap-4 items-center"
-          showActiveOnly={showActiveOnly}
-          onToggleActive={setShowActiveOnly}
-          unacknowledgedOnly={unacknowledgedOnly}
-          onToggleUnacknowledged={setUnacknowledgedOnly}
-          selectedDepartment={selectedDepartment}
-          onChangeDepartment={setSelectedDepartment}
-          departmentOptions={departmentOptions}
-          selectedPriority={selectedPriority}
-          onChangePriority={setSelectedPriority}
-          priorityOptions={priorityOptions}
-          sortOrder={sortOrder}
-          onChangeSort={setSortOrder}
-          searchTerm={searchTerm}
-          onChangeSearch={setSearchTerm}
-        />
-
-        <div className="overflow-x-auto">
-          <RequestsTable
-            requests={filtered}
-            onAcknowledge={async id => { await acknowledgeRequest(id); fetchRequests(); }}
-            onComplete={async id => { await completeRequest(id); fetchRequests(); }}
-            onRowClick={id => navigate(`/request/${id}`)}
-            onOpenNotes={openNotesModal}
+          <FiltersBar
+            showActiveOnly={showActiveOnly}
+            onToggleActive={setShowActiveOnly}
+            unacknowledgedOnly={unacknowledgedOnly}
+            onToggleUnacknowledged={setUnacknowledgedOnly}
+            selectedDepartment={selectedDepartment}
+            onChangeDepartment={setSelectedDepartment}
+            departmentOptions={departmentOptions}
+            selectedPriority={selectedPriority}
+            onChangePriority={setSelectedPriority}
+            priorityOptions={priorityOptions}
+            sortOrder={sortOrder}
+            onChangeSort={setSortOrder}
+            searchTerm={searchTerm}
+            onChangeSearch={setSearchTerm}
           />
+
+          <div className="overflow-x-auto mt-4">
+            <RequestsTable
+              requests={filtered}
+              onAcknowledge={async id => { await acknowledgeRequest(id); fetchRequests(); }}
+              onComplete={async id => { await completeRequest(id); fetchRequests(); }}
+              onRowClick={id => navigate(`/request/${id}`)}
+              onOpenNotes={openNotesModal}
+            />
+          </div>
         </div>
       </div>
 
