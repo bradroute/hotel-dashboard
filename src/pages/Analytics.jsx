@@ -1,25 +1,24 @@
 // src/components/Analytics.jsx
 
-import React, { useState } from 'react'
-import { useAnalytics } from '../hooks/useAnalytics'
+import React, { useState } from 'react';
+import { useAnalytics } from '../hooks/useAnalytics';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
   LineChart, Line, CartesianGrid,
   PieChart, Pie, Cell,
   ResponsiveContainer
-} from 'recharts'
+} from 'recharts';
 
 export default function Analytics() {
-  const today   = new Date().toISOString().slice(0,10)
-  const weekAgo = new Date(Date.now() - 6*24*60*60*1000).toISOString().slice(0,10)
-  const [range, setRange] = useState({ start: weekAgo, end: today })
+  const today   = new Date().toISOString().slice(0,10);
+  const weekAgo = new Date(Date.now() - 6*24*60*60*1000).toISOString().slice(0,10);
+  const [range, setRange] = useState({ start: weekAgo, end: today });
 
-  const { data, loading, error } = useAnalytics(range.start, range.end)
+  const { data, loading, error } = useAnalytics(range.start, range.end);
 
-  if (loading) return <div className="p-6 text-lg font-medium">Loading analytics…</div>
-  if (error)   return <div className="p-6 text-lg text-red-600">Error: {error}</div>
+  if (loading) return <div className="p-6 text-lg font-medium">Loading analytics…</div>;
+  if (error)   return <div className="p-6 text-lg text-red-600">Error: {error}</div>;
 
-  // Destructure core metrics and chart data
   const {
     total,
     avgAck,
@@ -30,7 +29,6 @@ export default function Analytics() {
     estimatedRevenue,
     enhancedLaborTimeSaved,
     serviceScoreEstimate,
-
     requestsPerDay,
     topDepartments,
     commonWords,
@@ -39,54 +37,47 @@ export default function Analytics() {
     repeatGuestTrend,
     requestsPerOccupiedRoom,
     topEscalationReasons,
-
     dailyCompletionRate = [],
     weeklyCompletionRate = [],
     monthlyCompletionRate = []
-  } = data
+  } = data;
 
-  // Calculate "Requests Today"
-  const todayCount = requestsPerDay.find(d => d.date === range.end)?.count || 0
+  const todayCount = requestsPerDay.find(d => d.date === range.end)?.count || 0;
+  const dailyPct   = dailyCompletionRate.at(-1)?.completionRate || 0;
+  const weeklyPct  = weeklyCompletionRate.at(-1)?.completionRate || 0;
+  const monthlyPct = monthlyCompletionRate.at(-1)?.completionRate || 0;
 
-  // Get latest percent complete values
-  const dailyPct   = dailyCompletionRate.length   ? dailyCompletionRate[dailyCompletionRate.length - 1].completionRate   : 0
-  const weeklyPct  = weeklyCompletionRate.length  ? weeklyCompletionRate[weeklyCompletionRate.length - 1].completionRate : 0
-  const monthlyPct = monthlyCompletionRate.length ? monthlyCompletionRate[monthlyCompletionRate.length - 1].completionRate : 0
+  const dailyData       = requestsPerDay.map(d => ({ date: d.date, count: d.count }));
+  const deptData        = topDepartments;
+  const commonData      = commonWords.map(w => ({ name: w.word, value: w.count }));
+  const priorityData    = priorityBreakdown;
+  const scoreTrendData  = serviceScoreTrend.map(d => ({ period: d.period, score: d.avgServiceScore }));
+  const repeatTrendData = repeatGuestTrend.map(d => ({ period: d.period, repeatPct: d.repeatPct }));
+  const perRoomData     = requestsPerOccupiedRoom.map(d => ({ date: d.date, value: d.requestsPerRoom }));
+  const escData         = topEscalationReasons.map(d => ({ reason: d.reason, count: d.count }));
 
-  // Transform data for charts
-  const dailyData       = requestsPerDay.map(d => ({ date: d.date, count: d.count }))
-  const deptData        = topDepartments
-  const commonData      = commonWords.map(w => ({ name: w.word, value: w.count }))
-  const priorityData    = priorityBreakdown
-  const scoreTrendData  = serviceScoreTrend.map(d => ({ period: d.period, score: d.avgServiceScore }))
-  const repeatTrendData = repeatGuestTrend.map(d => ({ period: d.period, repeatPct: d.repeatPct }))
-  const perRoomData     = requestsPerOccupiedRoom.map(d => ({ date: d.date, value: d.requestsPerRoom }))
-  const escData         = topEscalationReasons.map(d => ({ reason: d.reason, count: d.count }))
-
-  const COLORS = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6']
+  const COLORS = ['#47B2FF', '#2D2D2D', '#10b981', '#f59e0b', '#ef4444'];
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6 space-y-10">
-      <h1 className="text-4xl font-bold text-gray-800">📊 Hotel Analytics</h1>
+    <div className="min-h-screen bg-operon-background p-6 space-y-10">
+      <h1 className="text-4xl font-bold text-operon-charcoal">📊 Hotel Analytics</h1>
 
-      {/* Date Range */}
       <div className="flex gap-4 items-center">
         <input
           type="date"
-          className="border p-2 rounded shadow-sm"
+          className="border border-gray-300 p-2 rounded shadow-sm"
           value={range.start}
           onChange={e => setRange(r => ({ ...r, start: e.target.value }))}
         />
         <span className="text-gray-500">to</span>
         <input
           type="date"
-          className="border p-2 rounded shadow-sm"
+          className="border border-gray-300 p-2 rounded shadow-sm"
           value={range.end}
           onChange={e => setRange(r => ({ ...r, end: e.target.value }))}
         />
       </div>
 
-      {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
         <StatCard title="Total Requests"       value={total} />
         <StatCard title="Requests Today"       value={todayCount} />
@@ -94,19 +85,17 @@ export default function Analytics() {
         <StatCard title="Avg Ack Time (min)"   value={avgAck} />
         <StatCard title="Avg Completion (min)" value={avgCompletion} />
         <StatCard title="Revenue"              value={`$${estimatedRevenue}`} />
-        <StatCard title="Labor Saved (min)"    value={`${enhancedLaborTimeSaved}`} />
+        <StatCard title="Labor Saved (min)"    value={enhancedLaborTimeSaved} />
         <StatCard title="VIP Guests"           value={vipCount} />
         <StatCard title="Repeat Request %"     value={`${repeatPercent}%`} />
         <StatCard title="Service Score"        value={serviceScoreEstimate} />
       </div>
 
-      {/* Charts + Percent Complete Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-        {/* Requests per Day Chart */}
         <ChartSection title="Requests Per Day">
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={dailyData}>
-              <XAxis dataKey="date" />
+              <XAxis dataKey="date" padding={{ left: 10, right: 10 }} />
               <YAxis />
               <CartesianGrid strokeDasharray="3 3" />
               <Tooltip />
@@ -115,7 +104,6 @@ export default function Analytics() {
           </ResponsiveContainer>
         </ChartSection>
 
-        {/* Top Departments */}
         <ChartSection title="Top Departments">
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={deptData}>
@@ -127,7 +115,6 @@ export default function Analytics() {
           </ResponsiveContainer>
         </ChartSection>
 
-        {/* Priority Breakdown */}
         <ChartSection title="Priority Breakdown">
           <ResponsiveContainer width="100%" height={250}>
             <PieChart>
@@ -141,16 +128,14 @@ export default function Analytics() {
           </ResponsiveContainer>
         </ChartSection>
 
-        {/* Percent Complete */}
         <ChartSection title="Percent Complete">
           <div className="h-full flex flex-col items-center justify-center space-y-2">
-            <p className="text-xl font-semibold">Per Day: {dailyPct}%</p>
-            <p className="text-xl font-semibold">Per Week: {weeklyPct}%</p>
-            <p className="text-xl font-semibold">Per Month: {monthlyPct}%</p>
+            <p className="text-xl font-semibold text-operon-charcoal">Per Day: {dailyPct}%</p>
+            <p className="text-xl font-semibold text-operon-charcoal">Per Week: {weeklyPct}%</p>
+            <p className="text-xl font-semibold text-operon-charcoal">Per Month: {monthlyPct}%</p>
           </div>
         </ChartSection>
 
-        {/* Common Request Words */}
         <ChartSection title="Common Request Words">
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={commonData} layout="vertical">
@@ -162,7 +147,6 @@ export default function Analytics() {
           </ResponsiveContainer>
         </ChartSection>
 
-        {/* Service Score Trend */}
         <ChartSection title="Service Score Trend">
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={scoreTrendData}>
@@ -175,7 +159,6 @@ export default function Analytics() {
           </ResponsiveContainer>
         </ChartSection>
 
-        {/* Repeat Guest Trend */}
         <ChartSection title="Repeat Guest Trend">
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={repeatTrendData}>
@@ -188,8 +171,7 @@ export default function Analytics() {
           </ResponsiveContainer>
         </ChartSection>
 
-        {/* Requests per Occupied Room */}
-        <ChartSection title="Requests per Occupied Room">  
+        <ChartSection title="Requests per Occupied Room">
           <ResponsiveContainer width="100%" height={250}>
             <LineChart data={perRoomData}>
               <XAxis dataKey="date" />
@@ -201,7 +183,6 @@ export default function Analytics() {
           </ResponsiveContainer>
         </ChartSection>
 
-        {/* Top Escalation Reasons */}
         <ChartSection title="Top Escalation Reasons">
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={escData} layout="vertical">
@@ -214,23 +195,23 @@ export default function Analytics() {
         </ChartSection>
       </div>
     </div>
-  )
+  );
 }
 
 function StatCard({ title, value }) {
   return (
     <div className="p-4 bg-white rounded-lg shadow flex flex-col items-center justify-center">
-      <h3 className="text-gray-500 text-sm">{title}</h3>
-      <p className="text-3xl font-bold text-gray-800">{value}</p>
+      <h3 className="text-operon-blue text-sm font-medium">{title}</h3>
+      <p className="text-3xl font-bold text-operon-charcoal">{value}</p>
     </div>
-  )
+  );
 }
 
 function ChartSection({ title, children }) {
   return (
     <div className="bg-white rounded-lg shadow p-4">
-      <h2 className="text-lg font-semibold text-gray-700 mb-2">{title}</h2>
+      <h2 className="text-lg font-semibold text-operon-charcoal mb-2">{title}</h2>
       {children}
     </div>
-  )
+  );
 }

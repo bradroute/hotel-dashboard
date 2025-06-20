@@ -6,7 +6,7 @@ import styles from '../styles/Dashboard.module.css';
 /**
  * Props:
  *  - requestId
- *  - notes (array of strings)
+ *  - notes (array of objects with .id and .content)
  *  - loading
  *  - error
  *  - onAddNote (function)
@@ -54,37 +54,44 @@ export default function RequestNotes({
   return (
     <div className={styles.modalOverlay}>
       <div className={styles.modalContent}>
-        <h2 className={styles.modalTitle}>📝 Request Notes</h2>
+        <h2 className="text-xl font-semibold text-operon-charcoal mb-4">📝 Request Notes</h2>
 
         {error && <div className={styles.errorBanner}>{error}</div>}
 
-        <form onSubmit={handleSubmit} className={styles.noteForm}>
+        <form onSubmit={handleSubmit} className="flex gap-2 mb-4">
           <input
             type="text"
             placeholder="Type a new note…"
             value={newNote}
             onChange={(e) => setNewNote(e.target.value)}
-            className={styles.noteInput}
+            className="flex-grow border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-operon-blue text-operon-charcoal"
           />
-          <button type="submit" disabled={submitting} className={styles.addNoteButton}>
+          <button
+            type="submit"
+            disabled={submitting}
+            className="bg-operon-blue text-white px-4 py-2 rounded hover:bg-blue-400 transition disabled:opacity-50"
+          >
             Add Note
           </button>
         </form>
 
         {submitError && <div className={styles.errorBanner}>{submitError}</div>}
 
-        <ul className={styles.notesList}>
+        <ul className="space-y-2 max-h-64 overflow-y-auto mb-4">
           {loading ? (
             <li>Loading…</li>
           ) : notes.length === 0 ? (
-            <li className={styles.emptyNotes}>No notes yet.</li>
+            <li className="text-gray-500 italic">No notes yet.</li>
           ) : (
             notes.map((note) => (
-              <li key={note.id} className={styles.noteItem}>
+              <li
+                key={note.id}
+                className="flex justify-between items-center bg-gray-100 px-3 py-2 rounded text-operon-charcoal"
+              >
                 <span>{note.content}</span>
                 <button
                   onClick={() => handleDelete(note.id)}
-                  className={styles.deleteButton}
+                  className="text-red-500 hover:text-red-700 ml-3"
                   title="Delete note"
                 >
                   ❌
@@ -94,8 +101,11 @@ export default function RequestNotes({
           )}
         </ul>
 
-        <div className={styles.modalActions}>
-          <button onClick={onClose} className={styles.closeButton}>
+        <div className="flex justify-end mt-2">
+          <button
+            onClick={onClose}
+            className="bg-gray-300 hover:bg-gray-400 text-operon-charcoal px-4 py-2 rounded font-medium transition"
+          >
             Close
           </button>
         </div>

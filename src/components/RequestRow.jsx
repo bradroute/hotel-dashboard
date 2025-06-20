@@ -23,23 +23,16 @@ export default function RequestRow({ request, onAcknowledge, onComplete, onRowCl
     priorityClass = styles.priorityLow;
   }
 
-  // State to hold the formatted Central Time string
   const [createdAtCentral, setCreatedAtCentral] = useState('');
 
   useEffect(() => {
     if (created_at) {
-      // Log the raw timestamp for debugging
-      console.log('Raw created_at:', created_at);
-
-      // Parse the UTC timestamp string into a Date object
       const dateObj = new Date(created_at);
       if (isNaN(dateObj.getTime())) {
-        console.warn('Invalid date:', created_at);
-        setCreatedAtCentral(created_at); // fallback to raw if invalid
+        setCreatedAtCentral(created_at); // fallback
         return;
       }
 
-      // Format with explicit America/Chicago timezone
       const formatted = dateObj.toLocaleString('en-US', {
         timeZone: 'America/Chicago',
         year: 'numeric',
@@ -65,17 +58,18 @@ export default function RequestRow({ request, onAcknowledge, onComplete, onRowCl
           onRowClick(id);
         }
       }}
+      className="hover:bg-gray-100 transition"
     >
-      <td>{createdAtCentral || '—'}</td>
-      <td>{from}</td>
-      <td>{department}</td>
+      <td className="text-sm text-operon-charcoal">{createdAtCentral || '—'}</td>
+      <td className="text-sm text-operon-charcoal">{from}</td>
+      <td className="text-sm text-operon-charcoal">{department}</td>
       <td>
-        <span className={priorityClass}>{priority}</span>
+        <span className={`${priorityClass} inline-block`}>{priority}</span>
       </td>
-      <td>{message}</td>
+      <td className={`text-sm ${styles.messageCol}`}>{message}</td>
       <td>
         {acknowledged ? (
-          <span className={styles.doneIcon} aria-label="Acknowledged">
+          <span className="text-green-600 text-lg" aria-label="Acknowledged">
             ✅
           </span>
         ) : (
@@ -93,7 +87,7 @@ export default function RequestRow({ request, onAcknowledge, onComplete, onRowCl
       </td>
       <td>
         {completed ? (
-          <span className={styles.doneIcon} aria-label="Completed">
+          <span className="text-green-600 text-lg" aria-label="Completed">
             ✅
           </span>
         ) : (

@@ -15,6 +15,8 @@ import SignUp from './pages/SignUp';
 import ProtectedRoute from './components/ProtectedRoute';
 import { supabase } from './utils/supabaseClient';
 
+import logoIcon from './assets/logo-icon.png';
+
 export default function App() {
   const [session, setSession] = useState(null);
 
@@ -36,14 +38,33 @@ export default function App() {
   return (
     <Router>
       {session && (
-        <nav className="flex justify-between items-center bg-white px-6 py-4 shadow-md mb-6">
-          <div className="flex gap-4">
-            <Link to="/dashboard" className="text-blue-600 font-semibold hover:underline">Dashboard</Link>
-            <Link to="/analytics" className="text-blue-600 font-semibold hover:underline">Analytics</Link>
+        <nav className="flex justify-between items-center bg-white px-6 py-4 shadow-sm border-b border-gray-200 mb-6">
+          <div className="flex items-center gap-4">
+            <Link to="/dashboard">
+              <img
+                src={logoIcon}
+                alt="Operon"
+                className="max-h-[32px] w-auto object-contain"
+              />
+            </Link>
+            <div className="flex gap-4">
+              <Link
+                to="/dashboard"
+                className="text-operon-blue font-medium hover:underline transition"
+              >
+                Dashboard
+              </Link>
+              <Link
+                to="/analytics"
+                className="text-operon-blue font-medium hover:underline transition"
+              >
+                Analytics
+              </Link>
+            </div>
           </div>
           <button
             onClick={handleLogout}
-            className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+            className="bg-operon-blue text-white font-medium py-2 px-4 rounded hover:bg-blue-400 transition"
           >
             Logout
           </button>

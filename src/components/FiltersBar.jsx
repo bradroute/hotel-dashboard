@@ -1,3 +1,5 @@
+// src/components/FiltersBar.jsx
+
 import React from 'react';
 import styles from '../styles/Dashboard.module.css';
 
@@ -27,7 +29,7 @@ export default function FiltersBar({
             checked={showActiveOnly}
             onChange={(e) => onToggleActive(e.target.checked)}
           />
-          Show Active Only
+          <span className="text-operon-charcoal font-medium">Show Active Only</span>
         </label>
 
         <label>
@@ -37,12 +39,12 @@ export default function FiltersBar({
             checked={unacknowledgedOnly}
             onChange={(e) => onToggleUnacknowledged(e.target.checked)}
           />
-          Unacknowledged Only
+          <span className="text-operon-charcoal font-medium">Unacknowledged Only</span>
         </label>
       </div>
 
       <label>
-        Department:{' '}
+        <span className="text-operon-charcoal font-medium mr-1">Department:</span>
         <select
           className={styles.filterSelect}
           value={selectedDepartment}
@@ -58,7 +60,7 @@ export default function FiltersBar({
       </label>
 
       <label>
-        Priority:{' '}
+        <span className="text-operon-charcoal font-medium mr-1">Priority:</span>
         <select
           className={styles.filterSelect}
           value={selectedPriority}
@@ -74,7 +76,7 @@ export default function FiltersBar({
       </label>
 
       <label>
-        Sort:{' '}
+        <span className="text-operon-charcoal font-medium mr-1">Sort:</span>
         <select
           className={styles.filterSelect}
           value={sortOrder}

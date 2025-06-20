@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* OPTIONAL: small tweaks for global smoothness */
 body {
-  @apply bg-gray-100 text-gray-900 font-sans antialiased;
+  @apply bg-operon-background text-operon-charcoal font-sans antialiased;
 }
