@@ -1,3 +1,5 @@
+// src/components/RequestsTable.jsx
+
 import React from 'react';
 import styles from '../styles/Dashboard.module.css';
 
@@ -9,8 +11,8 @@ export default function RequestsTable({
   onOpenNotes,
 }) {
   return (
-    <div className={styles.tableContainer} style={{ overflowX: 'auto' }}>
-      <table className={styles.requestsTable} style={{ width: '100%' }}>
+    <div className={styles.tableContainer}>
+      <table className={styles.requestsTable}>
         <thead>
           <tr>
             <th style={{ width: '150px', whiteSpace: 'nowrap' }}>Created At</th>
@@ -25,82 +27,88 @@ export default function RequestsTable({
           </tr>
         </thead>
         <tbody>
-          {requests.map((r) => (
-            <tr
-              key={r.id}
-              onClick={() => onRowClick(r.id)}
-              className={`${styles.row} ${r.is_vip ? styles.vipRow : ''}`}
-            >
-              <td>{new Date(r.created_at).toLocaleString()}</td>
-              <td>{r.room_number || '—'}</td>
-              <td>
-                {r.from_phone}
-                {r.is_vip && <span className={styles.vipBadge}>⭐ VIP</span>}
-              </td>
-              <td>{r.department}</td>
-              <td>
-                <span
-                  className={
-                    r.priority.toLowerCase() === 'urgent'
-                      ? styles.priorityUrgent
-                      : r.priority.toLowerCase() === 'low'
-                      ? styles.priorityLow
-                      : styles.priorityNormal
-                  }
-                >
-                  {r.priority.toUpperCase()}
-                </span>
-              </td>
-              <td className={styles.messageCol} style={{ wordBreak: 'break-word' }}>
-                {r.message}
-              </td>
-              <td>
-                <button
-                  className={styles.notesBtn}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onOpenNotes(r.id);
-                  }}
-                >
-                  Notes
-                </button>
-              </td>
-              <td>
-                {r.acknowledged ? (
-                  <span className={styles.doneIcon} aria-label="acknowledged">
-                    ✔️
-                  </span>
-                ) : (
+          {requests.map((r) => {
+            const priorityClass =
+              r.priority.toLowerCase() === 'urgent'
+                ? styles.priorityUrgent
+                : r.priority.toLowerCase() === 'low'
+                ? styles.priorityLow
+                : styles.priorityNormal;
+            return (
+              <tr
+                key={r.id}
+                onClick={() => onRowClick(r.id)}
+                className={`${styles.row} ${r.is_vip ? styles.vipRow : ''} cursor-pointer transition`}
+              >
+                <td>
+                  {new Date(r.created_at).toLocaleString('en-US', {
+                    timeZone: 'America/Chicago',
+                    year: 'numeric',
+                    month: 'numeric',
+                    day: 'numeric',
+                    hour: 'numeric',
+                    minute: 'numeric',
+                  })}
+                </td>
+                <td style={{ textAlign: 'center' }}>{r.room_number || '—'}</td>
+                <td>
+                  <div className="flex flex-col items-start">
+                    <span>{r.from_phone}</span>
+                    {r.is_vip && <span className={styles.vipBadge}>VIP</span>}
+                  </div>
+                </td>
+                <td style={{ textAlign: 'center' }}>{r.department}</td>
+                <td style={{ textAlign: 'center' }}>
+                  <span className={priorityClass}>{r.priority.toUpperCase()}</span>
+                </td>
+                <td className={styles.messageCol}>{r.message}</td>
+                <td>
                   <button
-                    className={styles.ackBtn}
+                    type="button"
+                    className={`${styles.btn} ${styles.notesBtn}`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      onAcknowledge(r.id);
+                      onOpenNotes(r.id);
                     }}
                   >
-                    Acknowledge
+                    Notes
                   </button>
-                )}
-              </td>
-              <td>
-                {r.completed ? (
-                  <span className={styles.doneIcon} aria-label="completed">
-                    ✔️
-                  </span>
-                ) : (
-                  <button
-                    className={styles.completeBtn}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onComplete(r.id);
-                    }}
-                  >
-                    Complete
-                  </button>
-                )}
-              </td>
-            </tr>
-          ))}
+                </td>
+                <td>
+                  {r.acknowledged ? (
+                    <span className={styles.doneIcon} aria-label="acknowledged">✔️</span>
+                  ) : (
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.ackBtn}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onAcknowledge(r.id);
+                      }}
+                    >
+                      Acknowledge
+                    </button>
+                  )}
+                </td>
+                <td>
+                  {r.completed ? (
+                    <span className={styles.doneIcon} aria-label="completed">✔️</span>
+                  ) : (
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.completeBtn}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onComplete(r.id);
+                      }}
+                    >
+                      Complete
+                    </button>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

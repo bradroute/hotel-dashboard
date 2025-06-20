@@ -12,6 +12,7 @@ import {
 } from './utils/api';
 import FiltersBar from './components/FiltersBar';
 import RequestsTable from './components/RequestsTable';
+import styles from './styles/Dashboard.module.css';
 
 export default function Dashboard() {
   const [requests, setRequests] = useState([]);
@@ -121,9 +122,9 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="min-h-screen bg-gray-50 p-6 flex flex-col items-center">
-        <div className="container max-w-6xl w-full">
-          <h1 className="text-4xl font-bold text-gray-800 flex items-center gap-2 mb-6">
+      <div className="min-h-screen bg-operon-background p-6 flex flex-col items-center">
+        <div className={`${styles.container} max-w-6xl w-full`}>
+          <h1 className="text-4xl font-bold text-operon-charcoal flex items-center gap-2 mb-6">
             <span role="img" aria-label="clipboard">📋</span> Hotel Request Dashboard
           </h1>
 
@@ -144,7 +145,7 @@ export default function Dashboard() {
             onChangeSearch={setSearchTerm}
           />
 
-          <div className="overflow-x-auto mt-4">
+          <div className="mt-4">
             <RequestsTable
               requests={filtered}
               onAcknowledge={async id => { await acknowledgeRequest(id); fetchRequests(); }}
@@ -160,7 +161,7 @@ export default function Dashboard() {
         <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">📝 Request Notes</h2>
+              <h2 className="text-xl font-semibold text-operon-charcoal">📝 Request Notes</h2>
               <button
                 onClick={() => setNotesModalOpen(false)}
                 className="text-gray-500 hover:text-gray-800 text-2xl leading-none"
@@ -176,7 +177,7 @@ export default function Dashboard() {
               {!notesLoading && notes.length === 0 && <p className="text-gray-500">No notes yet.</p>}
               {!notesLoading && notes.map(note => (
                 <div key={note.id} className="flex justify-between items-center bg-gray-100 p-2 rounded">
-                  <span className="text-gray-800">{note.content}</span>
+                  <span className="text-operon-charcoal">{note.content}</span>
                   <button
                     onClick={() => handleDeleteNote(note.id)}
                     className="text-red-500 hover:text-red-700 ml-2"
@@ -194,11 +195,11 @@ export default function Dashboard() {
                 placeholder="Add a new note..."
                 value={newNote}
                 onChange={e => setNewNote(e.target.value)}
-                className="flex-grow border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                className="flex-grow border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-operon-blue"
               />
               <button
                 onClick={handleAddNote}
-                className="bg-indigo-600 text-white rounded px-4 py-2 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                className="bg-operon-blue text-white rounded px-4 py-2 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300"
               >
                 Add
               </button>
