@@ -174,22 +174,6 @@
   background-color: #2563eb;
 }
 
-/* VIP */
-.vipBadge {
-  margin-left: 0.5rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #b45309;
-  background-color: #fef3c7;
-  padding: 2px 6px;
-  border-radius: 9999px;
-  box-shadow: 0 0 0 1px #facc15;
-}
-.vipRow {
-  border-left: 4px solid #facc15;
-  background-color: #fffbeb;
-}
-
 /* Done Icon */
 .doneIcon {
   font-size: 18px;
@@ -240,4 +224,35 @@
     padding: 0.25rem 0.5rem;
     font-size: 0.75rem;
   }
+}
+.vipBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  background-color: #facc15; /* amber-400 */
+  color: #000;
+  border-radius: 9999px;
+  text-transform: uppercase;
+}
+
+.staffBadge {
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  background-color: #60a5fa; /* blue-400 */
+  color: #fff;
+  border-radius: 9999px;
+  text-transform: uppercase;
+}
+
+.vipRow {
+  border-left: 4px solid #facc15;
+  background-color: #fffbeb;
+}
+
+.staffRow {
+  border-left: 4px solid #3b82f6; /* blue-500 */
+  background-color: #f0f9ff; /* very light blue background */
 }

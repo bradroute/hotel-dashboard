@@ -34,11 +34,19 @@ export default function RequestsTable({
                 : r.priority.toLowerCase() === 'low'
                 ? styles.priorityLow
                 : styles.priorityNormal;
+
+            const rowClass = [
+              styles.row,
+              r.is_vip ? styles.vipRow : '',
+              r.is_staff ? styles.staffRow : '',
+              'cursor-pointer transition',
+            ].join(' ');
+
             return (
               <tr
                 key={r.id}
                 onClick={() => onRowClick(r.id)}
-                className={`${styles.row} ${r.is_vip ? styles.vipRow : ''} cursor-pointer transition`}
+                className={rowClass}
               >
                 <td>
                   {new Date(r.created_at).toLocaleString('en-US', {
@@ -54,7 +62,10 @@ export default function RequestsTable({
                 <td>
                   <div className="flex flex-col items-start">
                     <span>{r.from_phone}</span>
-                    {r.is_vip && <span className={styles.vipBadge}>VIP</span>}
+                    <div className="flex gap-1 mt-1">
+                      {r.is_vip && <span className={styles.vipBadge}>VIP</span>}
+                      {r.is_staff && <span className={styles.staffBadge}>STAFF</span>}
+                    </div>
                   </div>
                 </td>
                 <td style={{ textAlign: 'center' }}>{r.department}</td>
