@@ -15,7 +15,7 @@ import SignUp from './pages/SignUp';
 import ProtectedRoute from './components/ProtectedRoute';
 import { supabase } from './utils/supabaseClient';
 
-import logoIcon from './assets/logo-icon.png';
+import logoIcon from './assets/logo-icon2.png';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -44,7 +44,7 @@ export default function App() {
               <img
                 src={logoIcon}
                 alt="Operon"
-                className="max-h-[32px] w-auto object-contain"
+                className="max-h-[64px] w-auto object-contain"
               />
             </Link>
             <div className="flex gap-4">
