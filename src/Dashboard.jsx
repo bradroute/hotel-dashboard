@@ -69,12 +69,29 @@ export default function Dashboard() {
     }
   };
 
+  // Updated handleAddNote with detailed logging
   const handleAddNote = async () => {
-    if (!newNote.trim()) return;
-    await addNote(currentRequestId, newNote.trim());
-    const updated = await getNotes(currentRequestId);
-    setNotes(updated);
-    setNewNote('');
+    console.log('📝 handleAddNote called for request:', currentRequestId);
+    console.log('📝 New note content:', newNote);
+
+    if (!newNote.trim()) {
+      console.warn('⚠️ handleAddNote: note is empty—skipping add');
+      return;
+    }
+
+    try {
+      const response = await addNote(currentRequestId, newNote.trim());
+      console.log('✅ addNote response:', response);
+
+      const updated = await getNotes(currentRequestId);
+      console.log('✅ getNotes after add:', updated);
+
+      setNotes(updated);
+      setNewNote('');
+    } catch (err) {
+      console.error('❌ Error in handleAddNote:', err);
+      setNotesError(err.message || 'Unknown error adding note');
+    }
   };
 
   const handleDeleteNote = async (noteId) => {
