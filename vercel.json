@@ -2,6 +2,12 @@
   "redirects": [
     {
       "source": "/(.*)",
+      "has": [
+        {
+          "type": "host",
+          "value": "operonops.com"
+        }
+      ],
       "destination": "https://www.operonops.com/$1",
       "permanent": true
     }
