@@ -12,7 +12,7 @@ import {
 } from '../utils/api';
 import FiltersBar from '../components/FiltersBar';
 import RequestsTable from '../components/RequestsTable';
-import styles from './styles/Dashboard.module.css';
+import styles from '../styles/Dashboard.module.css';
 
 export default function Dashboard() {
   const [requests, setRequests] = useState([]);
