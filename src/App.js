@@ -8,7 +8,7 @@ import {
   Navigate,
   Link
 } from 'react-router-dom';
-import Dashboard from './Dashboard';
+import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
 import LoginPage from './pages/LoginPage';
 import SignUp from './pages/SignUp';
