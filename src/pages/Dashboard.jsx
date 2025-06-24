@@ -12,6 +12,7 @@ import {
 } from '../utils/api';
 import FiltersBar from '../components/FiltersBar';
 import RequestsTable from '../components/RequestsTable';
+import Navbar from '../components/Navbar';
 import styles from '../styles/Dashboard.module.css';
 
 export default function Dashboard() {
@@ -69,27 +70,15 @@ export default function Dashboard() {
     }
   };
 
-  // Updated handleAddNote with detailed logging
   const handleAddNote = async () => {
-    console.log('📝 handleAddNote called for request:', currentRequestId);
-    console.log('📝 New note content:', newNote);
-
-    if (!newNote.trim()) {
-      console.warn('⚠️ handleAddNote: note is empty—skipping add');
-      return;
-    }
+    if (!newNote.trim()) return;
 
     try {
-      const response = await addNote(currentRequestId, newNote.trim());
-      console.log('✅ addNote response:', response);
-
+      await addNote(currentRequestId, newNote.trim());
       const updated = await getNotes(currentRequestId);
-      console.log('✅ getNotes after add:', updated);
-
       setNotes(updated);
       setNewNote('');
     } catch (err) {
-      console.error('❌ Error in handleAddNote:', err);
       setNotesError(err.message || 'Unknown error adding note');
     }
   };
@@ -139,7 +128,9 @@ export default function Dashboard() {
 
   return (
     <>
-      <div className="min-h-screen bg-operon-background p-6 flex flex-col items-center">
+      <Navbar />
+
+      <div className="min-h-screen bg-operon-background pt-24 px-6 flex flex-col items-center">
         <div className={`${styles.container} max-w-6xl w-full`}>
           <h1 className="text-4xl font-bold text-operon-charcoal flex items-center gap-2 mb-6">
             <span role="img" aria-label="clipboard">📋</span> Hotel Request Dashboard
