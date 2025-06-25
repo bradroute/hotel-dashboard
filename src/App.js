@@ -9,6 +9,7 @@ import {
 
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
+import SettingsPage from './pages/SettingsPage'; // ✅ NEW
 import LoginPage from './pages/LoginPage';
 import SignUp from './pages/SignUp';
 import About from './pages/About';
@@ -54,6 +55,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <Analytics />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings"
+            element={
+              <ProtectedRoute>
+                <SettingsPage />
               </ProtectedRoute>
             }
           />

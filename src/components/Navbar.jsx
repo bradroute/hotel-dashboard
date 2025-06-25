@@ -63,6 +63,14 @@ export default function Navbar() {
             Analytics
           </Link>
         )}
+        {session && currentPath !== '/settings' && (
+          <Link
+            to="/settings"
+            className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
+          >
+            Settings
+          </Link>
+        )}
 
         {session ? (
           <button
@@ -71,6 +79,13 @@ export default function Navbar() {
           >
             Logout
           </button>
+        ) : currentPath === '/signup' ? (
+          <Link
+            to="/login"
+            className="bg-operon-blue text-white font-medium px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
+          >
+            Login
+          </Link>
         ) : (
           <Link
             to="/signup"

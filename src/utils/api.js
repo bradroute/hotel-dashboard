@@ -92,3 +92,24 @@ export async function deleteNote(requestId, noteId) {
   }
   return res.json();
 }
+
+// ── Department Settings API ──────────────────────────────────────────────────
+
+export async function getEnabledDepartments() {
+  const res = await fetch(`${BASE_URL}/settings/departments`);
+  if (!res.ok) throw new Error(`getEnabledDepartments failed: ${res.status}`);
+  return res.json();
+}
+
+export async function updateEnabledDepartments(departments) {
+  const res = await fetch(`${BASE_URL}/settings/departments`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ departments }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.message || 'updateEnabledDepartments failed');
+  }
+  return res.json();
+}

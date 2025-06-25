@@ -1,5 +1,3 @@
-// src/Dashboard.jsx
-
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -10,6 +8,7 @@ import {
   addNote,
   deleteNote,
 } from '../utils/api';
+import { supabase } from '../utils/supabaseClient';
 import FiltersBar from '../components/FiltersBar';
 import RequestsTable from '../components/RequestsTable';
 import Navbar from '../components/Navbar';
@@ -19,6 +18,7 @@ export default function Dashboard() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [departmentOptions, setDepartmentOptions] = useState([]);
 
   const [showActiveOnly, setShowActiveOnly] = useState(true);
   const [unacknowledgedOnly, setUnacknowledgedOnly] = useState(false);
@@ -36,6 +36,38 @@ export default function Dashboard() {
 
   const navigate = useNavigate();
 
+  // Fetch enabled departments
+  const fetchEnabledDepartments = useCallback(async () => {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+
+    if (!userId) return;
+
+    const { data: profile, error: profileErr } = await supabase
+      .from('profiles')
+      .select('hotel_id')
+      .eq('id', userId)
+      .single();
+
+    if (profileErr || !profile?.hotel_id) return;
+
+    const { data: settings, error: settingsErr } = await supabase
+      .from('department_settings')
+      .select('department')
+      .eq('hotel_id', profile.hotel_id)
+      .eq('enabled', true);
+
+    if (settingsErr) {
+      console.error('Error fetching department settings:', settingsErr.message);
+      return;
+    }
+
+    const enabled = settings.map((d) => d.department);
+    setDepartmentOptions(enabled);
+  }, []);
+
   const fetchRequests = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -51,9 +83,10 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchRequests();
+    fetchEnabledDepartments();
     const interval = setInterval(fetchRequests, 60000);
     return () => clearInterval(interval);
-  }, [fetchRequests]);
+  }, [fetchRequests, fetchEnabledDepartments]);
 
   const openNotesModal = async (requestId) => {
     setCurrentRequestId(requestId);
@@ -89,7 +122,6 @@ export default function Dashboard() {
     setNotes(updated);
   };
 
-  const departmentOptions = ['Front Desk', 'Housekeeping', 'Maintenance', 'Room Service', 'Valet'];
   const priorityOptions = ['Normal', 'Urgent', 'Low'];
 
   const filtered = useMemo(() => {
