@@ -40,7 +40,7 @@ export default function OnboardingPage() {
       // 2) Create hotel/property record
       const { data: hotel, error: hotelErr } = await supabase
         .from('hotels')
-        .insert([{ owner_id: userId, type: propertyType, name: accountName }])
+        .insert([{ prfoile_id: userId, type: propertyType, name: accountName }])
         .select('id')
         .single();
       if (hotelErr) throw hotelErr;
