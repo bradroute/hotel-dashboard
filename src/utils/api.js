@@ -7,8 +7,17 @@ const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 // ── Requests API ─────────────────────────────────────────────────────────────
 
-export async function getAllRequests() {
-  const res = await fetch(`${BASE_URL}/requests`);
+/**
+ * Fetch all requests, optionally scoped to a specific hotel.
+ * @param {string} [hotelId] – if provided, only returns requests for that hotel
+ */
+export async function getAllRequests(hotelId) {
+  // Build URL and append hotel_id if given
+  const url = new URL(`${BASE_URL}/requests`);
+  if (hotelId) {
+    url.searchParams.append('hotel_id', hotelId);
+  }
+  const res = await fetch(url.toString());
   if (!res.ok) throw new Error(`getAllRequests failed: ${res.status}`);
   return res.json();
 }
@@ -83,9 +92,10 @@ export async function addNote(requestId, content) {
 }
 
 export async function deleteNote(requestId, noteId) {
-  const res = await fetch(`${BASE_URL}/requests/${requestId}/notes/${noteId}`, {
-    method: 'DELETE',
-  });
+  const res = await fetch(
+    `${BASE_URL}/requests/${requestId}/notes/${noteId}`,
+    { method: 'DELETE' }
+  );
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || 'deleteNote failed');
@@ -97,7 +107,8 @@ export async function deleteNote(requestId, noteId) {
 
 export async function getEnabledDepartments() {
   const res = await fetch(`${BASE_URL}/settings/departments`);
-  if (!res.ok) throw new Error(`getEnabledDepartments failed: ${res.status}`);
+  if (!res.ok)
+    throw new Error(`getEnabledDepartments failed: ${res.status}`);
   return res.json();
 }
 
@@ -109,7 +120,9 @@ export async function updateEnabledDepartments(departments) {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err.message || 'updateEnabledDepartments failed');
+    throw new Error(
+      err.message || 'updateEnabledDepartments failed'
+    );
   }
   return res.json();
 }

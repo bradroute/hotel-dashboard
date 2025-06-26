@@ -1,3 +1,4 @@
+// src/pages/Dashboard.jsx
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -15,10 +16,11 @@ import Navbar from '../components/Navbar';
 import styles from '../styles/Dashboard.module.css';
 
 export default function Dashboard() {
+  const [hotelId, setHotelId] = useState(null);
   const [requests, setRequests] = useState([]);
+  const [departmentOptions, setDepartmentOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [departmentOptions, setDepartmentOptions] = useState([]);
 
   const [showActiveOnly, setShowActiveOnly] = useState(true);
   const [unacknowledgedOnly, setUnacknowledgedOnly] = useState(false);
@@ -36,85 +38,69 @@ export default function Dashboard() {
 
   const navigate = useNavigate();
 
-  // Redirect new or unauthenticated users
+  // 1) Fetch user profile for hotel_id and auth guard
   useEffect(() => {
     (async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      const user = session?.user;
-      if (!user) {
-        return navigate('/login');
-      }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user) return navigate('/login');
+      const userId = session.user.id;
 
       const { data: profile, error: profileErr } = await supabase
         .from('profiles')
-        .select('*')
-        .eq('id', user.id)
+        .select('hotel_id')
+        .eq('id', userId)
         .single();
-      if (profileErr && profileErr.code !== 'PGRST116') {
-        console.error('Error fetching profile:', profileErr.message);
+      if (profileErr) {
+        console.error('Error fetching profile:', profileErr);
+        return navigate('/login');
       }
-      // If no profile or only id present, send to onboarding
-      if (!profile || Object.keys(profile).length === 1) {
-        return navigate('/onboarding');
-      }
+      if (!profile?.hotel_id) return navigate('/onboarding');
+      setHotelId(profile.hotel_id);
     })();
   }, [navigate]);
 
-  // Fetch enabled departments
+  // 2) Fetch enabled departments for this hotel
   const fetchEnabledDepartments = useCallback(async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-    const userId = session?.user?.id;
-    if (!userId) return;
-
-    const { data: profile, error: profileErr } = await supabase
-      .from('profiles')
-      .select('hotel_id')
-      .eq('id', userId)
-      .single();
-    if (profileErr || !profile?.hotel_id) return;
-
-    const { data: settings, error: settingsErr } = await supabase
+    if (!hotelId) return;
+    const { data: settings, error } = await supabase
       .from('department_settings')
       .select('department')
-      .eq('hotel_id', profile.hotel_id)
+      .eq('hotel_id', hotelId)
       .eq('enabled', true);
-
-    if (settingsErr) {
-      console.error('Error fetching department settings:', settingsErr.message);
+    if (error) {
+      console.error('Error fetching departments:', error);
       return;
     }
-
     setDepartmentOptions(settings.map(d => d.department));
-  }, []);
+  }, [hotelId]);
 
-  // Fetch all requests
+  // 3) Fetch requests for this hotel
   const fetchRequests = useCallback(async () => {
+    if (!hotelId) return;
     setLoading(true);
     setError('');
     try {
-      const data = await getAllRequests();
+      const data = await getAllRequests(hotelId);
       setRequests(data);
     } catch (err) {
       setError(err.message || 'Failed to fetch requests');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [hotelId]);
 
-  // On mount: load departments and start polling
+  // 4) On mount and when hotelId changes, load data
   useEffect(() => {
-    fetchEnabledDepartments();
-    fetchRequests();
-    const interval = setInterval(fetchRequests, 60000);
-    return () => clearInterval(interval);
-  }, [fetchEnabledDepartments, fetchRequests]);
+    if (hotelId) {
+      fetchEnabledDepartments();
+      fetchRequests();
+      const interval = setInterval(fetchRequests, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [hotelId, fetchEnabledDepartments, fetchRequests]);
 
-  // Notes modal handlers
-  const openNotesModal = async requestId => {
+  // 5) Notes modal handlers
+  const openNotesModal = async (requestId) => {
     setCurrentRequestId(requestId);
     setNotesLoading(true);
     setNotesError('');
@@ -140,22 +126,22 @@ export default function Dashboard() {
     }
   };
 
-  const handleDeleteNote = async noteId => {
+  const handleDeleteNote = async (noteId) => {
     await deleteNote(currentRequestId, noteId);
     setNotes(await getNotes(currentRequestId));
   };
 
   const priorityOptions = ['Normal', 'Urgent', 'Low'];
 
-  // Apply filters, search, and sorting
+  // 6) Apply filters, search, and sorting
   const filtered = useMemo(() => {
     let result = [...requests];
     if (showActiveOnly) result = result.filter(r => !r.completed);
     if (unacknowledgedOnly) result = result.filter(r => !r.acknowledged);
     if (selectedDepartment !== 'All') result = result.filter(r => r.department === selectedDepartment);
-    if (selectedPriority !== 'All') result = result.filter(
-      r => r.priority.toLowerCase() === selectedPriority.toLowerCase()
-    );
+    if (selectedPriority !== 'All') {
+      result = result.filter(r => r.priority.toLowerCase() === selectedPriority.toLowerCase());
+    }
     if (searchTerm.trim()) {
       result = result.filter(r =>
         r.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -163,21 +149,12 @@ export default function Dashboard() {
         (r.room_number && r.room_number.toString().includes(searchTerm))
       );
     }
-    if (sortOrder === 'oldest') {
-      result.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-    } else {
-      result.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    }
+    result.sort((a, b) => sortOrder === 'oldest'
+      ? new Date(a.created_at) - new Date(b.created_at)
+      : new Date(b.created_at) - new Date(a.created_at)
+    );
     return result;
-  }, [
-    requests,
-    showActiveOnly,
-    unacknowledgedOnly,
-    selectedDepartment,
-    selectedPriority,
-    sortOrder,
-    searchTerm,
-  ]);
+  }, [requests, showActiveOnly, unacknowledgedOnly, selectedDepartment, selectedPriority, sortOrder, searchTerm]);
 
   if (loading) return <div className="p-6 text-lg font-medium">Loading requests…</div>;
   if (error) return <div className="p-6 text-lg text-red-600">Error: {error}</div>;
@@ -208,12 +185,18 @@ export default function Dashboard() {
             onChangeSearch={setSearchTerm}
           />
 
-          <div className="mt-4">
+          <div className="mt-4 w-full">
             <RequestsTable
               requests={filtered}
-              onAcknowledge={async id => { await acknowledgeRequest(id); fetchRequests(); }}
-              onComplete={async id => { await completeRequest(id); fetchRequests(); }}
-              onRowClick={id => navigate(`/request/${id}`)}
+              onAcknowledge={async (id) => {
+                await acknowledgeRequest(id, hotelId);
+                fetchRequests();
+              }}
+              onComplete={async (id) => {
+                await completeRequest(id, hotelId);
+                fetchRequests();
+              }}
+              onRowClick={(id) => navigate(`/request/${id}`)}
               onOpenNotes={openNotesModal}
             />
           </div>
@@ -225,47 +208,24 @@ export default function Dashboard() {
           <div className="bg-white p-6 rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-operon-charcoal">📝 Request Notes</h2>
-              <button
-                onClick={() => setNotesModalOpen(false)}
-                className="text-gray-500 hover:text-gray-800 text-2xl leading-none"
-                aria-label="Close notes modal"
-              >
-                ×
-              </button>
+              <button onClick={() => setNotesModalOpen(false)} className="text-gray-500 hover:text-gray-800 text-2xl leading-none" aria-label="Close notes modal">×</button>
             </div>
 
             <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
               {notesLoading && <p className="text-gray-600">Loading...</p>}
               {notesError && <p className="text-red-600">{notesError}</p>}
               {!notesLoading && notes.length === 0 && <p className="text-gray-500">No notes yet.</p>}
-              {!notesLoading && notes.map(note => (
+              {!notesLoading && notes.map((note) => (
                 <div key={note.id} className="flex justify-between items-center bg-gray-100 p-2 rounded">
                   <span className="text-operon-charcoal">{note.content}</span>
-                  <button
-                    onClick={() => handleDeleteNote(note.id)}
-                    className="text-red-500 hover:text-red-700 ml-2"
-                    aria-label="Delete note"
-                  >
-                    ×
-                  </button>
+                  <button onClick={() => handleDeleteNote(note.id)} className="text-red-500 hover:text-red-700 ml-2" aria-label="Delete note">×</button>
                 </div>
               ))}
             </div>
 
             <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Add a new note..."
-                value={newNote}
-                onChange={e => setNewNote(e.target.value)}
-                className="flex-grow border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-operon-blue"
-              />
-              <button
-                onClick={handleAddNote}
-                className="bg-operon-blue text-white rounded px-4 py-2 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300"
-              >
-                Add
-              </button>
+              <input type="text" placeholder="Add a new note..." value={newNote} onChange={(e) => setNewNote(e.target.value)} className="flex-grow border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-operon-blue" />
+              <button onClick={handleAddNote} className="bg-operon-blue text-white rounded px-4 py-2 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300">Add</button>
             </div>
           </div>
         </div>
