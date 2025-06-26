@@ -27,19 +27,25 @@ export default function OnboardingPage() {
     setLoading(true);
 
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      const userId = userData.user.id;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      const userId = user.id;
 
-      // 1) Update profile with account_name and property_type
+      // 1) Upsert profile with account_name and property_type
       await supabase
         .from('profiles')
-        .update({ account_name: accountName, property_type: propertyType })
-        .eq('id', userId);
+        .upsert(
+          { id: userId, account_name: accountName, property_type: propertyType },
+          { onConflict: 'id' }
+        );
 
-      // 2) Create hotel/property record using correct profile_id column
+      // 2) Create hotel/property record referencing the existing profile
       const { data: hotel, error: hotelErr } = await supabase
         .from('hotels')
-        .insert([{ profile_id: userId, type: propertyType, name: accountName }])
+        .insert([
+          { profile_id: userId, type: propertyType, name: accountName }
+        ])
         .select('id')
         .single();
       if (hotelErr) throw hotelErr;
