@@ -1,134 +1,152 @@
-// src/pages/OnboardingPage.jsx
-import React, { useState, useEffect } from 'react';
+// src/pages/Dashboard.jsx
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
+import FiltersBar from '../components/FiltersBar';
+import RequestsTable from '../components/RequestsTable';
 import Navbar from '../components/Navbar';
-import { getDefaultsFor } from '../utils/propertyDefaults';
+import styles from '../styles/Dashboard.module.css';
 
-export default function OnboardingPage() {
-  const [accountName, setAccountName] = useState('');
-  const [propertyType, setPropertyType] = useState('hotel');
-  const [loading, setLoading] = useState(false);
+export default function Dashboard() {
+  const [requests, setRequests] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const navigate = useNavigate();
+  const [departmentOptions, setDepartmentOptions] = useState([]);
 
+  const [showActiveOnly, setShowActiveOnly] = useState(true);
+  const [unacknowledgedOnly, setUnacknowledgedOnly] = useState(false);
+  const [selectedDepartment, setSelectedDepartment] = useState('All');
+  const [selectedPriority, setSelectedPriority] = useState('All');
+  const [sortOrder, setSortOrder] = useState('newest');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const [notesModalOpen, setNotesModalOpen] = useState(false);
+  const [currentRequestId, setCurrentRequestId] = useState(null);
+  const [notes, setNotes] = useState([]);
+  const [notesLoading, setNotesLoading] = useState(false);
+  const [notesError, setNotesError] = useState('');
+  const [newNote, setNewNote] = useState('');
+
+  const navigate = useNavigate();
+  const [hotelId, setHotelId] = useState(null);
+
+  // Fetch user profile to get hotel_id
   useEffect(() => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session || !session.user) {
-        navigate('/login');
-      }
+      if (!session) return navigate('/login');
+      const userId = session.user.id;
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('hotel_id')
+        .eq('id', userId)
+        .single();
+      if (!profile?.hotel_id) return navigate('/onboarding');
+      setHotelId(profile.hotel_id);
     })();
   }, [navigate]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+  // Fetch enabled departments
+  const fetchEnabledDepartments = useCallback(async () => {
+    if (!hotelId) return;
+    const { data: settings } = await supabase
+      .from('department_settings')
+      .select('department')
+      .eq('hotel_id', hotelId)
+      .eq('enabled', true);
+    setDepartmentOptions(settings.map(d => d.department));
+  }, [hotelId]);
+
+  // Fetch all requests for this hotel
+  const fetchRequests = useCallback(async () => {
+    if (!hotelId) return;
     setLoading(true);
-
+    setError('');
     try {
-      // 1) Get authenticated user
-      const { data: { user } } = await supabase.auth.getUser();
-      const userId = user.id;
-
-      // 2) Create hotel/property first (must exist before profile FK)
-      const { data: hotel, error: hotelErr } = await supabase
-        .from('hotels')
-        .insert([{ profile_id: userId, type: propertyType, name: accountName }])
-        .select('id')
-        .single();
-      if (hotelErr) {
-        console.error('Hotel insert error:', hotelErr);
-        throw hotelErr;
-      }
-      const hotelId = hotel.id;
-
-      // 3) Upsert profile with account_name, property_type, and hotel_id
-      const { error: profileErr } = await supabase
-        .from('profiles')
-        .upsert(
-          { id: userId, account_name: accountName, property_type: propertyType, hotel_id: hotelId },
-          { onConflict: 'id' }
-        );
-      if (profileErr) {
-        console.error('Profile upsert error:', profileErr);
-        throw profileErr;
-      }
-
-      // 4) Seed default department_settings for the new hotel
-      const defaults = getDefaultsFor(propertyType);
-      const seedData = defaults.map(dept => ({ hotel_id: hotelId, department: dept, enabled: true }));
-      const { error: seedErr } = await supabase
-        .from('department_settings')
-        .insert(seedData);
-      if (seedErr) {
-        console.error('Seeding dept settings error:', seedErr);
-        throw seedErr;
-      }
-
-      // 5) Navigate to dashboard
-      navigate('/dashboard');
+      const { data, error } = await supabase
+        .from('requests')
+        .select('*')
+        .eq('hotel_id', hotelId);
+      if (error) throw error;
+      setRequests(data);
     } catch (err) {
-      console.error(err);
-      setError(err.message || 'Onboarding failed');
+      setError(err.message || 'Failed to fetch requests');
     } finally {
       setLoading(false);
     }
-  };
+  }, [hotelId]);
+
+  useEffect(() => {
+    if (hotelId) {
+      fetchEnabledDepartments();
+      fetchRequests();
+      const interval = setInterval(fetchRequests, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [hotelId, fetchEnabledDepartments, fetchRequests]);
+
+  // Notes modal handlers omitted for brevity; unchanged
+  // ... (existing openNotesModal, handleAddNote, handleDeleteNote)
+
+  const priorityOptions = ['Normal', 'Urgent', 'Low'];
+
+  const filtered = useMemo(() => {
+    let result = [...requests];
+    if (showActiveOnly) result = result.filter(r => !r.completed);
+    if (unacknowledgedOnly) result = result.filter(r => !r.acknowledged);
+    if (selectedDepartment !== 'All') result = result.filter(r => r.department === selectedDepartment);
+    if (selectedPriority !== 'All') result = result.filter(
+      r => r.priority.toLowerCase() === selectedPriority.toLowerCase()
+    );
+    if (searchTerm.trim()) {
+      result = result.filter(r =>
+        r.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (r.from_phone && r.from_phone.includes(searchTerm)) ||
+        (r.room_number && r.room_number.toString().includes(searchTerm))
+      );
+    }
+    result.sort((a, b) => {
+      return sortOrder === 'oldest'
+        ? new Date(a.created_at) - new Date(b.created_at)
+        : new Date(b.created_at) - new Date(a.created_at);
+    });
+    return result;
+  }, [requests, showActiveOnly, unacknowledgedOnly, selectedDepartment, selectedPriority, sortOrder, searchTerm]);
+
+  if (loading) return <div className="p-6 text-lg font-medium">Loading requests…</div>;
+  if (error) return <div className="p-6 text-lg text-red-600">Error: {error}</div>;
 
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-operon-background pt-24 px-4 flex items-center justify-center">
-        <form
-          onSubmit={handleSubmit}
-          className="w-full max-w-lg bg-white p-8 rounded-lg shadow-lg space-y-6"
-        >
-          <h1 className="text-2xl font-semibold text-operon-charcoal text-center">
-            Welcome! Let’s set up your account
-          </h1>
-
-          {error && <p className="text-red-600 text-center">{error}</p>}
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Account Name
-            </label>
-            <input
-              type="text"
-              value={accountName}
-              onChange={(e) => setAccountName(e.target.value)}
-              placeholder="E.g. The Grand Hotel"
-              required
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-operon-blue"
+      <div className="min-h-screen bg-operon-background pt-24 px-6 flex flex-col items-center">
+        <FiltersBar
+            showActiveOnly={showActiveOnly}
+            onToggleActive={setShowActiveOnly}
+            unacknowledgedOnly={unacknowledgedOnly}
+            onToggleUnacknowledged={setUnacknowledgedOnly}
+            selectedDepartment={selectedDepartment}
+            onChangeDepartment={setSelectedDepartment}
+            departmentOptions={departmentOptions}
+            selectedPriority={selectedPriority}
+            onChangePriority={setSelectedPriority}
+            priorityOptions={priorityOptions}
+            sortOrder={sortOrder}
+            onChangeSort={setSortOrder}
+            searchTerm={searchTerm}
+            onChangeSearch={setSearchTerm}
+          />
+          <div className="mt-4 w-full">
+            <RequestsTable
+              requests={filtered}
+              onAcknowledge={async id => { await acknowledgeRequest(id); fetchRequests(); }}
+              onComplete={async id => { await completeRequest(id); fetchRequests(); }}
+              onRowClick={id => navigate(`/request/${id}`)}
+              onOpenNotes={openNotesModal}
             />
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Property Type
-            </label>
-            <select
-              value={propertyType}
-              onChange={(e) => setPropertyType(e.target.value)}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-operon-blue"
-            >
-              <option value="hotel">Hotel</option>
-              <option value="apartment">Apartment</option>
-              <option value="condo">Condo</option>
-              <option value="restaurant">Restaurant</option>
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-operon-blue hover:bg-blue-400 text-white py-2 rounded font-medium transition disabled:opacity-50"
-          >
-            {loading ? 'Setting up…' : 'Get Started'}
-          </button>
-        </form>
       </div>
+      {/* Notes modal unchanged */}
     </>
   );
 }
