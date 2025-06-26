@@ -42,19 +42,32 @@ export default function Dashboard() {
   useEffect(() => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) return navigate('/login');
+      if (!session?.user) {
+        navigate('/login');
+        return;
+      }
       const userId = session.user.id;
 
-      const { data: profile, error: profileErr } = await supabase
+      // use maybeSingle so "no row" returns data=null, status=406 instead of throwing
+      const { data: profile, error: profileErr, status } = await supabase
         .from('profiles')
         .select('hotel_id')
         .eq('id', userId)
-        .single();
-      if (profileErr) {
+        .maybeSingle();
+
+      // if it errored for any reason *other* than "no rows", bail
+      if (profileErr && status !== 406) {
         console.error('Error fetching profile:', profileErr);
-        return navigate('/login');
+        navigate('/login');
+        return;
       }
-      if (!profile?.hotel_id) return navigate('/onboarding');
+
+      // if there's no profile or no hotel_id, send to onboarding
+      if (!profile?.hotel_id) {
+        navigate('/onboarding');
+        return;
+      }
+
       setHotelId(profile.hotel_id);
     })();
   }, [navigate]);
@@ -80,7 +93,7 @@ export default function Dashboard() {
     setLoading(true);
     setError('');
     try {
-      const data = await getAllRequests(hotelId);
+      const data = await getAllRequests(); // assumes server filters by authenticated hotel
       setRequests(data);
     } catch (err) {
       setError(err.message || 'Failed to fetch requests');
@@ -157,7 +170,7 @@ export default function Dashboard() {
   }, [requests, showActiveOnly, unacknowledgedOnly, selectedDepartment, selectedPriority, sortOrder, searchTerm]);
 
   if (loading) return <div className="p-6 text-lg font-medium">Loading requests…</div>;
-  if (error) return <div className="p-6 text-lg text-red-600">Error: {error}</div>;
+  if (error)   return <div className="p-6 text-lg text-red-600">Error: {error}</div>;
 
   return (
     <>
@@ -188,14 +201,8 @@ export default function Dashboard() {
           <div className="mt-4 w-full">
             <RequestsTable
               requests={filtered}
-              onAcknowledge={async (id) => {
-                await acknowledgeRequest(id, hotelId);
-                fetchRequests();
-              }}
-              onComplete={async (id) => {
-                await completeRequest(id, hotelId);
-                fetchRequests();
-              }}
+              onAcknowledge={async (id) => { await acknowledgeRequest(id); fetchRequests(); }}
+              onComplete={async   (id) => { await completeRequest(id);   fetchRequests(); }}
               onRowClick={(id) => navigate(`/request/${id}`)}
               onOpenNotes={openNotesModal}
             />
@@ -213,9 +220,9 @@ export default function Dashboard() {
 
             <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
               {notesLoading && <p className="text-gray-600">Loading...</p>}
-              {notesError && <p className="text-red-600">{notesError}</p>}
+              {notesError   && <p className="text-red-600">{notesError}</p>}
               {!notesLoading && notes.length === 0 && <p className="text-gray-500">No notes yet.</p>}
-              {!notesLoading && notes.map((note) => (
+              {notes.map(note => (
                 <div key={note.id} className="flex justify-between items-center bg-gray-100 p-2 rounded">
                   <span className="text-operon-charcoal">{note.content}</span>
                   <button onClick={() => handleDeleteNote(note.id)} className="text-red-500 hover:text-red-700 ml-2" aria-label="Delete note">×</button>
@@ -224,8 +231,16 @@ export default function Dashboard() {
             </div>
 
             <div className="flex gap-2">
-              <input type="text" placeholder="Add a new note..." value={newNote} onChange={(e) => setNewNote(e.target.value)} className="flex-grow border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-operon-blue" />
-              <button onClick={handleAddNote} className="bg-operon-blue text-white rounded px-4 py-2 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300">Add</button>
+              <input
+                type="text"
+                placeholder="Add a new note..."
+                value={newNote}
+                onChange={e => setNewNote(e.target.value)}
+                className="flex-grow border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-operon-blue"
+              />
+              <button onClick={handleAddNote} className="bg-operon-blue text-white rounded px-4 py-2 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300">
+                Add
+              </button>
             </div>
           </div>
         </div>
