@@ -16,7 +16,6 @@ export default function OnboardingPage() {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session || !session.user) {
-        // If not authenticated, redirect to login
         navigate('/login');
       }
     })();
@@ -28,26 +27,26 @@ export default function OnboardingPage() {
     setLoading(true);
 
     try {
-      // 1) Update profile with account_name and property_type
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData.user.id;
 
+      // 1) Update profile with account_name and property_type
       await supabase
         .from('profiles')
         .update({ account_name: accountName, property_type: propertyType })
         .eq('id', userId);
 
-      // 2) Create hotel/property record
+      // 2) Create hotel/property record using correct profile_id column
       const { data: hotel, error: hotelErr } = await supabase
         .from('hotels')
-        .insert([{ prfoile_id: userId, type: propertyType, name: accountName }])
+        .insert([{ profile_id: userId, type: propertyType, name: accountName }])
         .select('id')
         .single();
       if (hotelErr) throw hotelErr;
 
       const hotelId = hotel.id;
 
-      // 3) Update profile to link hotel_id
+      // 3) Link hotel_id back to profile
       await supabase
         .from('profiles')
         .update({ hotel_id: hotelId })
