@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import logoFull from '../assets/logo-full.png';
-import Navbar from '../components/Navbar'; // ✅ Import your Navbar
+import Navbar from '../components/Navbar';
 
 export default function SignUp() {
   const [accountName, setAccountName] = useState('');
@@ -18,39 +18,26 @@ export default function SignUp() {
     setError(null);
     setSuccessMessage('');
 
-    const { data: authData, error: authErr } = await supabase.auth.signUp({
+    // 1) Sign up sends confirmation email but does NOT return a session until confirmed
+    const { data, error: signUpErr } = await supabase.auth.signUp({
       email,
       password,
     });
 
-    if (authErr) {
-      setError(authErr.message);
+    if (signUpErr) {
+      setError(signUpErr.message);
       return;
     }
 
-    const userId = authData?.user?.id;
-    if (!userId) {
-      setSuccessMessage(
-        'Sign up successful! Please check your email to confirm your address before logging in.'
-      );
-      return;
-    }
-
-    const { error: profileErr } = await supabase
-      .from('profiles')
-      .insert([{ id: userId, account_name: accountName }]);
-
-    if (profileErr) {
-      setError(profileErr.message);
-      return;
-    }
-
-    navigate('/dashboard');
+    // 2) Don’t insert into profiles yet—user is still anon until they confirm email & log in
+    setSuccessMessage(
+      'Welcome! 🎉 Please check your email for a confirmation link before logging in.'
+    );
   };
 
   return (
     <div className="min-h-screen bg-operon-background">
-      <Navbar /> {/* ✅ Navbar added */}
+      <Navbar />
       <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-4">
         <form
           onSubmit={handleSubmit}
@@ -108,9 +95,13 @@ export default function SignUp() {
 
           <p className="text-center text-sm text-gray-600">
             Already have an account?{' '}
-            <a href="/login" className="text-operon-blue hover:underline">
+            <button
+              type="button"
+              onClick={() => navigate('/login')}
+              className="text-operon-blue hover:underline"
+            >
               Login
-            </a>
+            </button>
           </p>
         </form>
       </div>

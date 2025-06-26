@@ -42,7 +42,6 @@ export default function Dashboard() {
       data: { session },
     } = await supabase.auth.getSession();
     const userId = session?.user?.id;
-
     if (!userId) return;
 
     const { data: profile, error: profileErr } = await supabase
@@ -50,7 +49,6 @@ export default function Dashboard() {
       .select('hotel_id')
       .eq('id', userId)
       .single();
-
     if (profileErr || !profile?.hotel_id) return;
 
     const { data: settings, error: settingsErr } = await supabase
@@ -64,10 +62,10 @@ export default function Dashboard() {
       return;
     }
 
-    const enabled = settings.map((d) => d.department);
-    setDepartmentOptions(enabled);
+    setDepartmentOptions(settings.map(d => d.department));
   }, []);
 
+  // Fetch all requests
   const fetchRequests = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -81,14 +79,16 @@ export default function Dashboard() {
     }
   }, []);
 
+  // On mount: load departments and start polling
   useEffect(() => {
-    fetchRequests();
     fetchEnabledDepartments();
+    fetchRequests();
     const interval = setInterval(fetchRequests, 60000);
     return () => clearInterval(interval);
-  }, [fetchRequests, fetchEnabledDepartments]);
+  }, [fetchEnabledDepartments, fetchRequests]);
 
-  const openNotesModal = async (requestId) => {
+  // Notes modal handlers
+  const openNotesModal = async requestId => {
     setCurrentRequestId(requestId);
     setNotesLoading(true);
     setNotesError('');
@@ -105,25 +105,23 @@ export default function Dashboard() {
 
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
-
     try {
       await addNote(currentRequestId, newNote.trim());
-      const updated = await getNotes(currentRequestId);
-      setNotes(updated);
+      setNotes(await getNotes(currentRequestId));
       setNewNote('');
     } catch (err) {
       setNotesError(err.message || 'Unknown error adding note');
     }
   };
 
-  const handleDeleteNote = async (noteId) => {
+  const handleDeleteNote = async noteId => {
     await deleteNote(currentRequestId, noteId);
-    const updated = await getNotes(currentRequestId);
-    setNotes(updated);
+    setNotes(await getNotes(currentRequestId));
   };
 
   const priorityOptions = ['Normal', 'Urgent', 'Low'];
 
+  // Apply filters, search, and sorting
   const filtered = useMemo(() => {
     let result = [...requests];
     if (showActiveOnly) result = result.filter(r => !r.completed);
@@ -161,7 +159,6 @@ export default function Dashboard() {
   return (
     <>
       <Navbar />
-
       <div className="min-h-screen bg-operon-background pt-24 px-6 flex flex-col items-center">
         <div className={`${styles.container} max-w-6xl w-full`}>
           <h1 className="text-4xl font-bold text-operon-charcoal flex items-center gap-2 mb-6">
@@ -207,7 +204,7 @@ export default function Dashboard() {
                 className="text-gray-500 hover:text-gray-800 text-2xl leading-none"
                 aria-label="Close notes modal"
               >
-                &times;
+                ×
               </button>
             </div>
 
@@ -223,7 +220,7 @@ export default function Dashboard() {
                     className="text-red-500 hover:text-red-700 ml-2"
                     aria-label="Delete note"
                   >
-                    &times;
+                    ×
                   </button>
                 </div>
               ))}
