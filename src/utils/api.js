@@ -12,20 +12,24 @@ const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
  * @param {string} [hotelId] – if provided, only returns requests for that hotel
  */
 export async function getAllRequests(hotelId) {
-  // Build URL and append hotel_id if given
   const url = new URL(`${BASE_URL}/requests`);
   if (hotelId) {
     url.searchParams.append('hotel_id', hotelId);
   }
-  const res = await fetch(url.toString());
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`getAllRequests failed: ${res.status}`);
   return res.json();
 }
 
-export async function acknowledgeRequest(id) {
-  const res = await fetch(`${BASE_URL}/requests/${id}/acknowledge`, {
-    method: 'POST',
-  });
+/**
+ * Acknowledge a request (optionally scoped by hotel_id).
+ * @param {string} id – request ID
+ * @param {string} [hotelId] – if provided, passed through as query
+ */
+export async function acknowledgeRequest(id, hotelId) {
+  const url = new URL(`${BASE_URL}/requests/${id}/acknowledge`);
+  if (hotelId) url.searchParams.append('hotel_id', hotelId);
+  const res = await fetch(url, { method: 'POST' });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || 'acknowledgeRequest failed');
@@ -33,10 +37,15 @@ export async function acknowledgeRequest(id) {
   return res.json();
 }
 
-export async function completeRequest(id) {
-  const res = await fetch(`${BASE_URL}/requests/${id}/complete`, {
-    method: 'POST',
-  });
+/**
+ * Complete a request (optionally scoped by hotel_id).
+ * @param {string} id – request ID
+ * @param {string} [hotelId] – if provided, passed through as query
+ */
+export async function completeRequest(id, hotelId) {
+  const url = new URL(`${BASE_URL}/requests/${id}/complete`);
+  if (hotelId) url.searchParams.append('hotel_id', hotelId);
+  const res = await fetch(url, { method: 'POST' });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.message || 'completeRequest failed');
@@ -107,8 +116,7 @@ export async function deleteNote(requestId, noteId) {
 
 export async function getEnabledDepartments() {
   const res = await fetch(`${BASE_URL}/settings/departments`);
-  if (!res.ok)
-    throw new Error(`getEnabledDepartments failed: ${res.status}`);
+  if (!res.ok) throw new Error(`getEnabledDepartments failed: ${res.status}`);
   return res.json();
 }
 
@@ -120,9 +128,7 @@ export async function updateEnabledDepartments(departments) {
   });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(
-      err.message || 'updateEnabledDepartments failed'
-    );
+    throw new Error(err.message || 'updateEnabledDepartments failed');
   }
   return res.json();
 }

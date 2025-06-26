@@ -38,7 +38,7 @@ export default function Dashboard() {
 
   const navigate = useNavigate();
 
-  // 1) Fetch user profile for hotel_id and auth guard
+  // 1) Fetch user profile for hotel_id and guard
   useEffect(() => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -48,31 +48,26 @@ export default function Dashboard() {
       }
       const userId = session.user.id;
 
-      // use maybeSingle so "no row" returns data=null, status=406 instead of throwing
-      const { data: profile, error: profileErr, status } = await supabase
+      const { data: profile, error: profileErr } = await supabase
         .from('profiles')
         .select('hotel_id')
         .eq('id', userId)
         .maybeSingle();
 
-      // if it errored for any reason *other* than "no rows", bail
-      if (profileErr && status !== 406) {
+      if (profileErr) {
         console.error('Error fetching profile:', profileErr);
         navigate('/login');
         return;
       }
-
-      // if there's no profile or no hotel_id, send to onboarding
       if (!profile?.hotel_id) {
         navigate('/onboarding');
         return;
       }
-
       setHotelId(profile.hotel_id);
     })();
   }, [navigate]);
 
-  // 2) Fetch enabled departments for this hotel
+  // 2) Load enabled departments
   const fetchEnabledDepartments = useCallback(async () => {
     if (!hotelId) return;
     const { data: settings, error } = await supabase
@@ -80,6 +75,7 @@ export default function Dashboard() {
       .select('department')
       .eq('hotel_id', hotelId)
       .eq('enabled', true);
+
     if (error) {
       console.error('Error fetching departments:', error);
       return;
@@ -87,13 +83,13 @@ export default function Dashboard() {
     setDepartmentOptions(settings.map(d => d.department));
   }, [hotelId]);
 
-  // 3) Fetch requests for this hotel
+  // 3) Load requests for this hotel
   const fetchRequests = useCallback(async () => {
     if (!hotelId) return;
     setLoading(true);
     setError('');
     try {
-      const data = await getAllRequests(); // assumes server filters by authenticated hotel
+      const data = await getAllRequests(hotelId);
       setRequests(data);
     } catch (err) {
       setError(err.message || 'Failed to fetch requests');
@@ -102,17 +98,16 @@ export default function Dashboard() {
     }
   }, [hotelId]);
 
-  // 4) On mount and when hotelId changes, load data
+  // 4) On mount & hotelId change, fetch everything (and poll)
   useEffect(() => {
-    if (hotelId) {
-      fetchEnabledDepartments();
-      fetchRequests();
-      const interval = setInterval(fetchRequests, 60000);
-      return () => clearInterval(interval);
-    }
+    if (!hotelId) return;
+    fetchEnabledDepartments();
+    fetchRequests();
+    const interval = setInterval(fetchRequests, 60_000);
+    return () => clearInterval(interval);
   }, [hotelId, fetchEnabledDepartments, fetchRequests]);
 
-  // 5) Notes modal handlers
+  // 5) Notes modal
   const openNotesModal = async (requestId) => {
     setCurrentRequestId(requestId);
     setNotesLoading(true);
@@ -127,7 +122,6 @@ export default function Dashboard() {
       setNotesLoading(false);
     }
   };
-
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
     try {
@@ -138,7 +132,6 @@ export default function Dashboard() {
       setNotesError(err.message || 'Unknown error adding note');
     }
   };
-
   const handleDeleteNote = async (noteId) => {
     await deleteNote(currentRequestId, noteId);
     setNotes(await getNotes(currentRequestId));
@@ -146,27 +139,26 @@ export default function Dashboard() {
 
   const priorityOptions = ['Normal', 'Urgent', 'Low'];
 
-  // 6) Apply filters, search, and sorting
+  // 6) Filters, search, sort
   const filtered = useMemo(() => {
-    let result = [...requests];
-    if (showActiveOnly) result = result.filter(r => !r.completed);
-    if (unacknowledgedOnly) result = result.filter(r => !r.acknowledged);
-    if (selectedDepartment !== 'All') result = result.filter(r => r.department === selectedDepartment);
-    if (selectedPriority !== 'All') {
-      result = result.filter(r => r.priority.toLowerCase() === selectedPriority.toLowerCase());
-    }
+    let list = [...requests];
+    if (showActiveOnly)     list = list.filter(r => !r.completed);
+    if (unacknowledgedOnly) list = list.filter(r => !r.acknowledged);
+    if (selectedDepartment !== 'All') list = list.filter(r => r.department === selectedDepartment);
+    if (selectedPriority   !== 'All') list = list.filter(r => r.priority.toLowerCase() === selectedPriority.toLowerCase());
     if (searchTerm.trim()) {
-      result = result.filter(r =>
+      list = list.filter(r =>
         r.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (r.from_phone && r.from_phone.includes(searchTerm)) ||
+        (r.from_phone  && r.from_phone.includes(searchTerm)) ||
         (r.room_number && r.room_number.toString().includes(searchTerm))
       );
     }
-    result.sort((a, b) => sortOrder === 'oldest'
-      ? new Date(a.created_at) - new Date(b.created_at)
-      : new Date(b.created_at) - new Date(a.created_at)
+    list.sort((a, b) =>
+      sortOrder === 'oldest'
+        ? new Date(a.created_at) - new Date(b.created_at)
+        : new Date(b.created_at) - new Date(a.created_at)
     );
-    return result;
+    return list;
   }, [requests, showActiveOnly, unacknowledgedOnly, selectedDepartment, selectedPriority, sortOrder, searchTerm]);
 
   if (loading) return <div className="p-6 text-lg font-medium">Loading requests…</div>;
@@ -201,10 +193,10 @@ export default function Dashboard() {
           <div className="mt-4 w-full">
             <RequestsTable
               requests={filtered}
-              onAcknowledge={async (id) => { await acknowledgeRequest(id); fetchRequests(); }}
-              onComplete={async   (id) => { await completeRequest(id);   fetchRequests(); }}
-              onRowClick={(id) => navigate(`/request/${id}`)}
-              onOpenNotes={openNotesModal}
+              onAcknowledge={async (id) => { await acknowledgeRequest(id, hotelId); fetchRequests(); }}
+              onComplete   ={async (id) => { await completeRequest(id,   hotelId); fetchRequests(); }}
+              onRowClick   ={id => navigate(`/request/${id}`)}
+              onOpenNotes  ={openNotesModal}
             />
           </div>
         </div>
@@ -213,11 +205,13 @@ export default function Dashboard() {
       {notesModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2">
+            {/* Modal header */}
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold text-operon-charcoal">📝 Request Notes</h2>
-              <button onClick={() => setNotesModalOpen(false)} className="text-gray-500 hover:text-gray-800 text-2xl leading-none" aria-label="Close notes modal">×</button>
+              <button onClick={() => setNotesModalOpen(false)} aria-label="Close notes modal"
+                className="text-gray-500 hover:text-gray-800 text-2xl leading-none">×</button>
             </div>
-
+            {/* Notes list */}
             <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
               {notesLoading && <p className="text-gray-600">Loading...</p>}
               {notesError   && <p className="text-red-600">{notesError}</p>}
@@ -225,11 +219,12 @@ export default function Dashboard() {
               {notes.map(note => (
                 <div key={note.id} className="flex justify-between items-center bg-gray-100 p-2 rounded">
                   <span className="text-operon-charcoal">{note.content}</span>
-                  <button onClick={() => handleDeleteNote(note.id)} className="text-red-500 hover:text-red-700 ml-2" aria-label="Delete note">×</button>
+                  <button onClick={() => handleDeleteNote(note.id)} aria-label="Delete note"
+                    className="text-red-500 hover:text-red-700 ml-2">×</button>
                 </div>
               ))}
             </div>
-
+            {/* Add note */}
             <div className="flex gap-2">
               <input
                 type="text"
@@ -238,7 +233,8 @@ export default function Dashboard() {
                 onChange={e => setNewNote(e.target.value)}
                 className="flex-grow border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-operon-blue"
               />
-              <button onClick={handleAddNote} className="bg-operon-blue text-white rounded px-4 py-2 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300">
+              <button onClick={handleAddNote}
+                className="bg-operon-blue text-white rounded px-4 py-2 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300">
                 Add
               </button>
             </div>
