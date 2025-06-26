@@ -15,7 +15,7 @@ export default function LoginPage() {
     e.preventDefault();
     setError(null);
 
-    // 1) Sign in
+    // 1) Sign in and get session
     const { data, error: authErr } = await supabase.auth.signInWithPassword({ email, password });
     if (authErr) {
       setError(authErr.message);
@@ -24,7 +24,7 @@ export default function LoginPage() {
 
     const userId = data.user.id;
 
-    // 2) Fetch profile to check onboarding status
+    // 2) Check onboarding status
     const { data: profile, error: profileErr } = await supabase
       .from('profiles')
       .select('hotel_id')
@@ -32,11 +32,11 @@ export default function LoginPage() {
       .single();
     if (profileErr) {
       console.error('Error fetching profile:', profileErr);
-      navigate('/dashboard'); // fallback
+      setError('Login succeeded but failed to fetch profile.');
       return;
     }
 
-    // 3) Redirect accordingly
+    // 3) Redirect based on whether hotel_id exists
     if (!profile || !profile.hotel_id) {
       navigate('/onboarding');
     } else {
@@ -53,15 +53,9 @@ export default function LoginPage() {
           <span className="text-xl font-bold text-operon-charcoal hidden sm:block">Operon</span>
         </Link>
         <div className="flex items-center gap-6">
-          <Link to="/about" className="text-operon-blue hover:underline font-medium text-sm sm:text-base">
-            About
-          </Link>
-          <Link to="/learn-more" className="text-operon-blue hover:underline font-medium text-sm sm:text-base">
-            Learn More
-          </Link>
-          <Link to="/signup" className="bg-operon-blue text-white font-medium px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base">
-            Sign Up
-          </Link>
+          <Link to="/about" className="text-operon-blue hover:underline font-medium text-sm sm:text-base">About</Link>
+          <Link to="/learn-more" className="text-operon-blue hover:underline font-medium text-sm sm:text-base">Learn More</Link>
+          <Link to="/signup" className="bg-operon-blue text-white font-medium px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base">Sign Up</Link>
         </div>
       </nav>
 
@@ -75,16 +69,8 @@ export default function LoginPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 mt-6">
-            <Link to="/learn-more">
-              <button className="px-6 py-2 border border-operon-blue text-operon-blue rounded hover:bg-blue-50 transition text-sm sm:text-base">
-                Learn More
-              </button>
-            </Link>
-            <Link to="/signup">
-              <button className="px-6 py-2 bg-operon-blue text-white rounded hover:bg-blue-400 transition text-sm sm:text-base">
-                Sign Up
-              </button>
-            </Link>
+            <Link to="/learn-more"><button className="px-6 py-2 border border-operon-blue text-operon-blue rounded hover:bg-blue-50 transition text-sm sm:text-base">Learn More</button></Link>
+            <Link to="/signup"><button className="px-6 py-2 bg-operon-blue text-white rounded hover:bg-blue-400 transition text-sm sm:text-base">Sign Up</button></Link>
           </div>
 
           <p className="text-sm text-gray-500 italic mt-4 max-w-sm mx-auto">
