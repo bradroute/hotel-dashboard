@@ -36,6 +36,32 @@ export default function Dashboard() {
 
   const navigate = useNavigate();
 
+  // Redirect new or unauthenticated users
+  useEffect(() => {
+    (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!user) {
+        return navigate('/login');
+      }
+
+      const { data: profile, error: profileErr } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      if (profileErr && profileErr.code !== 'PGRST116') {
+        console.error('Error fetching profile:', profileErr.message);
+      }
+      // If no profile or only id present, send to onboarding
+      if (!profile || Object.keys(profile).length === 1) {
+        return navigate('/onboarding');
+      }
+    })();
+  }, [navigate]);
+
   // Fetch enabled departments
   const fetchEnabledDepartments = useCallback(async () => {
     const {

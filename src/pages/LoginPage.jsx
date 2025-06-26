@@ -1,3 +1,4 @@
+// src/pages/Login.jsx
 import React, { useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { useNavigate, Link } from 'react-router-dom';
@@ -13,9 +14,32 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-    const { error: authErr } = await supabase.auth.signInWithPassword({ email, password });
-    if (authErr) setError(authErr.message);
-    else navigate('/dashboard');
+
+    // 1) Sign in and get back a valid session/JWT
+    const { data, error: authErr } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (authErr) {
+      setError(authErr.message);
+      return;
+    }
+
+    // 2) Upsert a profile row (this will create { id } if none exists yet)
+    const userId = data.user.id;
+    const { error: profileErr } = await supabase
+      .from('profiles')
+      .upsert(
+        { id: userId },            // you can add other defaults here later
+        { onConflict: 'id' }
+      );
+    if (profileErr) {
+      setError(profileErr.message);
+      return;
+    }
+
+    // 3) Send them into the dashboard
+    navigate('/dashboard');
   };
 
   return (
@@ -24,7 +48,9 @@ export default function LoginPage() {
       <nav className="w-full flex items-center justify-between px-6 py-4 bg-white shadow-sm fixed top-0 left-0 z-10">
         <Link to="/" className="flex items-center gap-2">
           <img src={logoFull} alt="Operon Logo" className="h-8 sm:h-10" />
-          <span className="text-xl font-bold text-operon-charcoal hidden sm:block">Operon</span>
+          <span className="text-xl font-bold text-operon-charcoal hidden sm:block">
+            Operon
+          </span>
         </Link>
         <div className="flex items-center gap-6">
           <Link
@@ -61,10 +87,13 @@ export default function LoginPage() {
             alt="Operon"
             className="h-14 sm:h-16 mx-auto mb-3"
           />
-          <h1 className="text-3xl font-semibold text-operon-charcoal">Welcome to Operon</h1>
+          <h1 className="text-3xl font-semibold text-operon-charcoal">
+            Welcome to Operon
+          </h1>
           <p className="text-operon-muted text-base mt-3 max-w-xl mx-auto leading-relaxed">
-            Operon is a lightweight yet powerful hotel operations platform that streamlines
-            guest service requests across all departments — in real time.
+            Operon is a lightweight yet powerful hotel operations platform that
+            streamlines guest service requests across all departments — in
+            real time.
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 mt-6">
@@ -81,7 +110,8 @@ export default function LoginPage() {
           </div>
 
           <p className="text-sm text-gray-500 italic mt-4 max-w-sm mx-auto">
-            "Operon cut our response times in half." — Front Desk Manager, Hotel Crosby
+            "Operon cut our response times in half." — Front Desk Manager, Hotel
+            Crosby
           </p>
         </motion.div>
 
@@ -93,15 +123,13 @@ export default function LoginPage() {
             Login
           </h2>
 
-          {error && (
-            <p className="text-center text-red-600 text-sm">{error}</p>
-          )}
+          {error && <p className="text-center text-red-600 text-sm">{error}</p>}
 
           <input
             type="email"
             placeholder="Email"
             value={email}
-            onChange={e => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-operon-blue"
             required
           />
@@ -110,7 +138,7 @@ export default function LoginPage() {
             type="password"
             placeholder="Password"
             value={password}
-            onChange={e => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-operon-blue"
             required
           />

@@ -14,6 +14,7 @@ import LoginPage from './pages/LoginPage';
 import SignUp from './pages/SignUp';
 import About from './pages/About';
 import LearnMore from './pages/LearnMore';
+import OnboardingPage from './pages/OnboardingPage'; // ✅ Onboarding
 import ProtectedRoute from './components/ProtectedRoute';
 import { supabase } from './utils/supabaseClient';
 
@@ -21,10 +22,11 @@ export default function App() {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
+    // Initialize session state
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
-
+    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => setSession(session)
     );
@@ -38,8 +40,32 @@ export default function App() {
           {/* Public routes */}
           <Route path="/about" element={<About />} />
           <Route path="/learn-more" element={<LearnMore />} />
-          <Route path="/login" element={session ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
-          <Route path="/signup" element={session ? <Navigate to="/dashboard" replace /> : <SignUp />} />
+          <Route
+            path="/login"
+            element={
+              session
+                ? <Navigate to="/dashboard" replace />
+                : <LoginPage />
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              session
+                ? <Navigate to="/dashboard" replace />
+                : <SignUp />
+            }
+          />
+
+          {/* Onboarding route for authenticated users */}
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute>
+                <OnboardingPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Protected routes */}
           <Route
