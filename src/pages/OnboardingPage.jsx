@@ -27,44 +27,44 @@ export default function OnboardingPage() {
     setLoading(true);
 
     try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      // 1) Get authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
       const userId = user.id;
 
-      // 1) Upsert profile with account_name and property_type
-      await supabase
-        .from('profiles')
-        .upsert(
-          { id: userId, account_name: accountName, property_type: propertyType },
-          { onConflict: 'id' }
-        );
-
-      // 2) Create hotel/property record referencing the existing profile
+      // 2) Create hotel/property first (must exist before profile FK)
       const { data: hotel, error: hotelErr } = await supabase
         .from('hotels')
-        .insert([
-          { profile_id: userId, type: propertyType, name: accountName }
-        ])
+        .insert([{ profile_id: userId, type: propertyType, name: accountName }])
         .select('id')
         .single();
-      if (hotelErr) throw hotelErr;
-
+      if (hotelErr) {
+        console.error('Hotel insert error:', hotelErr);
+        throw hotelErr;
+      }
       const hotelId = hotel.id;
 
-      // 3) Link hotel_id back to profile
-      await supabase
+      // 3) Upsert profile with account_name, property_type, and hotel_id
+      const { error: profileErr } = await supabase
         .from('profiles')
-        .update({ hotel_id: hotelId })
-        .eq('id', userId);
+        .upsert(
+          { id: userId, account_name: accountName, property_type: propertyType, hotel_id: hotelId },
+          { onConflict: 'id' }
+        );
+      if (profileErr) {
+        console.error('Profile upsert error:', profileErr);
+        throw profileErr;
+      }
 
-      // 4) Seed default department_settings
+      // 4) Seed default department_settings for the new hotel
       const defaults = getDefaultsFor(propertyType);
       const seedData = defaults.map(dept => ({ hotel_id: hotelId, department: dept, enabled: true }));
       const { error: seedErr } = await supabase
         .from('department_settings')
         .insert(seedData);
-      if (seedErr) throw seedErr;
+      if (seedErr) {
+        console.error('Seeding dept settings error:', seedErr);
+        throw seedErr;
+      }
 
       // 5) Navigate to dashboard
       navigate('/dashboard');
