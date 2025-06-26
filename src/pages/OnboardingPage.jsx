@@ -12,7 +12,7 @@ export default function OnboardingPage() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Redirect to login if unauthenticated
+  // Redirect if not logged in
   useEffect(() => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -26,11 +26,18 @@ export default function OnboardingPage() {
     setLoading(true);
 
     try {
-      // 1) Get current user
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       const userId = user.id;
 
-      // 2) Create the hotel first (so hotel_id exists)
+      // 1) Upsert the profile (so we have profiles.id)
+      const { error: upsertErr } = await supabase
+        .from('profiles')
+        .upsert({ id: userId }, { onConflict: 'id' });
+      if (upsertErr) throw upsertErr;
+
+      // 2) Insert the hotel now that the profile exists
       const { data: hotel, error: hotelErr } = await supabase
         .from('hotels')
         .insert([{ profile_id: userId, name: accountName, type: propertyType }])
@@ -39,24 +46,30 @@ export default function OnboardingPage() {
       if (hotelErr) throw hotelErr;
       const hotelId = hotel.id;
 
-      // 3) Upsert profile with account_name, property_type, and hotel_id
+      // 3) Update that profile with account_name, property_type, and hotel_id
       const { error: profileErr } = await supabase
         .from('profiles')
-        .upsert(
-          { id: userId, account_name: accountName, property_type: propertyType, hotel_id: hotelId },
-          { onConflict: 'id' }
-        );
+        .update({
+          account_name: accountName,
+          property_type: propertyType,
+          hotel_id: hotelId,
+        })
+        .eq('id', userId);
       if (profileErr) throw profileErr;
 
-      // 4) Seed default departments for the hotel
+      // 4) Seed default departments
       const defaults = getDefaultsFor(propertyType);
-      const seedData = defaults.map(department => ({ hotel_id: hotelId, department, enabled: true }));
+      const seedData = defaults.map(dept => ({
+        hotel_id: hotelId,
+        department: dept,
+        enabled: true,
+      }));
       const { error: seedErr } = await supabase
         .from('department_settings')
         .insert(seedData);
       if (seedErr) throw seedErr;
 
-      // 5) Navigate to dashboard
+      // 5) Go to dashboard
       navigate('/dashboard');
     } catch (err) {
       console.error('Onboarding error:', err);
@@ -70,7 +83,10 @@ export default function OnboardingPage() {
     <>
       <Navbar />
       <div className="min-h-screen bg-operon-background pt-24 px-4 flex items-center justify-center">
-        <form onSubmit={handleSubmit} className="w-full max-w-lg bg-white p-8 rounded-lg shadow-lg space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full max-w-lg bg-white p-8 rounded-lg shadow-lg space-y-6"
+        >
           <h1 className="text-2xl font-semibold text-operon-charcoal text-center">
             Welcome! Let’s set up your account
           </h1>
@@ -78,7 +94,9 @@ export default function OnboardingPage() {
           {error && <p className="text-red-600 text-center">{error}</p>}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Account Name
+            </label>
             <input
               type="text"
               value={accountName}
@@ -90,7 +108,9 @@ export default function OnboardingPage() {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Property Type</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Property Type
+            </label>
             <select
               value={propertyType}
               onChange={e => setPropertyType(e.target.value)}
