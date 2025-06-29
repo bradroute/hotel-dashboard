@@ -103,13 +103,21 @@ export default function SettingsPage() {
     load();
   }, []);
 
-  // Seed default departments on type change
+  // On property-type change, seed **all** possible departments for that type:
+  // default ones enabled, others disabled
   useEffect(() => {
     async function resetDefaults() {
       if (!hotelId || !profile.type) return;
+      const fullList = DEPARTMENT_LISTS[profile.type] || getDefaultsFor(profile.type);
       const defaults = getDefaultsFor(profile.type);
-      const entries = defaults.map(dept => ({ hotel_id: hotelId, department: dept, enabled: true }));
-      await supabase.from('department_settings').upsert(entries, { onConflict: ['hotel_id','department'] });
+      const entries = fullList.map(dept => ({
+        hotel_id: hotelId,
+        department: dept,
+        enabled: defaults.includes(dept)
+      }));
+      await supabase
+        .from('department_settings')
+        .upsert(entries, { onConflict: ['hotel_id','department'] });
       setDepartments(entries);
     }
     resetDefaults();
