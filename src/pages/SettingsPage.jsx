@@ -30,6 +30,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
 
+  // Load profile, departments, and SLA settings
   useEffect(() => {
     async function load() {
       try {
@@ -88,7 +89,7 @@ export default function SettingsPage() {
     load();
   }, []);
 
-  // Reset defaults when type changes
+  // Seed default departments on type change
   useEffect(() => {
     async function resetDefaults() {
       if (!hotelId || !profile.type) return;
@@ -104,16 +105,13 @@ export default function SettingsPage() {
     setProfile(prev => ({ ...prev, [field]: value }));
 
   const toggleDepartment = async (department) => {
-    // Determine current enabled state or default false
     const idx = departments.findIndex(d => d.department === department);
     const current = idx >= 0 ? departments[idx].enabled : false;
 
-    // Upsert into Supabase
     await supabase
       .from('department_settings')
       .upsert({ hotel_id: hotelId, department, enabled: !current }, { onConflict: ['hotel_id','department'] });
 
-    // Update local state: toggle existing or add new
     if (idx >= 0) {
       setDepartments(departments.map(d =>
         d.department === department ? { ...d, enabled: !current } : d
@@ -169,7 +167,7 @@ export default function SettingsPage() {
   if (loading) return <div className="p-4">Loading...</div>;
   if (error) return <div className="p-4 text-red-600">Error: {error}</div>;
 
-  // Determine which departments to show
+  // Pick which departments list to render
   const showList = profile.type === 'hotel'
     ? HOTEL_DEPTS
     : getDefaultsFor(profile.type);
