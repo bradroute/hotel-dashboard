@@ -1,12 +1,19 @@
 // src/pages/SettingsPage.jsx
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
-import { getDefaultsFor, getDepartmentsFor } from '../utils/propertyDefaults';
+import { getDefaultsFor } from '../utils/propertyDefaults';
 import Navbar from '../components/Navbar';
 
 const US_TIMEZONES = [
   'America/New_York','America/Chicago','America/Denver',
   'America/Los_Angeles','America/Phoenix','America/Anchorage','Pacific/Honolulu'
+];
+
+// Full list of possible hotel departments
+const HOTEL_DEPTS = [
+  'Front Desk','Housekeeping','Maintenance','Room Service','Valet',
+  'Concierge','Spa','Bellhop','Security','Events',
+  'Laundry','IT','Engineering','Food & Beverage','Reservations'
 ];
 
 export default function SettingsPage() {
@@ -15,21 +22,14 @@ export default function SettingsPage() {
   const [error, setError] = useState('');
 
   const [profile, setProfile] = useState({
-    name: '',
-    type: '',
-    timezone: '',
-    address: '',
-    city: '',
-    state: '',
-    zip_code: '',
-    phone_number: ''
+    name: '', type: '', timezone: '', address: '', city: '', state: '', zip_code: '', phone_number: ''
   });
   const [departments, setDepartments] = useState([]);
   const [slaSettings, setSlaSettings] = useState([]);
+
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
 
-  // Fetch initial data
   useEffect(() => {
     async function load() {
       try {
@@ -38,10 +38,7 @@ export default function SettingsPage() {
         const userId = session.user.id;
 
         const { data: prof } = await supabase
-          .from('profiles')
-          .select('hotel_id')
-          .eq('id', userId)
-          .single();
+          .from('profiles').select('hotel_id').eq('id', userId).single();
         if (!prof) throw new Error('Profile not found');
         setHotelId(prof.hotel_id);
 
@@ -91,31 +88,39 @@ export default function SettingsPage() {
     load();
   }, []);
 
-  // Seed defaults on type change
+  // Reset defaults when type changes
   useEffect(() => {
-    async function seed() {
+    async function resetDefaults() {
       if (!hotelId || !profile.type) return;
       const defaults = getDefaultsFor(profile.type);
-      const rows = defaults.map(dept => ({ hotel_id: hotelId, department: dept, enabled: true }));
-      await supabase
-        .from('department_settings')
-        .upsert(rows, { onConflict: ['hotel_id','department'] });
-      setDepartments(rows);
+      const entries = defaults.map(dept => ({ hotel_id: hotelId, department: dept, enabled: true }));
+      await supabase.from('department_settings').upsert(entries, { onConflict: ['hotel_id','department'] });
+      setDepartments(entries);
     }
-    seed();
+    resetDefaults();
   }, [profile.type, hotelId]);
 
   const handleProfileChange = (field, value) =>
     setProfile(prev => ({ ...prev, [field]: value }));
 
-  const toggleDepartment = async department => {
-    const current = departments.find(d => d.department === department)?.enabled;
+  const toggleDepartment = async (department) => {
+    // Determine current enabled state or default false
+    const idx = departments.findIndex(d => d.department === department);
+    const current = idx >= 0 ? departments[idx].enabled : false;
+
+    // Upsert into Supabase
     await supabase
       .from('department_settings')
       .upsert({ hotel_id: hotelId, department, enabled: !current }, { onConflict: ['hotel_id','department'] });
-    setDepartments(departments.map(d =>
-      d.department === department ? { ...d, enabled: !current } : d
-    ));
+
+    // Update local state: toggle existing or add new
+    if (idx >= 0) {
+      setDepartments(departments.map(d =>
+        d.department === department ? { ...d, enabled: !current } : d
+      ));
+    } else {
+      setDepartments([...departments, { department, enabled: !current }]);
+    }
   };
 
   const handleSlaChange = (department, field, value) =>
@@ -164,7 +169,10 @@ export default function SettingsPage() {
   if (loading) return <div className="p-4">Loading...</div>;
   if (error) return <div className="p-4 text-red-600">Error: {error}</div>;
 
-  const showList = getDepartmentsFor(profile.type);
+  // Determine which departments to show
+  const showList = profile.type === 'hotel'
+    ? HOTEL_DEPTS
+    : getDefaultsFor(profile.type);
 
   return (
     <>
@@ -235,16 +243,22 @@ export default function SettingsPage() {
         <section>
           <h2 className="text-xl font-semibold">Department Settings</h2>
           <ul className="mt-4 space-y-2">
-            {showList.map(dept => {
-              const enabled = departments.find(d => d.department === dept)?.enabled || false;
+            {showList.map(department => {
+              const enabled = departments.find(d => d.department === department)?.enabled || false;
               return (
-                <li key={dept} className="flex justify-between items-center bg-white p-3 rounded shadow">
-                  <span>{dept}</span>
+                <li key={department} className="flex justify-between items-center bg-white p-3 rounded shadow">
+                  <span>{department}</span>
                   <button
-                    onClick={() => toggleDepartment(dept)}
-                    className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${enabled ? 'bg-operon-blue' : 'bg-gray-300'}`}
+                    onClick={() => toggleDepartment(department)}
+                    className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${
+                      enabled ? 'bg-operon-blue' : 'bg-gray-300'
+                    }`}
                   >
-                    <div className={`bg-white w-6 h-6 rounded-full shadow transform transition-transform ${enabled ? 'translate-x-6' : 'translate-x-0'}`} />
+                    <div
+                      className={`bg-white w-6 h-6 rounded-full shadow transform transition-transform ${
+                        enabled ? 'translate-x-6' : 'translate-x-0'
+                      }`}
+                    />
                   </button>
                 </li>
               );
@@ -256,29 +270,34 @@ export default function SettingsPage() {
         <section>
           <h2 className="text-xl font-semibold">SLA Settings</h2>
           <div className="mt-4 space-y-2">
-            {showList.map(dept => {
-              const sla = slaSettings.find(s => s.department === dept) || { ack_time: 5, res_time: 30, is_active: false };
+            {showList.map(department => {
+              const sla = slaSettings.find(s => s.department === department) || { ack_time: 5, res_time: 30, is_active: false };
               return (
-                <div key={dept} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-white p-3 rounded shadow">
-                  <span>{dept}</span>
+                <div
+                  key={department}
+                  className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-white p-3 rounded shadow"
+                >
+                  <span>{department}</span>
                   <input
-                    type="number" min="0"
+                    type="number"
+                    min="0"
                     value={sla.ack_time}
-                    onChange={e => handleSlaChange(dept, 'ack_time', Number(e.target.value))}
+                    onChange={e => handleSlaChange(department, 'ack_time', Number(e.target.value))}
                     placeholder="Ack min"
                     className="border p-1 rounded"
                   />
                   <input
-                    type="number" min="0"
+                    type="number"
+                    min="0"
                     value={sla.res_time}
-                    onChange={e => handleSlaChange(dept, 'res_time', Number(e.target.value))}
+                    onChange={e => handleSlaChange(department, 'res_time', Number(e.target.value))}
                     placeholder="Res min"
                     className="border p-1 rounded"
                   />
                   <input
                     type="checkbox"
                     checked={sla.is_active}
-                    onChange={e => handleSlaChange(dept, 'is_active', e.target.checked)}
+                    onChange={e => handleSlaChange(department, 'is_active', e.target.checked)}
                   />
                 </div>
               );
