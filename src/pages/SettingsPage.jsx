@@ -1,5 +1,5 @@
 // src/pages/SettingsPage.jsx
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { getDefaultsFor } from '../utils/propertyDefaults';
 import Navbar from '../components/Navbar';
@@ -43,6 +43,24 @@ export default function SettingsPage() {
 
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
+
+  // Reset defaults helper
+  const resetDefaults = useCallback(async (typeOverride = profile.type) => {
+    if (!hotelId || !typeOverride) return;
+    // delete existing
+    await supabase.from('department_settings').delete().eq('hotel_id', hotelId);
+    // build entries for this type
+    const fullList = DEPARTMENT_LISTS[typeOverride] || getDefaultsFor(typeOverride);
+    const defaults = getDefaultsFor(typeOverride);
+    const entries = fullList.map(dept => ({
+      hotel_id: hotelId,
+      department: dept,
+      enabled: defaults.includes(dept)
+    }));
+    // upsert fresh
+    await supabase.from('department_settings').upsert(entries, { onConflict: ['hotel_id','department'] });
+    setDepartments(entries);
+  }, [hotelId, profile.type]);
 
   // Load profile, departments, and SLA settings
   useEffect(() => {
@@ -103,28 +121,19 @@ export default function SettingsPage() {
     load();
   }, []);
 
-  // On property-type change, seed **all** possible departments for that type:
-  // default ones enabled, others disabled
+  // Whenever property type or hotelId changes, reset defaults
   useEffect(() => {
-    async function resetDefaults() {
-      if (!hotelId || !profile.type) return;
-      const fullList = DEPARTMENT_LISTS[profile.type] || getDefaultsFor(profile.type);
-      const defaults = getDefaultsFor(profile.type);
-      const entries = fullList.map(dept => ({
-        hotel_id: hotelId,
-        department: dept,
-        enabled: defaults.includes(dept)
-      }));
-      await supabase
-        .from('department_settings')
-        .upsert(entries, { onConflict: ['hotel_id','department'] });
-      setDepartments(entries);
-    }
-    resetDefaults();
-  }, [profile.type, hotelId]);
+    resetDefaults(profile.type);
+  }, [profile.type, hotelId, resetDefaults]);
 
-  const handleProfileChange = (field, value) =>
+  // handle changes and reset on type change
+  const handleProfileChange = (field, value) => {
     setProfile(prev => ({ ...prev, [field]: value }));
+    if (field === 'type') {
+      // immediately reset departments for new type
+      resetDefaults(value);
+    }
+  };
 
   const toggleDepartment = async (department) => {
     const idx = departments.findIndex(d => d.department === department);
@@ -189,7 +198,6 @@ export default function SettingsPage() {
   if (loading) return <div className="p-4">Loading...</div>;
   if (error) return <div className="p-4 text-red-600">Error: {error}</div>;
 
-  // Determine full list for this type, fallback to defaults
   const showList = DEPARTMENT_LISTS[profile.type] || getDefaultsFor(profile.type);
 
   return (
