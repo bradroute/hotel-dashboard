@@ -9,12 +9,26 @@ const US_TIMEZONES = [
   'America/Los_Angeles','America/Phoenix','America/Anchorage','Pacific/Honolulu'
 ];
 
-// Full list of possible hotel departments
-const HOTEL_DEPTS = [
-  'Front Desk','Housekeeping','Maintenance','Room Service','Valet',
-  'Concierge','Spa','Bellhop','Security','Events',
-  'Laundry','IT','Engineering','Food & Beverage','Reservations'
-];
+// Full department lists by property type
+const DEPARTMENT_LISTS = {
+  hotel: [
+    'Front Desk','Housekeeping','Maintenance','Room Service','Valet',
+    'Concierge','Spa','Bellhop','Security','Events',
+    'Laundry','IT','Engineering','Food & Beverage','Reservations'
+  ],
+  apartment: [
+    'Maintenance','Leasing','Security',
+    'HOA','Janitorial','Parking','Trash Services','Resident Services','Landscaping'
+  ],
+  condo: [
+    'Maintenance','Concierge','Security',
+    'HOA','Janitorial','Parking','Trash Services','Resident Services','Landscaping'
+  ],
+  restaurant: [
+    'Kitchen','Waitstaff','Management',
+    'Bar','Host','Cleaning','Reservations'
+  ]
+};
 
 export default function SettingsPage() {
   const [hotelId, setHotelId] = useState(null);
@@ -167,10 +181,8 @@ export default function SettingsPage() {
   if (loading) return <div className="p-4">Loading...</div>;
   if (error) return <div className="p-4 text-red-600">Error: {error}</div>;
 
-  // Pick which departments list to render
-  const showList = profile.type === 'hotel'
-    ? HOTEL_DEPTS
-    : getDefaultsFor(profile.type);
+  // Determine full list for this type, fallback to defaults
+  const showList = DEPARTMENT_LISTS[profile.type] || getDefaultsFor(profile.type);
 
   return (
     <>
