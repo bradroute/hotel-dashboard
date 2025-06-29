@@ -1,7 +1,7 @@
 // src/pages/SettingsPage.jsx
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
-import { getDefaultsFor } from '../utils/propertyDefaults';
+import { getDefaultsFor, getDepartmentsFor } from '../utils/propertyDefaults';
 import Navbar from '../components/Navbar';
 
 const US_TIMEZONES = [
@@ -15,14 +15,21 @@ export default function SettingsPage() {
   const [error, setError] = useState('');
 
   const [profile, setProfile] = useState({
-    name: '', type: '', timezone: '', address: '', city: '', state: '', zip_code: '', phone_number: ''
+    name: '',
+    type: '',
+    timezone: '',
+    address: '',
+    city: '',
+    state: '',
+    zip_code: '',
+    phone_number: ''
   });
   const [departments, setDepartments] = useState([]);
   const [slaSettings, setSlaSettings] = useState([]);
-
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
 
+  // Fetch initial data
   useEffect(() => {
     async function load() {
       try {
@@ -59,7 +66,7 @@ export default function SettingsPage() {
           .select('department,enabled')
           .eq('hotel_id', prof.hotel_id);
         if (deptErr) throw deptErr;
-        setDepartments(deptData);
+        setDepartments(deptData || []);
 
         const { data: slaData, error: slaErr } = await supabase
           .from('sla_settings')
@@ -84,24 +91,24 @@ export default function SettingsPage() {
     load();
   }, []);
 
-  // Reset departments when type changes
+  // Seed defaults on type change
   useEffect(() => {
-    async function resetDefaults() {
+    async function seed() {
       if (!hotelId || !profile.type) return;
       const defaults = getDefaultsFor(profile.type);
-      const entries = defaults.map(department => ({ hotel_id: hotelId, department, enabled: true }));
+      const rows = defaults.map(dept => ({ hotel_id: hotelId, department: dept, enabled: true }));
       await supabase
         .from('department_settings')
-        .upsert(entries, { onConflict: ['hotel_id', 'department'] });
-      setDepartments(entries);
+        .upsert(rows, { onConflict: ['hotel_id','department'] });
+      setDepartments(rows);
     }
-    resetDefaults();
+    seed();
   }, [profile.type, hotelId]);
 
   const handleProfileChange = (field, value) =>
     setProfile(prev => ({ ...prev, [field]: value }));
 
-  const toggleDepartment = async (department) => {
+  const toggleDepartment = async department => {
     const current = departments.find(d => d.department === department)?.enabled;
     await supabase
       .from('department_settings')
@@ -134,16 +141,16 @@ export default function SettingsPage() {
           phone_number: profile.phone_number
         })
         .eq('id', hotelId);
-      const payload = slaSettings.map(s => ({
+
+      const slaPayload = slaSettings.map(s => ({
         hotel_id: hotelId,
         department: s.department,
         ack_time_minutes: s.ack_time,
         res_time_minutes: s.res_time,
         is_active: s.is_active
       }));
-      await supabase
-        .from('sla_settings')
-        .upsert(payload, { onConflict: ['hotel_id','department'] });
+      await supabase.from('sla_settings').upsert(slaPayload, { onConflict: ['hotel_id','department'] });
+
       setSaveStatus('All changes saved!');
     } catch (e) {
       console.error(e);
@@ -157,10 +164,12 @@ export default function SettingsPage() {
   if (loading) return <div className="p-4">Loading...</div>;
   if (error) return <div className="p-4 text-red-600">Error: {error}</div>;
 
+  const showList = getDepartmentsFor(profile.type);
+
   return (
     <>
       <Navbar />
-      <div className="max-w-3xl mx-auto p-6 space-y-8">
+      <div className="pt-24 max-w-3xl mx-auto p-6 space-y-8">
         {/* Property Profile */}
         <section>
           <h2 className="text-xl font-semibold">Property Profile</h2>
@@ -226,16 +235,20 @@ export default function SettingsPage() {
         <section>
           <h2 className="text-xl font-semibold">Department Settings</h2>
           <ul className="mt-4 space-y-2">
-            {departments.map(({ department, enabled }) => (
-              <li key={department} className="flex justify-between items-center bg-white p-3 rounded shadow">
-                <span>{department}</span>
-                <input
-                  type="checkbox"
-                  checked={enabled}
-                  onChange={() => toggleDepartment(department)}
-                />
-              </li>
-            ))}
+            {showList.map(dept => {
+              const enabled = departments.find(d => d.department === dept)?.enabled || false;
+              return (
+                <li key={dept} className="flex justify-between items-center bg-white p-3 rounded shadow">
+                  <span>{dept}</span>
+                  <button
+                    onClick={() => toggleDepartment(dept)}
+                    className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${enabled ? 'bg-operon-blue' : 'bg-gray-300'}`}
+                  >
+                    <div className={`bg-white w-6 h-6 rounded-full shadow transform transition-transform ${enabled ? 'translate-x-6' : 'translate-x-0'}`} />
+                  </button>
+                </li>
+              );
+            })}
           </ul>
         </section>
 
@@ -243,35 +256,33 @@ export default function SettingsPage() {
         <section>
           <h2 className="text-xl font-semibold">SLA Settings</h2>
           <div className="mt-4 space-y-2">
-            {slaSettings.map(({ department, ack_time, res_time, is_active }) => (
-              <div
-                key={department}
-                className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-white p-3 rounded shadow"
-              >
-                <span>{department}</span>
-                <input
-                  type="number"
-                  min="0"
-                  value={ack_time}
-                  onChange={e => handleSlaChange(department, 'ack_time', Number(e.target.value))}
-                  placeholder="Ack min"
-                  className="border p-1 rounded"
-                />
-                <input
-                  type="number"
-                  min="0"
-                  value={res_time}
-                  onChange={e => handleSlaChange(department, 'res_time', Number(e.target.value))}
-                  placeholder="Res min"
-                  className="border p-1 rounded"
-                />
-                <input
-                  type="checkbox"
-                  checked={is_active}
-                  onChange={e => handleSlaChange(department, 'is_active', e.target.checked)}
-                />
-              </div>
-            ))}
+            {showList.map(dept => {
+              const sla = slaSettings.find(s => s.department === dept) || { ack_time: 5, res_time: 30, is_active: false };
+              return (
+                <div key={dept} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-white p-3 rounded shadow">
+                  <span>{dept}</span>
+                  <input
+                    type="number" min="0"
+                    value={sla.ack_time}
+                    onChange={e => handleSlaChange(dept, 'ack_time', Number(e.target.value))}
+                    placeholder="Ack min"
+                    className="border p-1 rounded"
+                  />
+                  <input
+                    type="number" min="0"
+                    value={sla.res_time}
+                    onChange={e => handleSlaChange(dept, 'res_time', Number(e.target.value))}
+                    placeholder="Res min"
+                    className="border p-1 rounded"
+                  />
+                  <input
+                    type="checkbox"
+                    checked={sla.is_active}
+                    onChange={e => handleSlaChange(dept, 'is_active', e.target.checked)}
+                  />
+                </div>
+              );
+            })}
           </div>
         </section>
 
