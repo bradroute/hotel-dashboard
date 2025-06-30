@@ -5,11 +5,15 @@ import { getDefaultsFor } from '../utils/propertyDefaults';
 import Navbar from '../components/Navbar';
 
 const US_TIMEZONES = [
-  'America/New_York','America/Chicago','America/Denver',
-  'America/Los_Angeles','America/Phoenix','America/Anchorage','Pacific/Honolulu'
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'America/Phoenix',
+  'America/Anchorage',
+  'Pacific/Honolulu'
 ];
 
-// Full department lists by property type
 const DEPARTMENT_LISTS = {
   hotel: [
     'Front Desk','Housekeeping','Maintenance','Room Service','Valet',
@@ -36,7 +40,14 @@ export default function SettingsPage() {
   const [error, setError] = useState('');
 
   const [profile, setProfile] = useState({
-    name: '', type: '', timezone: '', address: '', city: '', state: '', zip_code: '', phone_number: ''
+    name: '',
+    type: '',
+    timezone: '',
+    address: '',
+    city: '',
+    state: '',
+    zip_code: '',
+    phone_number: ''
   });
   const [departments, setDepartments] = useState([]);
   const [slaSettings, setSlaSettings] = useState([]);
@@ -44,64 +55,85 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
 
-  // Reset defaults helper
-  const resetDefaults = useCallback(async (typeOverride = profile.type) => {
-    if (!hotelId || !typeOverride) return;
-    // delete existing
-    await supabase.from('department_settings').delete().eq('hotel_id', hotelId);
-    // build entries for this type
-    const fullList = DEPARTMENT_LISTS[typeOverride] || getDefaultsFor(typeOverride);
-    const defaults = getDefaultsFor(typeOverride);
+  // Reset defaults only when user changes property type
+  const resetDefaults = useCallback(async (newType) => {
+    if (!hotelId || !newType) return;
+    // clear existing department_settings for this hotel
+    await supabase
+      .from('department_settings')
+      .delete()
+      .eq('hotel_id', hotelId);
+
+    // get full list and default-enabled list
+    const fullList = DEPARTMENT_LISTS[newType] || getDefaultsFor(newType);
+    const defaults = getDefaultsFor(newType);
+
+    // prepare entries and upsert
     const entries = fullList.map(dept => ({
       hotel_id: hotelId,
       department: dept,
       enabled: defaults.includes(dept)
     }));
-    // upsert fresh
-    await supabase.from('department_settings').upsert(entries, { onConflict: ['hotel_id','department'] });
-    setDepartments(entries);
-  }, [hotelId, profile.type]);
+    await supabase
+      .from('department_settings')
+      .upsert(entries, { onConflict: ['hotel_id','department'] });
 
-  // Load profile, departments, and SLA settings
+    setDepartments(entries);
+  }, [hotelId]);
+
+  // Load profile, departments, SLA on mount
   useEffect(() => {
-    async function load() {
+    async function loadData() {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) throw new Error('Not authenticated');
         const userId = session.user.id;
 
-        const { data: prof } = await supabase
-          .from('profiles').select('hotel_id').eq('id', userId).single();
-        if (!prof) throw new Error('Profile not found');
-        setHotelId(prof.hotel_id);
+        // fetch profile to get hotelId
+        const { data: profData, error: profErr } = await supabase
+          .from('profiles')
+          .select('hotel_id')
+          .eq('id', userId)
+          .single();
+        if (profErr || !profData) throw profErr || new Error('Profile not found');
+        setHotelId(profData.hotel_id);
 
-        const { data: hotel } = await supabase
+        // fetch hotel details
+        const { data: hotelData, error: hotelErr } = await supabase
           .from('hotels')
           .select('name,type,timezone,address,city,state,zip_code,phone_number')
-          .eq('id', prof.hotel_id)
+          .eq('id', profData.hotel_id)
           .single();
+        if (hotelErr) throw hotelErr;
         setProfile({
-          name: hotel.name || '',
-          type: hotel.type || '',
-          timezone: hotel.timezone || '',
-          address: hotel.address || '',
-          city: hotel.city || '',
-          state: hotel.state || '',
-          zip_code: hotel.zip_code || '',
-          phone_number: hotel.phone_number || ''
+          name: hotelData.name || '',
+          type: hotelData.type || '',
+          timezone: hotelData.timezone || '',
+          address: hotelData.address || '',
+          city: hotelData.city || '',
+          state: hotelData.state || '',
+          zip_code: hotelData.zip_code || '',
+          phone_number: hotelData.phone_number || ''
         });
 
+        // fetch existing department settings
         const { data: deptData, error: deptErr } = await supabase
           .from('department_settings')
           .select('department,enabled')
-          .eq('hotel_id', prof.hotel_id);
+          .eq('hotel_id', profData.hotel_id);
         if (deptErr) throw deptErr;
-        setDepartments(deptData || []);
+        // if none exist, initialize defaults
+        if (!deptData || deptData.length === 0) {
+          await resetDefaults(hotelData.type);
+        } else {
+          setDepartments(deptData);
+        }
 
+        // fetch SLA settings
         const { data: slaData, error: slaErr } = await supabase
           .from('sla_settings')
           .select('department,ack_time_minutes,res_time_minutes,is_active')
-          .eq('hotel_id', prof.hotel_id);
+          .eq('hotel_id', profData.hotel_id);
         if (slaErr) throw slaErr;
         setSlaSettings(
           slaData.map(s => ({
@@ -111,57 +143,56 @@ export default function SettingsPage() {
             is_active: s.is_active
           }))
         );
-      } catch (e) {
-        console.error(e);
-        setError(e.message);
+      } catch (err) {
+        console.error(err);
+        setError(err.message);
       } finally {
         setLoading(false);
       }
     }
-    load();
-  }, []);
+    loadData();
+  }, [resetDefaults]);
 
-  // Whenever property type or hotelId changes, reset defaults
-  useEffect(() => {
-    resetDefaults(profile.type);
-  }, [profile.type, hotelId, resetDefaults]);
-
-  // handle changes and reset on type change
+  // handle profile input changes
   const handleProfileChange = (field, value) => {
     setProfile(prev => ({ ...prev, [field]: value }));
     if (field === 'type') {
-      // immediately reset departments for new type
       resetDefaults(value);
     }
   };
 
-  const toggleDepartment = async (department) => {
-    const idx = departments.findIndex(d => d.department === department);
+  // toggle a department and persist change immediately
+  const toggleDepartment = async (dept) => {
+    const idx = departments.findIndex(d => d.department === dept);
     const current = idx >= 0 ? departments[idx].enabled : false;
 
     await supabase
       .from('department_settings')
-      .upsert({ hotel_id: hotelId, department, enabled: !current }, { onConflict: ['hotel_id','department'] });
+      .upsert({ hotel_id: hotelId, department: dept, enabled: !current }, { onConflict: ['hotel_id','department'] });
 
     if (idx >= 0) {
-      setDepartments(departments.map(d =>
-        d.department === department ? { ...d, enabled: !current } : d
-      ));
+      setDepartments(
+        departments.map(d => d.department === dept ? { ...d, enabled: !current } : d)
+      );
     } else {
-      setDepartments([...departments, { department, enabled: !current }]);
+      setDepartments([...departments, { department: dept, enabled: !current }]);
     }
   };
 
-  const handleSlaChange = (department, field, value) =>
-    setSlaSettings(prev => prev.map(s =>
-      s.department === department ? { ...s, [field]: value } : s
-    ));
+  // handle SLA field changes locally
+  const handleSlaChange = (dept, field, value) => {
+    setSlaSettings(prev =>
+      prev.map(s => s.department === dept ? { ...s, [field]: value } : s)
+    );
+  };
 
+  // save hotel info and SLA settings together
   const saveAll = async () => {
     if (!hotelId) return;
     setSaving(true);
     setSaveStatus('');
     try {
+      // update hotel profile
       await supabase
         .from('hotels')
         .update({
@@ -176,6 +207,7 @@ export default function SettingsPage() {
         })
         .eq('id', hotelId);
 
+      // upsert SLA
       const slaPayload = slaSettings.map(s => ({
         hotel_id: hotelId,
         department: s.department,
@@ -183,11 +215,13 @@ export default function SettingsPage() {
         res_time_minutes: s.res_time,
         is_active: s.is_active
       }));
-      await supabase.from('sla_settings').upsert(slaPayload, { onConflict: ['hotel_id','department'] });
+      await supabase
+        .from('sla_settings')
+        .upsert(slaPayload, { onConflict: ['hotel_id','department'] });
 
       setSaveStatus('All changes saved!');
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error(err);
       setSaveStatus('Save failed');
     } finally {
       setSaving(false);
@@ -198,13 +232,14 @@ export default function SettingsPage() {
   if (loading) return <div className="p-4">Loading...</div>;
   if (error) return <div className="p-4 text-red-600">Error: {error}</div>;
 
+  // departments to display based on type
   const showList = DEPARTMENT_LISTS[profile.type] || getDefaultsFor(profile.type);
 
   return (
     <>
       <Navbar />
       <div className="pt-24 max-w-3xl mx-auto p-6 space-y-8">
-        {/* Property Profile */}
+        {/* Property Profile Section */}
         <section>
           <h2 className="text-xl font-semibold">Property Profile</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
@@ -215,7 +250,7 @@ export default function SettingsPage() {
               className="border p-2 rounded"
             />
             <input
-              value={profile.phone_number}
+              value={profile.phone_number} 
               onChange={e => handleProfileChange('phone_number', e.target.value)}
               placeholder="Phone Number"
               className="border p-2 rounded"
@@ -225,6 +260,7 @@ export default function SettingsPage() {
               onChange={e => handleProfileChange('type', e.target.value)}
               className="border p-2 rounded"
             >
+              <option value="">Select Type</option>
               <option value="hotel">Hotel</option>
               <option value="apartment">Apartment</option>
               <option value="condo">Condo</option>
@@ -248,24 +284,21 @@ export default function SettingsPage() {
               value={profile.city}
               onChange={e => handleProfileChange('city', e.target.value)}
               placeholder="City"
-              className="border p-2 rounded"
-            />
+              className="border p-2 rounded"/>
             <input
               value={profile.state}
               onChange={e => handleProfileChange('state', e.target.value)}
               placeholder="State"
-              className="border p-2 rounded"
-            />
+              className="border p-2 rounded"/>
             <input
               value={profile.zip_code}
               onChange={e => handleProfileChange('zip_code', e.target.value)}
               placeholder="ZIP Code"
-              className="border p-2 rounded"
-            />
+              className="border p-2 rounded"/>
           </div>
         </section>
 
-        {/* Department Settings */}
+        {/* Department Settings Section */}
         <section>
           <h2 className="text-xl font-semibold">Department Settings</h2>
           <ul className="mt-4 space-y-2">
@@ -276,14 +309,10 @@ export default function SettingsPage() {
                   <span>{department}</span>
                   <button
                     onClick={() => toggleDepartment(department)}
-                    className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${
-                      enabled ? 'bg-operon-blue' : 'bg-gray-300'
-                    }`}
+                    className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${enabled ? 'bg-operon-blue' : 'bg-gray-300'}`}
                   >
                     <div
-                      className={`bg-white w-6 h-6 rounded-full shadow transform transition-transform ${
-                        enabled ? 'translate-x-6' : 'translate-x-0'
-                      }`}
+                      className={`bg-white w-6 h-6 rounded-full shadow transform transition-transform ${enabled ? 'translate-x-6' : 'translate-x-0'}`}
                     />
                   </button>
                 </li>
@@ -292,34 +321,23 @@ export default function SettingsPage() {
           </ul>
         </section>
 
-        {/* SLA Settings */}
+        {/* SLA Settings Section */}
         <section>
           <h2 className="text-xl font-semibold">SLA Settings</h2>
           <div className="mt-4 space-y-2">
             {showList.map(department => {
               const sla = slaSettings.find(s => s.department === department) || { ack_time: 5, res_time: 30, is_active: false };
               return (
-                <div
-                  key={department}
-                  className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-white p-3 rounded shadow"
-                >
+                <div key={department} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-white p-3 rounded shadow">
                   <span>{department}</span>
                   <input
-                    type="number"
-                    min="0"
-                    value={sla.ack_time}
+                    type="number" min="0" value={sla.ack_time}
                     onChange={e => handleSlaChange(department, 'ack_time', Number(e.target.value))}
-                    placeholder="Ack min"
-                    className="border p-1 rounded"
-                  />
+                    placeholder="Ack min" className="border p-1 rounded"/>
                   <input
-                    type="number"
-                    min="0"
-                    value={sla.res_time}
+                    type="number" min="0" value={sla.res_time}
                     onChange={e => handleSlaChange(department, 'res_time', Number(e.target.value))}
-                    placeholder="Res min"
-                    className="border p-1 rounded"
-                  />
+                    placeholder="Res min" className="border p-1 rounded"/>
                   <input
                     type="checkbox"
                     checked={sla.is_active}
@@ -331,6 +349,7 @@ export default function SettingsPage() {
           </div>
         </section>
 
+        {/* Save Button */}
         <button
           onClick={saveAll}
           disabled={saving}
