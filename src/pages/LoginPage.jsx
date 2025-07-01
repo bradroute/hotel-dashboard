@@ -74,7 +74,7 @@ export default function LoginPage() {
           </div>
 
           <p className="text-sm text-gray-500 italic mt-4 max-w-sm mx-auto">
-            "Operon cut our response times in half." — Front Desk Manager, Hotel Crosby
+            "Operon cut our response times in half." — Front Desk Manager
           </p>
         </motion.div>
 
