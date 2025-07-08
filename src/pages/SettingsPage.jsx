@@ -85,7 +85,7 @@ export default function SettingsPage() {
     async function loadData() {
       try {
         // Auth & session
-        const { data:{ session } } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) throw new Error('Not authenticated');
         const uid = session.user.id;
         setUserId(uid);
@@ -130,18 +130,26 @@ export default function SettingsPage() {
           setDepartments(deptData);
         }
 
-        // SLA settings
+        // SLA settings (complete list)
         const { data: slaData, error: slaErr } = await supabase
           .from('sla_settings')
           .select('department,ack_time_minutes,res_time_minutes,is_active')
           .eq('hotel_id', profData.hotel_id);
         if (slaErr) throw slaErr;
-        setSlaSettings(slaData.map(s => ({
+
+        // build full list with defaults for missing
+        const fullList = DEPARTMENT_LISTS[hotelData.type] || getDefaultsFor(hotelData.type);
+        const existing = slaData.map(s => ({
           department: s.department,
-          ack_time: s.ack_time_minutes,
-          res_time: s.res_time_minutes,
+          ack_time:  s.ack_time_minutes,
+          res_time:  s.res_time_minutes,
           is_active: s.is_active,
-        })));
+        }));
+        const complete = fullList.map(dept => {
+          const found = existing.find(x => x.department === dept);
+          return found || { department: dept, ack_time: 5, res_time: 30, is_active: false };
+        });
+        setSlaSettings(complete);
 
         // Ensure Stripe customer exists via POST
         const customerRes = await fetch(
@@ -174,9 +182,7 @@ export default function SettingsPage() {
     async function loadCards() {
       if (!stripeCustomerId) return;
       try {
-        const res = await fetch(
-          `${API_URL}/api/list-payment-methods/${stripeCustomerId}`
-        );
+        const res = await fetch(`${API_URL}/api/list-payment-methods/${stripeCustomerId}`);
         if (!res.ok) {
           console.error('Payment methods API error', res.status);
           return;
@@ -211,15 +217,13 @@ export default function SettingsPage() {
         { onConflict: ['hotel_id','department'] }
       );
     setDepartments(d =>
-      d.map(x =>
-        x.department === dept ? { ...x, enabled: !current } : x
-      )
+      d.map(x => x.department === dept ? { ...x, enabled: !current } : x)
     );
   };
 
   const handleSlaChange = (dept, field, val) => {
     setSlaSettings(s =>
-      s.map(x => (x.department === dept ? { ...x, [field]: val } : x))
+      s.map(x => x.department === dept ? { ...x, [field]: val } : x)
     );
   };
 
@@ -298,7 +302,7 @@ export default function SettingsPage() {
                 <option value="hotel">Hotel</option>
                 <option value="apartment">Apartment</option>
                 <option value="condo">Condo</option>
-                <option value="restaurant">Restaurant</option>`
+                <option value="restaurant">Restaurant</option>
               </select>
               <select
                 value={profile.timezone}
@@ -332,8 +336,7 @@ export default function SettingsPage() {
                 value={profile.zip_code}
                 onChange={e => handleProfileChange('zip_code', e.target.value)}
                 placeholder="ZIP Code"
-                className="border p-2 rounded"
-              />
+                className="border p-2 rounded" />
             </div>
           </section>
 
@@ -342,10 +345,7 @@ export default function SettingsPage() {
             <h2 className="text-xl font-semibold">Payment Method</h2>
             <div className="mt-4 space-y-2">
               {paymentMethods.map(pm => (
-                <label
-                  key={pm.id}
-                  className="flex items-center bg-white p-3 rounded shadow"
-                >
+                <label key={pm.id} className="flex items-center bg-white p-3 rounded shadow">
                   <input
                     type="radio"
                     name="defaultPm"
@@ -366,10 +366,7 @@ export default function SettingsPage() {
                 </label>
               ))}
               {!showNewCardForm && (
-                <button
-                  className="text-operon-blue underline mt-1"
-                  onClick={() => setShowNewCardForm(true)}
-                >
+                <button className="text-operon-blue underline mt-1" onClick={() => setShowNewCardForm(true)}>
                   + Add another card
                 </button>
               )}
@@ -378,9 +375,7 @@ export default function SettingsPage() {
                   customerId={stripeCustomerId}
                   onSuccess={async () => {
                     setShowNewCardForm(false);
-                    const res = await fetch(
-                      `${API_URL}/api/list-payment-methods/${stripeCustomerId}`
-                    );
+                    const res = await fetch(`${API_URL}/api/list-payment-methods/${stripeCustomerId}`);
                     const { paymentMethods: methods } = await res.json();
                     setPaymentMethods(methods);
                   }}
@@ -396,23 +391,16 @@ export default function SettingsPage() {
               {showList.map(dept => {
                 const enabled = departments.find(d => d.department === dept)?.enabled || false;
                 return (
-                  <li
-                    key={dept}
-                    className="flex justify-between items-center bg-white p-3 rounded shadow"
-                  >
+                  <li key={dept} className="flex justify-between items-center bg-white p-3 rounded shadow">
                     <span>{dept}</span>
                     <button
                       onClick={() => toggleDepartment(dept)}
                       className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${
                         enabled ? 'bg-operon-blue' : 'bg-gray-300'
                       }`}
-                    >
-                      <div
-                        className={`bg-white w-6 h-6 rounded-full shadow transform transition-transform ${
-                          enabled ? 'translate-x-6' : 'translate-x-0'
-                        }`}
-                      />
-                    </button>
+                    ><div className={`bg-white w-6 h-6 rounded-full shadow transform transition-transform ${
+                        enabled ? 'translate-x-6' : 'translate-x-0'
+                      }`}/></button>
                   </li>
                 );
               })}
@@ -424,36 +412,13 @@ export default function SettingsPage() {
             <h2 className="text-xl font-semibold">SLA Settings</h2>
             <div className="mt-4 space-y-2">
               {showList.map(dept => {
-                const s = slaSettings.find(x => x.department === dept) || {
-                  ack_time: 5, res_time: 30, is_active: false
-                };
+                const s = slaSettings.find(x => x.department === dept) || { ack_time: 5, res_time: 30, is_active: false };
                 return (
-                  <div
-                    key={dept}
-                    className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-white p-3 rounded shadow"
-                  >
+                  <div key={dept} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-white p-3 rounded shadow">
                     <span>{dept}</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={s.ack_time}
-                      onChange={e => handleSlaChange(dept, 'ack_time', Number(e.target.value))}
-                      placeholder="Ack min"
-                      className="border p-1 rounded"
-                    />
-                    <input
-                      type="number"
-                      min="0"
-                      value={s.res_time}
-                      onChange={e => handleSlaChange(dept, 'res_time', Number(e.target.value))}
-                      placeholder="Res min"
-                      className="border p-1 rounded"
-                    />
-                    <input
-                      type="checkbox"
-                      checked={s.is_active}
-                      onChange={e => handleSlaChange(dept, 'is_active', e.target.checked)}
-                    />
+                    <input type="number" min="0" value={s.ack_time} onChange={e=>handleSlaChange(dept,'ack_time',+e.target.value)} placeholder="Ack min" className="border p-1 rounded"/>
+                    <input type="number" min="0" value={s.res_time} onChange={e=>handleSlaChange(dept,'res_time',+e.target.value)} placeholder="Res min" className="border p-1 rounded"/>
+                    <input type="checkbox" checked={s.is_active} onChange={e=>handleSlaChange(dept,'is_active',e.target.checked)}/>
                   </div>
                 );
               })}
@@ -461,11 +426,7 @@ export default function SettingsPage() {
           </section>
 
           {/* Save All */}
-          <button
-            onClick={saveAll}
-            disabled={saving}
-            className="w-full bg-operon-blue text-white py-2 rounded disabled:opacity-50"
-          >
+          <button onClick={saveAll} disabled={saving} className="w-full bg-operon-blue text-white py-2 rounded disabled:opacity-50">
             {saving ? 'Saving…' : 'Save Changes'}
           </button>
           {saveStatus && <p className="text-center text-green-600 mt-2">{saveStatus}</p>}
