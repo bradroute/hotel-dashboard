@@ -21,6 +21,7 @@ export default function OnboardingPage() {
     state: '',
     zip_code: ''
   });
+  const [propertyCount, setPropertyCount] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ export default function OnboardingPage() {
       // Insert new hotel with full fields
       const { data: hotel, error: hotelErr } = await supabase
         .from('hotels')
-        .insert([{ 
+        .insert([{
           profile_id: userId,
           name: profile.accountName,
           type: profile.type,
@@ -65,12 +66,13 @@ export default function OnboardingPage() {
       if (hotelErr) throw hotelErr;
       const hotelId = hotel.id;
 
-      // Update profile record
+      // Update profile record with property count estimate
       await supabase.from('profiles')
         .update({
           account_name: profile.accountName,
           property_type: profile.type,
-          hotel_id: hotelId
+          hotel_id: hotelId,
+          property_count_estimate: propertyCount
         })
         .eq('id', userId);
 
@@ -129,6 +131,27 @@ export default function OnboardingPage() {
             <option value="restaurant">Restaurant</option>
           </select>
 
+          {/* New: Property Count Dropdown */}
+          <div>
+            <label htmlFor="propertyCount" className="block text-sm font-medium text-gray-700">
+              How many properties will you manage?
+            </label>
+            <select
+              id="propertyCount"
+              name="propertyCount"
+              value={propertyCount}
+              onChange={e => setPropertyCount(e.target.value)}
+              required
+              className="mt-1 block w-full border px-3 py-2 rounded focus:outline-none focus:ring-2 focus:ring-operon-blue"
+            >
+              <option value="">Select one</option>
+              <option value="1">1</option>
+              <option value="2-5">2–5</option>
+              <option value="6-10">6–10</option>
+              <option value="10+">10+</option>
+            </select>
+          </div>
+
           <select
             value={profile.timezone}
             onChange={e => handleChange('timezone', e.target.value)}
@@ -181,7 +204,7 @@ export default function OnboardingPage() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !propertyCount}
             className="w-full bg-operon-blue text-white py-2 rounded font-medium hover:bg-blue-500 transition disabled:opacity-50"
           >
             {loading ? 'Setting up…' : 'Get Started'}
