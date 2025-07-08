@@ -7,6 +7,9 @@ import { Elements } from '@stripe/react-stripe-js';
 import { stripePromise } from '../utils/stripe';
 import CardForm from '../components/CardForm';
 
+// Must match the Vercel env var key exactly
+const API_URL = process.env.REACT_APP_API_URL;
+
 const US_TIMEZONES = [
   'America/New_York',
   'America/Chicago',
@@ -38,7 +41,7 @@ const DEPARTMENT_LISTS = {
 };
 
 export default function SettingsPage() {
-  // core state
+  // Core state
   const [userId, setUserId]           = useState(null);
   const [hotelId, setHotelId]         = useState(null);
   const [loading, setLoading]         = useState(true);
@@ -55,11 +58,11 @@ export default function SettingsPage() {
   const [defaultPm, setDefaultPm]               = useState(null);
   const [showNewCardForm, setShowNewCardForm]   = useState(false);
 
-  // save state
+  // Save state
   const [saving, setSaving]         = useState(false);
   const [saveStatus, setSaveStatus] = useState('');
 
-  // 0) reset department defaults
+  // Reset department defaults helper
   const resetDefaults = useCallback(async (newType) => {
     if (!hotelId || !newType) return;
     await supabase.from('department_settings').delete().eq('hotel_id', hotelId);
@@ -74,31 +77,30 @@ export default function SettingsPage() {
     await supabase
       .from('department_settings')
       .upsert(entries, { onConflict: ['hotel_id','department'] });
-
     setDepartments(entries);
   }, [hotelId]);
 
-  // 1) load all initial data
+  // 1) Load all initial data
   useEffect(() => {
     async function loadData() {
       try {
-        // --- Auth & session
+        // Auth & session
         const { data:{ session } } = await supabase.auth.getSession();
         if (!session?.user) throw new Error('Not authenticated');
         const uid = session.user.id;
         setUserId(uid);
 
-        // --- profile → hotel
+        // Profile → hotel
         const { data: profData, error: profErr } = await supabase
           .from('profiles')
-          .select('hotel_id, default_payment_method_id, stripe_customer_id')
+          .select('hotel_id, default_payment_method_id')
           .eq('id', uid)
           .single();
         if (profErr || !profData) throw profErr || new Error('Profile not found');
         setHotelId(profData.hotel_id);
         setDefaultPm(profData.default_payment_method_id);
 
-        // --- hotel details
+        // Hotel details
         const { data: hotelData, error: hotelErr } = await supabase
           .from('hotels')
           .select('name,type,timezone,address,city,state,zip_code,phone_number')
@@ -116,7 +118,7 @@ export default function SettingsPage() {
           phone_number: hotelData.phone_number || '',
         });
 
-        // --- departments
+        // Departments
         const { data: deptData, error: deptErr } = await supabase
           .from('department_settings')
           .select('department,enabled')
@@ -128,7 +130,7 @@ export default function SettingsPage() {
           setDepartments(deptData);
         }
 
-        // --- SLA settings
+        // SLA settings
         const { data: slaData, error: slaErr } = await supabase
           .from('sla_settings')
           .select('department,ack_time_minutes,res_time_minutes,is_active')
@@ -141,8 +143,8 @@ export default function SettingsPage() {
           is_active: s.is_active,
         })));
 
-        // --- ensure Stripe Customer via POST
-        const customerRes = await fetch('/api/get-or-create-customer', {
+        // Ensure Stripe Customer via POST
+        const customerRes = await fetch(`${API_URL}/get-or-create-customer`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userId: uid }),
@@ -164,12 +166,12 @@ export default function SettingsPage() {
     loadData();
   }, [resetDefaults]);
 
-  // 2) load payment methods once stripeCustomerId is set
+  // 2) Load payment methods once stripeCustomerId is set
   useEffect(() => {
     async function loadCards() {
       if (!stripeCustomerId) return;
       try {
-        const res = await fetch(`/api/list-payment-methods/${stripeCustomerId}`);
+        const res = await fetch(`${API_URL}/list-payment-methods/${stripeCustomerId}`);
         if (!res.ok) {
           console.error('Payment methods API error', res.status);
           return;
@@ -183,7 +185,7 @@ export default function SettingsPage() {
     loadCards();
   }, [stripeCustomerId]);
 
-  // 3) stripe lib loaded
+  // 3) Stripe lib loaded
   useEffect(() => {
     stripePromise.then(s => console.log('✅ Stripe loaded:', !!s));
   }, []);
@@ -216,20 +218,19 @@ export default function SettingsPage() {
     setSaving(true);
     setSaveStatus('');
     try {
-      // update hotel record
-      await supabase.from('hotels')
-        .update({
-          name: profile.name,
-          type: profile.type,
-          timezone: profile.timezone,
-          address: profile.address,
-          city: profile.city,
-          state: profile.state,
-          zip_code: profile.zip_code,
-          phone_number: profile.phone_number,
-        }).eq('id', hotelId);
+      // Update hotel
+      await supabase.from('hotels').update({
+        name: profile.name,
+        type: profile.type,
+        timezone: profile.timezone,
+        address: profile.address,
+        city: profile.city,
+        state: profile.state,
+        zip_code: profile.zip_code,
+        phone_number: profile.phone_number,
+      }).eq('id', hotelId);
 
-      // upsert SLA settings
+      // Upsert SLA
       const slaPayload = slaSettings.map(s => ({
         hotel_id: hotelId,
         department: s.department,
@@ -237,8 +238,7 @@ export default function SettingsPage() {
         res_time_minutes: s.res_time,
         is_active: s.is_active,
       }));
-      await supabase.from('sla_settings')
-        .upsert(slaPayload, { onConflict: ['hotel_id','department'] });
+      await supabase.from('sla_settings').upsert(slaPayload, { onConflict: ['hotel_id','department'] });
 
       setSaveStatus('All changes saved!');
     } catch (err) {
@@ -341,7 +341,7 @@ export default function SettingsPage() {
                     checked={defaultPm === pm.id}
                     onChange={async () => {
                       setDefaultPm(pm.id);
-                      await fetch('/api/set-default-payment-method', {
+                      await fetch(`${API_URL}/set-default-payment-method`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ userId, paymentMethodId: pm.id }),
@@ -366,7 +366,7 @@ export default function SettingsPage() {
                   customerId={stripeCustomerId}
                   onSuccess={async () => {
                     setShowNewCardForm(false);
-                    const res = await fetch(`/api/list-payment-methods/${stripeCustomerId}`);
+                    const res = await fetch(`${API_URL}/list-payment-methods/${stripeCustomerId}`);
                     const { paymentMethods: methods } = await res.json();
                     setPaymentMethods(methods);
                   }}
