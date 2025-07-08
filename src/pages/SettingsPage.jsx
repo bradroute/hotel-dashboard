@@ -7,7 +7,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import { stripePromise } from '../utils/stripe';
 import CardForm from '../components/CardForm';
 
-// Must match the Vercel env var key exactly
+// Base URL of your backend (set in Vercel as REACT_APP_API_URL)
 const API_URL = process.env.REACT_APP_API_URL;
 
 const US_TIMEZONES = [
@@ -80,7 +80,7 @@ export default function SettingsPage() {
     setDepartments(entries);
   }, [hotelId]);
 
-  // 1) Load all initial data
+  // Load initial data
   useEffect(() => {
     async function loadData() {
       try {
@@ -118,7 +118,7 @@ export default function SettingsPage() {
           phone_number: hotelData.phone_number || '',
         });
 
-        // Departments
+        // Department settings
         const { data: deptData, error: deptErr } = await supabase
           .from('department_settings')
           .select('department,enabled')
@@ -143,12 +143,15 @@ export default function SettingsPage() {
           is_active: s.is_active,
         })));
 
-        // Ensure Stripe Customer via POST
-        const customerRes = await fetch(`${API_URL}/get-or-create-customer`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: uid }),
-        });
+        // Ensure Stripe customer exists via POST
+        const customerRes = await fetch(
+          `${API_URL}/api/get-or-create-customer`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: uid }),
+          }
+        );
         if (!customerRes.ok) {
           const text = await customerRes.text();
           throw new Error(`Customer API error ${customerRes.status}: ${text}`);
@@ -166,12 +169,14 @@ export default function SettingsPage() {
     loadData();
   }, [resetDefaults]);
 
-  // 2) Load payment methods once stripeCustomerId is set
+  // Load payment methods
   useEffect(() => {
     async function loadCards() {
       if (!stripeCustomerId) return;
       try {
-        const res = await fetch(`${API_URL}/list-payment-methods/${stripeCustomerId}`);
+        const res = await fetch(
+          `${API_URL}/api/list-payment-methods/${stripeCustomerId}`
+        );
         if (!res.ok) {
           console.error('Payment methods API error', res.status);
           return;
@@ -185,7 +190,7 @@ export default function SettingsPage() {
     loadCards();
   }, [stripeCustomerId]);
 
-  // 3) Stripe lib loaded
+  // Stripe lib loaded
   useEffect(() => {
     stripePromise.then(s => console.log('✅ Stripe loaded:', !!s));
   }, []);
@@ -201,16 +206,21 @@ export default function SettingsPage() {
     const current = idx >= 0 ? departments[idx].enabled : false;
     await supabase
       .from('department_settings')
-      .upsert({ hotel_id: hotelId, department: dept, enabled: !current }, { onConflict: ['hotel_id','department'] });
-    setDepartments(d => d.map(x =>
-      x.department === dept ? { ...x, enabled: !current } : x
-    ));
+      .upsert(
+        { hotel_id: hotelId, department: dept, enabled: !current },
+        { onConflict: ['hotel_id','department'] }
+      );
+    setDepartments(d =>
+      d.map(x =>
+        x.department === dept ? { ...x, enabled: !current } : x
+      )
+    );
   };
 
   const handleSlaChange = (dept, field, val) => {
-    setSlaSettings(s => s.map(x =>
-      x.department === dept ? { ...x, [field]: val } : x
-    ));
+    setSlaSettings(s =>
+      s.map(x => (x.department === dept ? { ...x, [field]: val } : x))
+    );
   };
 
   const saveAll = async () => {
@@ -218,7 +228,7 @@ export default function SettingsPage() {
     setSaving(true);
     setSaveStatus('');
     try {
-      // Update hotel
+      // Update hotel record
       await supabase.from('hotels').update({
         name: profile.name,
         type: profile.type,
@@ -230,7 +240,7 @@ export default function SettingsPage() {
         phone_number: profile.phone_number,
       }).eq('id', hotelId);
 
-      // Upsert SLA
+      // Upsert SLA settings
       const slaPayload = slaSettings.map(s => ({
         hotel_id: hotelId,
         department: s.department,
@@ -238,7 +248,9 @@ export default function SettingsPage() {
         res_time_minutes: s.res_time,
         is_active: s.is_active,
       }));
-      await supabase.from('sla_settings').upsert(slaPayload, { onConflict: ['hotel_id','department'] });
+      await supabase.from('sla_settings').upsert(slaPayload, {
+        onConflict: ['hotel_id','department'],
+      });
 
       setSaveStatus('All changes saved!');
     } catch (err) {
@@ -286,7 +298,7 @@ export default function SettingsPage() {
                 <option value="hotel">Hotel</option>
                 <option value="apartment">Apartment</option>
                 <option value="condo">Condo</option>
-                <option value="restaurant">Restaurant</option>
+                <option value="restaurant">Restaurant</option>`
               </select>
               <select
                 value={profile.timezone}
@@ -341,7 +353,7 @@ export default function SettingsPage() {
                     checked={defaultPm === pm.id}
                     onChange={async () => {
                       setDefaultPm(pm.id);
-                      await fetch(`${API_URL}/set-default-payment-method`, {
+                      await fetch(`${API_URL}/api/set-default-payment-method`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ userId, paymentMethodId: pm.id }),
@@ -366,7 +378,9 @@ export default function SettingsPage() {
                   customerId={stripeCustomerId}
                   onSuccess={async () => {
                     setShowNewCardForm(false);
-                    const res = await fetch(`${API_URL}/list-payment-methods/${stripeCustomerId}`);
+                    const res = await fetch(
+                      `${API_URL}/api/list-payment-methods/${stripeCustomerId}`
+                    );
                     const { paymentMethods: methods } = await res.json();
                     setPaymentMethods(methods);
                   }}
