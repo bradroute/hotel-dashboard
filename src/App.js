@@ -18,6 +18,7 @@ import LearnMore from './pages/LearnMore';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import OnboardingPage from './pages/OnboardingPage';
+import PropertyPicker from './pages/PropertyPicker';   // <-- ADD THIS LINE
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
 import { supabase } from './utils/supabaseClient';
@@ -65,6 +66,16 @@ function AppRoutes({ session }) {
           element={
             <ProtectedRoute>
               <OnboardingPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Property Picker route */}
+        <Route
+          path="/property-picker"
+          element={
+            <ProtectedRoute>
+              <PropertyPicker />
             </ProtectedRoute>
           }
         />

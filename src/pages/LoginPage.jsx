@@ -24,24 +24,42 @@ export default function LoginPage() {
 
     const userId = data.user.id;
 
-    // 2) Check onboarding status
+    // 2) Fetch all hotels for this user (multi-property support)
+    const { data: hotels, error: hotelsErr } = await supabase
+      .from('hotels')
+      .select('id')
+      .eq('profile_id', userId);
+    if (hotelsErr) {
+      setError('Login succeeded but failed to fetch properties.');
+      return;
+    }
+
+    // 3) Fetch profile for active hotel_id
     const { data: profile, error: profileErr } = await supabase
       .from('profiles')
       .select('hotel_id')
       .eq('id', userId)
       .single();
     if (profileErr) {
-      console.error('Error fetching profile:', profileErr);
       setError('Login succeeded but failed to fetch profile.');
       return;
     }
 
-    // 3) Redirect based on whether hotel_id exists
-    if (!profile || !profile.hotel_id) {
+    // Routing logic
+    if (!hotels || hotels.length === 0) {
+      // User owns zero properties → go to onboarding
       navigate('/onboarding');
-    } else {
-      navigate('/dashboard');
+      return;
     }
+
+    if (!profile.hotel_id) {
+      // User owns hotels but has no active hotel_id → go to property picker
+      navigate('/property-picker');
+      return;
+    }
+
+    // Otherwise, user is good → go to dashboard
+    navigate('/dashboard');
   };
 
   return (
