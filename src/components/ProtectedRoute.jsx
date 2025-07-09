@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, matchPath } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 
 /**
@@ -7,9 +7,15 @@ import { supabase } from '../utils/supabaseClient';
  *  • the user is signed in
  *  • the user has at least one property (hotel) before proceeding
  *  • property-picker page is used for multi-property users
+ *  • property-specific routes are always accessible
  */
 export default function ProtectedRoute({ children }) {
-  const [status, setStatus] = useState({ loading: true, session: null, propertyCount: 0 });
+  const [status, setStatus] = useState({
+    loading: true,
+    session: null,
+    hotels: [],
+    propertyCount: 0
+  });
   const location = useLocation();
 
   useEffect(() => {
@@ -20,67 +26,77 @@ export default function ProtectedRoute({ children }) {
         const { data: { session } } = await supabase.auth.getSession();
         if (!isMounted) return;
         if (!session) {
-          setStatus({ loading: false, session: null, propertyCount: 0 });
+          setStatus({ loading: false, session: null, hotels: [], propertyCount: 0 });
           return;
         }
-
-        // 2) Fetch how many hotels this user owns
+        // 2) Fetch hotels for this user
         const { data: hotels, error } = await supabase
           .from('hotels')
           .select('id')
           .eq('profile_id', session.user.id);
-
         if (!isMounted) return;
-
         if (error) {
-          setStatus({ loading: false, session, propertyCount: 0 });
+          setStatus({ loading: false, session, hotels: [], propertyCount: 0 });
           return;
         }
-
-        const count = hotels?.length || 0;
-        setStatus({ loading: false, session, propertyCount: count });
+        setStatus({
+          loading: false,
+          session,
+          hotels: hotels || [],
+          propertyCount: hotels?.length || 0
+        });
       } catch (err) {
         console.error('ProtectedRoute bootstrap error', err);
-        if (isMounted) setStatus({ loading: false, session: null, propertyCount: 0 });
+        if (isMounted)
+          setStatus({ loading: false, session: null, hotels: [], propertyCount: 0 });
       }
     }
-
     bootstrap();
     return () => { isMounted = false; };
   }, []);
 
-  if (status.loading) {
-    return null; // Spinner could go here
-  }
+  if (status.loading) return null;
 
-  // Not logged in => login
   if (!status.session) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
   const isOnboarding     = location.pathname === '/onboarding';
   const isPropertyPicker = location.pathname === '/property-picker';
+  const isDashboard      = matchPath('/dashboard/:hotelId', location.pathname);
+  const isAnalytics      = matchPath('/analytics/:hotelId', location.pathname);
+  const isSettings       = matchPath('/settings/:hotelId', location.pathname);
+
+  // Is this a property route? (dashboard, analytics, settings)
+  const isPropertyRoute = isDashboard || isAnalytics || isSettings;
 
   // No hotels, not onboarding? => must onboard
   if (status.propertyCount === 0 && !isOnboarding) {
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Has multiple hotels, not on picker? => must pick
-  if (status.propertyCount > 1 && !isPropertyPicker && !isOnboarding) {
+  // Has multiple hotels, not on picker/onboarding/property route? => must pick
+  if (
+    status.propertyCount > 1 &&
+    !isPropertyPicker &&
+    !isOnboarding &&
+    !isPropertyRoute
+  ) {
     return <Navigate to="/property-picker" replace />;
   }
 
-  // If they finish onboarding and have a hotel, but are still on /onboarding, go to picker (if multi) or dashboard (if single)
+  // Just finished onboarding
   if (isOnboarding && status.propertyCount > 0) {
     if (status.propertyCount === 1) {
-      return <Navigate to="/dashboard" replace />;
+      // Redirect to dashboard for single property
+      return (
+        <Navigate to={`/dashboard/${status.hotels[0].id}`} replace />
+      );
     }
-    if (status.propertyCount > 1) {
-      return <Navigate to="/property-picker" replace />;
-    }
+    // Multi-property: go to picker
+    return <Navigate to="/property-picker" replace />;
   }
 
-  // All good
+  // All good: render children
   return children;
 }
