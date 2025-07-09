@@ -1,4 +1,3 @@
-// src/components/AddPropertyForm.jsx
 import React, { useState, useContext } from 'react';
 import { PropertyContext } from '../contexts/PropertyContext';
 
@@ -50,11 +49,23 @@ export default function AddPropertyForm({ onClose }) {
         <option value="condo">Condo</option>
         <option value="restaurant">Restaurant</option>
       </select>
-      <input
-        required placeholder="Timezone"
-        value={form.timezone} onChange={handleChange('timezone')}
+      {/* --- Timezone Dropdown --- */}
+      <select
+        required
+        value={form.timezone}
+        onChange={handleChange('timezone')}
         className="w-full border p-2 rounded"
-      />
+      >
+        <option value="">Select Timezone</option>
+        <option value="America/New_York">Eastern Time (America/New_York)</option>
+        <option value="America/Chicago">Central Time (America/Chicago)</option>
+        <option value="America/Denver">Mountain Time (America/Denver)</option>
+        <option value="America/Los_Angeles">Pacific Time (America/Los_Angeles)</option>
+        <option value="America/Phoenix">Arizona (America/Phoenix)</option>
+        <option value="America/Anchorage">Alaska (America/Anchorage)</option>
+        <option value="Pacific/Honolulu">Hawaii (Pacific/Honolulu)</option>
+      </select>
+      {/* --- End Timezone Dropdown --- */}
       <input
         placeholder="Address"
         value={form.address} onChange={handleChange('address')}
