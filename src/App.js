@@ -18,7 +18,7 @@ import LearnMore from './pages/LearnMore';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import OnboardingPage from './pages/OnboardingPage';
-import PropertyPicker from './pages/PropertyPicker';   // <-- ADD THIS LINE
+import PropertyPicker from './pages/PropertyPicker';
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
 import { supabase } from './utils/supabaseClient';
@@ -47,7 +47,7 @@ function AppRoutes({ session }) {
           path="/login"
           element={
             session
-              ? <Navigate to="/dashboard" replace />
+              ? <Navigate to="/property-picker" replace />
               : <LoginPage />
           }
         />
@@ -55,7 +55,7 @@ function AppRoutes({ session }) {
           path="/signup"
           element={
             session
-              ? <Navigate to="/dashboard" replace />
+              ? <Navigate to="/property-picker" replace />
               : <SignUp />
           }
         />
@@ -80,9 +80,9 @@ function AppRoutes({ session }) {
           }
         />
 
-        {/* Protected routes */}
+        {/* Multi-property routes */}
         <Route
-          path="/dashboard"
+          path="/dashboard/:hotelId"
           element={
             <ProtectedRoute>
               <Dashboard />
@@ -90,7 +90,7 @@ function AppRoutes({ session }) {
           }
         />
         <Route
-          path="/analytics"
+          path="/analytics/:hotelId"
           element={
             <ProtectedRoute>
               <Analytics />
@@ -98,7 +98,7 @@ function AppRoutes({ session }) {
           }
         />
         <Route
-          path="/settings"
+          path="/settings/:hotelId"
           element={
             <ProtectedRoute>
               <SettingsPage />
@@ -111,7 +111,7 @@ function AppRoutes({ session }) {
           path="*"
           element={
             session
-              ? <Navigate to="/dashboard" replace />
+              ? <Navigate to="/property-picker" replace />
               : <Navigate to="/login" replace />
           }
         />

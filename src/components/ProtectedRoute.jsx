@@ -5,10 +5,11 @@ import { supabase } from '../utils/supabaseClient';
 /**
  * Wrap your routes in <ProtectedRoute> to ensure:
  *  • the user is signed in
- *  • the user has completed onboarding (hotel_id set on their profile)
+ *  • the user has at least one property (hotel) before proceeding
+ *  • property-picker page is used for multi-property users
  */
 export default function ProtectedRoute({ children }) {
-  const [status, setStatus] = useState({ loading: true, session: null, hotelId: null });
+  const [status, setStatus] = useState({ loading: true, session: null, propertyCount: 0 });
   const location = useLocation();
 
   useEffect(() => {
@@ -19,30 +20,28 @@ export default function ProtectedRoute({ children }) {
         const { data: { session } } = await supabase.auth.getSession();
         if (!isMounted) return;
         if (!session) {
-          setStatus({ loading: false, session: null, hotelId: null });
+          setStatus({ loading: false, session: null, propertyCount: 0 });
           return;
         }
 
-        // 2) Fetch profile (robust: .maybeSingle() instead of .single())
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('hotel_id')
-          .eq('id', session.user.id)
-          .maybeSingle();
+        // 2) Fetch how many hotels this user owns
+        const { data: hotels, error } = await supabase
+          .from('hotels')
+          .select('id')
+          .eq('profile_id', session.user.id);
 
         if (!isMounted) return;
 
-        // Handle error or missing profile
-        if (error || !profile) {
-          // No profile (or error): send to onboarding (or handle as needed)
-          setStatus({ loading: false, session, hotelId: null });
+        if (error) {
+          setStatus({ loading: false, session, propertyCount: 0 });
           return;
         }
 
-        setStatus({ loading: false, session, hotelId: profile.hotel_id });
+        const count = hotels?.length || 0;
+        setStatus({ loading: false, session, propertyCount: count });
       } catch (err) {
         console.error('ProtectedRoute bootstrap error', err);
-        if (isMounted) setStatus({ loading: false, session: null, hotelId: null });
+        if (isMounted) setStatus({ loading: false, session: null, propertyCount: 0 });
       }
     }
 
@@ -51,27 +50,37 @@ export default function ProtectedRoute({ children }) {
   }, []);
 
   if (status.loading) {
-    // You can render a spinner here if you want
-    return null;
+    return null; // Spinner could go here
   }
 
-  // Not logged in => go to login
+  // Not logged in => login
   if (!status.session) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  const isOnboarding = location.pathname === '/onboarding';
+  const isOnboarding     = location.pathname === '/onboarding';
+  const isPropertyPicker = location.pathname === '/property-picker';
 
-  // No profile or no hotel_id => onboarding (or property picker if you want, as discussed)
-  if (!status.hotelId && !isOnboarding) {
+  // No hotels, not onboarding? => must onboard
+  if (status.propertyCount === 0 && !isOnboarding) {
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Completed onboarding but still on /onboarding => go to dashboard
-  if (status.hotelId && isOnboarding) {
-    return <Navigate to="/dashboard" replace />;
+  // Has multiple hotels, not on picker? => must pick
+  if (status.propertyCount > 1 && !isPropertyPicker && !isOnboarding) {
+    return <Navigate to="/property-picker" replace />;
   }
 
-  // All good: render children
+  // If they finish onboarding and have a hotel, but are still on /onboarding, go to picker (if multi) or dashboard (if single)
+  if (isOnboarding && status.propertyCount > 0) {
+    if (status.propertyCount === 1) {
+      return <Navigate to="/dashboard" replace />;
+    }
+    if (status.propertyCount > 1) {
+      return <Navigate to="/property-picker" replace />;
+    }
+  }
+
+  // All good
   return children;
 }

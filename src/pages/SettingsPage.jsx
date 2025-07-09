@@ -3,7 +3,6 @@ import React, {
   useEffect,
   useState,
   useCallback,
-  useContext
 } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { getDefaultsFor } from '../utils/propertyDefaults';
@@ -12,7 +11,7 @@ import { Elements } from '@stripe/react-stripe-js';
 import { stripePromise } from '../utils/stripe';
 import CardForm from '../components/CardForm';
 import AddPropertyForm from '../components/AddPropertyForm';
-import { PropertyContext } from '../contexts/PropertyContext';
+import { useParams } from 'react-router-dom';
 
 // Base URL of your backend (set in Vercel as REACT_APP_API_URL)
 const API_URL = process.env.REACT_APP_API_URL;
@@ -48,8 +47,8 @@ const DEPARTMENT_LISTS = {
 };
 
 export default function SettingsPage() {
-  const { currentProperty, addProperty } = useContext(PropertyContext);
-  const propertyId = currentProperty?.id;
+  const { hotelId } = useParams();
+  const propertyId = hotelId;
 
   // Show/hide Add Property form
   const [showAddPropertyForm, setShowAddPropertyForm] = useState(false);

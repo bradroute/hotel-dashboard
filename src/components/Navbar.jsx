@@ -30,7 +30,10 @@ export default function Navbar() {
 
   const handlePropertyChange = async e => {
     const selected = properties.find(p => p.id === e.target.value);
-    if (selected) await switchProperty(selected);
+    if (selected) {
+      await switchProperty(selected);
+      navigate('/dashboard'); // Redirect to dashboard after switching property!
+    }
   };
 
   return (

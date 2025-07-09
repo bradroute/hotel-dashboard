@@ -1,8 +1,7 @@
-// src/components/Analytics.jsx
-
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { supabase } from '../utils/supabaseClient';
 import { useAnalytics } from '../hooks/useAnalytics';
-import { PropertyContext } from '../contexts/PropertyContext';
 import Navbar from '../components/Navbar';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
@@ -12,17 +11,31 @@ import {
 } from 'recharts';
 
 export default function Analytics() {
+  const { hotelId } = useParams();
+  const propertyId = hotelId;
+
+  // Get property name for title
+  const [propertyName, setPropertyName] = useState('');
+  useEffect(() => {
+    if (!propertyId) return;
+    (async () => {
+      const { data, error } = await supabase
+        .from('hotels')
+        .select('name')
+        .eq('id', propertyId)
+        .single();
+      if (data?.name) setPropertyName(data.name);
+    })();
+  }, [propertyId]);
+
+  // Date range controls
   const today = new Date().toISOString().slice(0, 10);
   const weekAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)
     .toISOString()
     .slice(0, 10);
   const [range, setRange] = useState({ start: weekAgo, end: today });
 
-  // Grab the active property
-  const { currentProperty } = useContext(PropertyContext);
-  const propertyId = currentProperty?.id;
-
-  // Pass propertyId into your analytics hook
+  // Use analytics for this property
   const { data, loading, error } = useAnalytics(range.start, range.end, propertyId);
 
   if (!propertyId || loading) {
@@ -78,8 +91,8 @@ export default function Analytics() {
       <div className="min-h-screen bg-operon-background pt-24 px-6 flex flex-col items-center">
         <div className="max-w-6xl w-full space-y-10">
           <h1 className="text-4xl font-bold text-operon-charcoal flex items-center gap-2">
-            <span role="img" aria-label="bar chart">📊</span> {currentProperty.name} Analytics
-          </h1>
+           <span role="img" aria-label="bar chart">📊</span> {propertyName || 'Property'} Analytics
+         </h1>
 
           <div className="flex gap-4 items-center">
             <input

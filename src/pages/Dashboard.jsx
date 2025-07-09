@@ -4,9 +4,8 @@ import React, {
   useState,
   useMemo,
   useCallback,
-  useContext
 } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   getAllRequests,
   acknowledgeRequest,
@@ -16,7 +15,6 @@ import {
   deleteNote,
 } from '../utils/api';
 import { supabase } from '../utils/supabaseClient';
-import { PropertyContext } from '../contexts/PropertyContext';
 import FiltersBar from '../components/FiltersBar';
 import RequestsTable from '../components/RequestsTable';
 import Navbar from '../components/Navbar';
@@ -24,12 +22,12 @@ import styles from '../styles/Dashboard.module.css';
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const { currentProperty } = useContext(PropertyContext);
-  const propertyId = currentProperty?.id;
+  const { hotelId } = useParams();
 
+  const [hotel, setHotel] = useState(null);
   const [requests, setRequests] = useState([]);
   const [departmentOptions, setDepartmentOptions] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const [showActiveOnly, setShowActiveOnly] = useState(true);
@@ -46,45 +44,66 @@ export default function Dashboard() {
   const [notesError, setNotesError] = useState('');
   const [newNote, setNewNote] = useState('');
 
+  // Load hotel info
+  const fetchHotel = useCallback(async () => {
+    if (!hotelId) return;
+    setLoading(true);
+    setError('');
+    try {
+      const { data: hotel, error } = await supabase
+        .from('hotels')
+        .select('id,name,type')
+        .eq('id', hotelId)
+        .single();
+      if (error) throw error;
+      setHotel(hotel);
+    } catch (err) {
+      setError(err.message || 'Failed to fetch hotel.');
+    } finally {
+      setLoading(false);
+    }
+  }, [hotelId]);
+
   // Load enabled departments for this property
   const fetchEnabledDepartments = useCallback(async () => {
-    if (!propertyId) return;
+    if (!hotelId) return;
     try {
       const { data: settings, error } = await supabase
         .from('department_settings')
         .select('department')
-        .eq('hotel_id', propertyId)
+        .eq('hotel_id', hotelId)
         .eq('enabled', true);
       if (error) throw error;
       setDepartmentOptions(settings.map(d => d.department));
     } catch (err) {
       console.error('Error fetching departments:', err);
     }
-  }, [propertyId]);
+  }, [hotelId]);
 
   // Load requests for this property
   const fetchRequests = useCallback(async () => {
-    if (!propertyId) return;
+    if (!hotelId) return;
     setLoading(true);
     setError('');
     try {
-      const data = await getAllRequests(propertyId);
+      const data = await getAllRequests(hotelId);
       setRequests(data);
     } catch (err) {
       setError(err.message || 'Failed to fetch requests');
     } finally {
       setLoading(false);
     }
-  }, [propertyId]);
+  }, [hotelId]);
 
-  // On property change, refresh data & poll
+  // On hotel change, refresh data & poll
   useEffect(() => {
-    if (!propertyId) return;
+    if (!hotelId) return;
+    fetchHotel();
     fetchEnabledDepartments();
     fetchRequests();
     const interval = setInterval(fetchRequests, 60000);
     return () => clearInterval(interval);
-  }, [propertyId, fetchEnabledDepartments, fetchRequests]);
+  }, [hotelId, fetchHotel, fetchEnabledDepartments, fetchRequests]);
 
   // Notes modal handlers
   const openNotesModal = async requestId => {
@@ -141,16 +160,20 @@ export default function Dashboard() {
     );
   }, [requests, showActiveOnly, unacknowledgedOnly, selectedDepartment, selectedPriority, sortOrder, searchTerm]);
 
-  if (!propertyId) {
-    return <div className="p-6 text-lg">Select a property first.</div>;
+  if (!hotelId) {
+    return <div className="p-6 text-lg">No hotel selected.</div>;
   }
 
   if (loading) {
-    return <div className="p-6 text-lg font-medium">Loading requests…</div>;
+    return <div className="p-6 text-lg font-medium">Loading…</div>;
   }
 
   if (error) {
     return <div className="p-6 text-lg text-red-600">Error: {error}</div>;
+  }
+
+  if (!hotel) {
+    return <div className="p-6 text-lg">Hotel not found.</div>;
   }
 
   return (
@@ -159,7 +182,7 @@ export default function Dashboard() {
       <div className="min-h-screen bg-operon-background pt-24 px-6 flex flex-col items-center">
         <div className={`${styles.container} max-w-6xl w-full`}>
           <h1 className="text-4xl font-bold text-operon-charcoal flex items-center gap-2 mb-6">
-            <span role="img" aria-label="clipboard">📋</span> {currentProperty.name} Dashboard
+            <span role="img" aria-label="clipboard">📋</span> {hotel.name} Dashboard
           </h1>
 
           <FiltersBar
@@ -183,11 +206,11 @@ export default function Dashboard() {
             <RequestsTable
               requests={filtered}
               onAcknowledge={async id => {
-                await acknowledgeRequest(id, propertyId);
+                await acknowledgeRequest(id, hotelId);
                 fetchRequests();
               }}
               onComplete={async id => {
-                await completeRequest(id, propertyId);
+                await completeRequest(id, hotelId);
                 fetchRequests();
               }}
               onRowClick={id => navigate(`/request/${id}`)}
