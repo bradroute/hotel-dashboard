@@ -11,23 +11,20 @@ export function PropertyProvider({ children }) {
   const [error, setError]                 = useState(null);
   const [session, setSession]             = useState(null);
 
-  // Fetch initial session & subscribe to changes
+  // 1. Fetch initial session & subscribe to changes
   useEffect(() => {
-    // grab current session
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
     });
-    // subscribe
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, newSession) => setSession(newSession)
     );
     return () => subscription.unsubscribe();
   }, []);
 
-  // Whenever session is ready, load properties
+  // 2. Whenever session is ready, load properties and update profile if needed
   useEffect(() => {
     if (!session?.user) {
-      // if no user, clear state
       setProperties([]);
       setCurrent(null);
       setLoading(false);
@@ -40,14 +37,14 @@ export function PropertyProvider({ children }) {
       try {
         const userId = session.user.id;
 
-        // 1) fetch all hotels for this user
+        // 1) Fetch all properties owned by this user
         const { data: owned = [], error: ownedErr } = await supabase
           .from('hotels')
           .select('id,name,type')
           .eq('profile_id', userId);
         if (ownedErr) throw ownedErr;
 
-        // 2) fetch saved hotel_id from profiles
+        // 2) Fetch their saved hotel_id from profile
         const { data: profile, error: profErr } = await supabase
           .from('profiles')
           .select('hotel_id')
@@ -55,8 +52,9 @@ export function PropertyProvider({ children }) {
           .maybeSingle();
         if (profErr) throw profErr;
 
-        // 3) if saved ID isn’t in owned, fetch it explicitly so we can still switch back
         let merged = [...owned];
+
+        // 3) If profile.hotel_id isn't in owned list, fetch and merge it in
         if (profile?.hotel_id && !owned.find(p => p.id === profile.hotel_id)) {
           const { data: extra, error: extraErr } = await supabase
             .from('hotels')
@@ -69,11 +67,22 @@ export function PropertyProvider({ children }) {
 
         setProperties(merged);
 
-        // 4) pick current: saved or first
-        const initial =
+        // 4) Pick "current": profile's saved, or first property if not set
+        let initial =
           merged.find(p => p.id === profile?.hotel_id) ||
           merged[0] ||
           null;
+
+        // If user has properties but no hotel_id saved, auto-save their first as default
+        if (merged.length === 1 && !profile?.hotel_id) {
+          // Auto-set hotel_id in profile
+          await supabase
+            .from('profiles')
+            .update({ hotel_id: merged[0].id })
+            .eq('id', userId);
+          initial = merged[0];
+        }
+
         setCurrent(initial);
       } catch (err) {
         console.error('PropertyContext.refreshProperties error:', err);
@@ -86,7 +95,7 @@ export function PropertyProvider({ children }) {
     refreshProperties();
   }, [session]);
 
-  // Switch active property
+  // 3. Switch active property (and update profile.hotel_id)
   const switchProperty = async property => {
     setCurrent(property);
     try {
@@ -99,7 +108,7 @@ export function PropertyProvider({ children }) {
     }
   };
 
-  // Add & switch in one go
+  // 4. Add new property and set as active
   const addProperty = async data => {
     setLoading(true);
     setError(null);
@@ -112,11 +121,8 @@ export function PropertyProvider({ children }) {
         .single();
       if (insertErr) throw insertErr;
 
-      // persist choice & reload
+      // Switch to new property (will update hotel_id in profile too)
       await switchProperty(newHotel);
-      // re-run the refresh logic
-      const refresh = () => {}; // no-op here, effect on [session] will do it
-      refresh();
     } catch (err) {
       console.error('PropertyContext.addProperty error:', err);
       setError(err.message);
