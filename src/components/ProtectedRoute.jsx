@@ -4,34 +4,27 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 
 export default function ProtectedRoute({ children }) {
-  const [session, setSession]             = useState(undefined); // undefined = “not yet loaded”
+  const [session, setSession]             = useState(undefined);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [checking, setChecking]           = useState(true);
   const location = useLocation();
 
-  // 1) Listen to auth state
+  // 1) load initial session + subscribe
   useEffect(() => {
-    // initial fetch
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
     });
-    // subscription for future changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => setSession(session)
+    );
     return () => subscription.unsubscribe();
   }, []);
 
-  // 2) Whenever session or path changes, re-check profile → onboarding status
+  // 2) whenever session or path changes, check if they have hotel_id
   useEffect(() => {
     (async () => {
-      // if session === undefined we’re still waiting on auth
-      if (session === undefined) return;
-
-      // if no session → no need to check profile
-      if (session === null) {
+      if (session === undefined) return;   // still loading auth
+      if (!session) {
         setNeedsOnboarding(false);
         setChecking(false);
         return;
@@ -39,21 +32,21 @@ export default function ProtectedRoute({ children }) {
 
       setChecking(true);
       try {
+        // fetch profile row
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('hotel_id')
           .eq('id', session.user.id)
           .single();
 
-        if (error) {
-          console.error('ProtectedRoute profile error', error);
-          // force onboarding on error
+        if (error || !profile) {
+          // no profile row yet → force onboarding
           setNeedsOnboarding(true);
         } else {
-          setNeedsOnboarding(!profile?.hotel_id);
+          setNeedsOnboarding(!profile.hotel_id);
         }
       } catch (err) {
-        console.error('ProtectedRoute unknown error', err);
+        console.error('ProtectedRoute:', err);
         setNeedsOnboarding(true);
       } finally {
         setChecking(false);
@@ -61,21 +54,21 @@ export default function ProtectedRoute({ children }) {
     })();
   }, [session, location.pathname]);
 
-  // 3) Show spinner / nothing while we’re fetching auth or profile
+  // 3) show nothing while loading
   if (session === undefined || checking) {
     return null;
   }
 
-  // 4) Not signed in → kick to login
+  // 4) if not signed in, go to login
   if (!session) {
     return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  // 5) Signed in but no hotel_id → force onboarding
+  // 5) if signed in but needs onboarding, force /onboarding
   if (needsOnboarding && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
 
-  // 6) Otherwise, show the protected page
+  // 6) otherwise show the protected page
   return children;
 }
