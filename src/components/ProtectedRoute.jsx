@@ -70,8 +70,14 @@ export default function ProtectedRoute({ children }) {
   // Is this a property route? (dashboard, analytics, settings)
   const isPropertyRoute = isDashboard || isAnalytics || isSettings;
 
+  // ---- THE FIX: allow explicit onboarding access ----
+  if (isOnboarding) {
+    return children;
+  }
+  // ---------------------------------------------------
+
   // No hotels, not onboarding? => must onboard
-  if (status.propertyCount === 0 && !isOnboarding) {
+  if (status.propertyCount === 0) {
     return <Navigate to="/onboarding" replace />;
   }
 
@@ -86,6 +92,7 @@ export default function ProtectedRoute({ children }) {
   }
 
   // Just finished onboarding
+  // (Note: we already allow onboarding above, so you can safely keep this for completeness)
   if (isOnboarding && status.propertyCount > 0) {
     if (status.propertyCount === 1) {
       // Redirect to dashboard for single property
