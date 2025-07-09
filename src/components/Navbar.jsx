@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from 'react';
+// src/components/Navbar.jsx
+import React, { useEffect, useState, useContext } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
+import { PropertyContext } from '../contexts/PropertyContext';
 import logoFull from '../assets/logo-icon2.png';
 
 export default function Navbar() {
@@ -9,15 +11,17 @@ export default function Navbar() {
   const location = useLocation();
   const currentPath = location.pathname;
 
+  // Property context
+  const { properties, currentProperty, switchProperty } = useContext(PropertyContext);
+
   useEffect(() => {
+    // Fetch Supabase session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
-
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => setSession(session)
     );
-
     return () => subscription.unsubscribe();
   }, []);
 
@@ -46,6 +50,24 @@ export default function Navbar() {
         >
           Learn More
         </Link>
+
+        {/* Property selector */}
+        {session && properties.length > 0 && (
+          <select
+            value={currentProperty?.id || ''}
+            onChange={e => {
+              const sel = properties.find(p => p.id === e.target.value);
+              switchProperty(sel);
+            }}
+            className="border rounded p-1 text-sm"
+          >
+            {properties.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.name} ({p.type})
+              </option>
+            ))}
+          </select>
+        )}
 
         {session && currentPath !== '/dashboard' && (
           <Link

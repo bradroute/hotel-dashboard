@@ -1,11 +1,17 @@
 // src/pages/SettingsPage.jsx
-import React, { useEffect, useState, useCallback } from 'react';
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useContext
+} from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { getDefaultsFor } from '../utils/propertyDefaults';
 import Navbar from '../components/Navbar';
 import { Elements } from '@stripe/react-stripe-js';
 import { stripePromise } from '../utils/stripe';
 import CardForm from '../components/CardForm';
+import { PropertyContext } from '../contexts/PropertyContext';
 
 // Base URL of your backend (set in Vercel as REACT_APP_API_URL)
 const API_URL = process.env.REACT_APP_API_URL;
@@ -41,13 +47,16 @@ const DEPARTMENT_LISTS = {
 };
 
 export default function SettingsPage() {
+  const { currentProperty } = useContext(PropertyContext);
+  const propertyId = currentProperty?.id;
+
   // Core state
   const [userId, setUserId]           = useState(null);
-  const [hotelId, setHotelId]         = useState(null);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState('');
   const [profile, setProfile]         = useState({
-    name:'', type:'', timezone:'', address:'', city:'', state:'', zip_code:'', phone_number:'',
+    name: '', type: '', timezone: '', address: '',
+    city: '', state: '', zip_code: '', phone_number: '',
   });
   const [departments, setDepartments] = useState([]);
   const [slaSettings, setSlaSettings] = useState([]);
@@ -64,13 +73,16 @@ export default function SettingsPage() {
 
   // Reset department defaults helper
   const resetDefaults = useCallback(async (newType) => {
-    if (!hotelId || !newType) return;
-    await supabase.from('department_settings').delete().eq('hotel_id', hotelId);
+    if (!propertyId || !newType) return;
+    await supabase
+      .from('department_settings')
+      .delete()
+      .eq('hotel_id', propertyId);
 
     const fullList = DEPARTMENT_LISTS[newType] || getDefaultsFor(newType);
     const defaults = getDefaultsFor(newType);
     const entries = fullList.map(dept => ({
-      hotel_id: hotelId,
+      hotel_id: propertyId,
       department: dept,
       enabled: defaults.includes(dept),
     }));
@@ -78,10 +90,11 @@ export default function SettingsPage() {
       .from('department_settings')
       .upsert(entries, { onConflict: ['hotel_id','department'] });
     setDepartments(entries);
-  }, [hotelId]);
+  }, [propertyId]);
 
-  // Load initial data
+  // Load initial data when property changes
   useEffect(() => {
+    if (!propertyId) return;
     async function loadData() {
       try {
         // Auth & session
@@ -90,21 +103,11 @@ export default function SettingsPage() {
         const uid = session.user.id;
         setUserId(uid);
 
-        // Profile → hotel
-        const { data: profData, error: profErr } = await supabase
-          .from('profiles')
-          .select('hotel_id, default_payment_method_id')
-          .eq('id', uid)
-          .single();
-        if (profErr || !profData) throw profErr || new Error('Profile not found');
-        setHotelId(profData.hotel_id);
-        setDefaultPm(profData.default_payment_method_id);
-
         // Hotel details
         const { data: hotelData, error: hotelErr } = await supabase
           .from('hotels')
           .select('name,type,timezone,address,city,state,zip_code,phone_number')
-          .eq('id', profData.hotel_id)
+          .eq('id', propertyId)
           .single();
         if (hotelErr) throw hotelErr;
         setProfile({
@@ -122,7 +125,7 @@ export default function SettingsPage() {
         const { data: deptData, error: deptErr } = await supabase
           .from('department_settings')
           .select('department,enabled')
-          .eq('hotel_id', profData.hotel_id);
+          .eq('hotel_id', propertyId);
         if (deptErr) throw deptErr;
         if (!deptData || deptData.length === 0) {
           await resetDefaults(hotelData.type);
@@ -130,14 +133,12 @@ export default function SettingsPage() {
           setDepartments(deptData);
         }
 
-        // SLA settings (complete list)
+        // SLA settings
         const { data: slaData, error: slaErr } = await supabase
           .from('sla_settings')
           .select('department,ack_time_minutes,res_time_minutes,is_active')
-          .eq('hotel_id', profData.hotel_id);
+          .eq('hotel_id', propertyId);
         if (slaErr) throw slaErr;
-
-        // build full list with defaults for missing
         const fullList = DEPARTMENT_LISTS[hotelData.type] || getDefaultsFor(hotelData.type);
         const existing = slaData.map(s => ({
           department: s.department,
@@ -175,7 +176,7 @@ export default function SettingsPage() {
       }
     }
     loadData();
-  }, [resetDefaults]);
+  }, [propertyId, resetDefaults]);
 
   // Load payment methods
   useEffect(() => {
@@ -208,12 +209,13 @@ export default function SettingsPage() {
   };
 
   const toggleDepartment = async (dept) => {
+    if (!propertyId) return;
     const idx = departments.findIndex(d => d.department === dept);
     const current = idx >= 0 ? departments[idx].enabled : false;
     await supabase
       .from('department_settings')
       .upsert(
-        { hotel_id: hotelId, department: dept, enabled: !current },
+        { hotel_id: propertyId, department: dept, enabled: !current },
         { onConflict: ['hotel_id','department'] }
       );
     setDepartments(d =>
@@ -228,7 +230,7 @@ export default function SettingsPage() {
   };
 
   const saveAll = async () => {
-    if (!hotelId) return;
+    if (!propertyId) return;
     setSaving(true);
     setSaveStatus('');
     try {
@@ -242,11 +244,11 @@ export default function SettingsPage() {
         state: profile.state,
         zip_code: profile.zip_code,
         phone_number: profile.phone_number,
-      }).eq('id', hotelId);
+      }).eq('id', propertyId);
 
       // Upsert SLA settings
       const slaPayload = slaSettings.map(s => ({
-        hotel_id: hotelId,
+        hotel_id: propertyId,
         department: s.department,
         ack_time_minutes: s.ack_time,
         res_time_minutes: s.res_time,
@@ -336,7 +338,8 @@ export default function SettingsPage() {
                 value={profile.zip_code}
                 onChange={e => handleProfileChange('zip_code', e.target.value)}
                 placeholder="ZIP Code"
-                className="border p-2 rounded" />
+                className="border p-2 rounded"
+              />
             </div>
           </section>
 
@@ -366,7 +369,10 @@ export default function SettingsPage() {
                 </label>
               ))}
               {!showNewCardForm && (
-                <button className="text-operon-blue underline mt-1" onClick={() => setShowNewCardForm(true)}>
+                <button
+                  className="text-operon-blue underline mt-1"
+                  onClick={() => setShowNewCardForm(true)}
+                >
                   + Add another card
                 </button>
               )}
@@ -395,12 +401,10 @@ export default function SettingsPage() {
                     <span>{dept}</span>
                     <button
                       onClick={() => toggleDepartment(dept)}
-                      className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${
-                        enabled ? 'bg-operon-blue' : 'bg-gray-300'
-                      }`}
-                    ><div className={`bg-white w-6 h-6 rounded-full shadow transform transition-transform ${
-                        enabled ? 'translate-x-6' : 'translate-x-0'
-                      }`}/></button>
+                      className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${enabled ? 'bg-operon-blue' : 'bg-gray-300'}`}
+                    >
+                      <div className={`bg-white w-6 h-6 rounded-full shadow transform transition-transform ${enabled ? 'translate-x-6' : 'translate-x-0'}`} />
+                    </button>
                   </li>
                 );
               })}
@@ -416,9 +420,27 @@ export default function SettingsPage() {
                 return (
                   <div key={dept} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-white p-3 rounded shadow">
                     <span>{dept}</span>
-                    <input type="number" min="0" value={s.ack_time} onChange={e=>handleSlaChange(dept,'ack_time',+e.target.value)} placeholder="Ack min" className="border p-1 rounded"/>
-                    <input type="number" min="0" value={s.res_time} onChange={e=>handleSlaChange(dept,'res_time',+e.target.value)} placeholder="Res min" className="border p-1 rounded"/>
-                    <input type="checkbox" checked={s.is_active} onChange={e=>handleSlaChange(dept,'is_active',e.target.checked)}/>
+                    <input
+                      type="number"
+                      min="0"
+                      value={s.ack_time}
+                      onChange={e => handleSlaChange(dept, 'ack_time', +e.target.value)}
+                      placeholder="Ack min"
+                      className="border p-1 rounded"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      value={s.res_time}
+                      onChange={e => handleSlaChange(dept, 'res_time', +e.target.value)}
+                      placeholder="Res min"
+                      className="border p-1 rounded"
+                    />
+                    <input
+                      type="checkbox"
+                      checked={s.is_active}
+                      onChange={e => handleSlaChange(dept, 'is_active', e.target.checked)}
+                    />
                   </div>
                 );
               })}
@@ -426,7 +448,11 @@ export default function SettingsPage() {
           </section>
 
           {/* Save All */}
-          <button onClick={saveAll} disabled={saving} className="w-full bg-operon-blue text-white py-2 rounded disabled:opacity-50">
+          <button
+            onClick={saveAll}
+            disabled={saving}
+            className="w-full bg-operon-blue text-white py-2 rounded disabled:opacity-50"
+          >
             {saving ? 'Saving…' : 'Save Changes'}
           </button>
           {saveStatus && <p className="text-center text-green-600 mt-2">{saveStatus}</p>}

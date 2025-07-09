@@ -7,7 +7,7 @@ import {
   Navigate,
   useLocation
 } from 'react-router-dom';
-
+import { PropertyProvider } from './contexts/PropertyContext';
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
 import SettingsPage from './pages/SettingsPage';
@@ -15,14 +15,13 @@ import LoginPage from './pages/LoginPage';
 import SignUp from './pages/SignUp';
 import About from './pages/About';
 import LearnMore from './pages/LearnMore';
-import PrivacyPolicy from './pages/PrivacyPolicy';           // NEW
-import TermsAndConditions from './pages/TermsAndConditions'; // NEW
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsAndConditions from './pages/TermsAndConditions';
 import OnboardingPage from './pages/OnboardingPage';
 import ProtectedRoute from './components/ProtectedRoute';
-import Footer from './components/Footer';                   // NEW
+import Footer from './components/Footer';
 import { supabase } from './utils/supabaseClient';
 
-// Separate component to handle routing and footer logic inside Router context
 function AppRoutes({ session }) {
   const location = useLocation();
   const publicPaths = [
@@ -41,8 +40,8 @@ function AppRoutes({ session }) {
         {/* Public routes */}
         <Route path="/about" element={<About />} />
         <Route path="/learn-more" element={<LearnMore />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />  {/* NEW */}
-        <Route path="/terms" element={<TermsAndConditions />} />    {/* NEW */}
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms" element={<TermsAndConditions />} />
         <Route
           path="/login"
           element={
@@ -60,7 +59,7 @@ function AppRoutes({ session }) {
           }
         />
 
-        {/* Onboarding route for authenticated users */}
+        {/* Onboarding route */}
         <Route
           path="/onboarding"
           element={
@@ -107,7 +106,7 @@ function AppRoutes({ session }) {
         />
       </Routes>
 
-      {/* Show footer on public-facing pages only */}
+      {/* Footer only on public pages */}
       {showFooter && <Footer />}
     </>
   );
@@ -130,9 +129,11 @@ export default function App() {
 
   return (
     <Router>
-      <div className="max-w-7xl mx-auto px-4">
-        <AppRoutes session={session} />
-      </div>
+      <PropertyProvider>
+        <div className="max-w-7xl mx-auto px-4">
+          <AppRoutes session={session} />
+        </div>
+      </PropertyProvider>
     </Router>
   );
 }

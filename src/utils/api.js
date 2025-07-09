@@ -55,26 +55,50 @@ export async function completeRequest(id, hotelId) {
 
 // ── Analytics API ────────────────────────────────────────────────────────────
 
-export async function getSummary() {
-  const res = await fetch(`${BASE_URL}/analytics/summary`);
+/**
+ * Fetch summary analytics, optionally scoped to a specific hotel.
+ * @param {string} [hotelId]
+ */
+export async function getSummary(hotelId) {
+  const url = new URL(`${BASE_URL}/analytics/summary`);
+  if (hotelId) url.searchParams.append('hotel_id', hotelId);
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`getSummary failed: ${res.status}`);
   return res.json();
 }
 
-export async function getByDepartment() {
-  const res = await fetch(`${BASE_URL}/analytics/by-department`);
+/**
+ * Fetch analytics by department, optionally scoped to a specific hotel.
+ * @param {string} [hotelId]
+ */
+export async function getByDepartment(hotelId) {
+  const url = new URL(`${BASE_URL}/analytics/by-department`);
+  if (hotelId) url.searchParams.append('hotel_id', hotelId);
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`getByDepartment failed: ${res.status}`);
   return res.json();
 }
 
-export async function getAvgResponseTime() {
-  const res = await fetch(`${BASE_URL}/analytics/avg-response-time`);
+/**
+ * Fetch average response time analytics, optionally scoped to a specific hotel.
+ * @param {string} [hotelId]
+ */
+export async function getAvgResponseTime(hotelId) {
+  const url = new URL(`${BASE_URL}/analytics/avg-response-time`);
+  if (hotelId) url.searchParams.append('hotel_id', hotelId);
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`getAvgResponseTime failed: ${res.status}`);
   return res.json();
 }
 
-export async function getDailyResponseTimes() {
-  const res = await fetch(`${BASE_URL}/analytics/daily-response-times`);
+/**
+ * Fetch daily response times analytics, optionally scoped to a specific hotel.
+ * @param {string} [hotelId]
+ */
+export async function getDailyResponseTimes(hotelId) {
+  const url = new URL(`${BASE_URL}/analytics/daily-response-times`);
+  if (hotelId) url.searchParams.append('hotel_id', hotelId);
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`getDailyResponseTimes failed: ${res.status}`);
   return res.json();
 }
@@ -114,14 +138,27 @@ export async function deleteNote(requestId, noteId) {
 
 // ── Department Settings API ──────────────────────────────────────────────────
 
-export async function getEnabledDepartments() {
-  const res = await fetch(`${BASE_URL}/settings/departments`);
+/**
+ * Fetch enabled departments for a property.
+ * @param {string} [hotelId]
+ */
+export async function getEnabledDepartments(hotelId) {
+  const url = new URL(`${BASE_URL}/settings/departments`);
+  if (hotelId) url.searchParams.append('hotel_id', hotelId);
+  const res = await fetch(url);
   if (!res.ok) throw new Error(`getEnabledDepartments failed: ${res.status}`);
   return res.json();
 }
 
-export async function updateEnabledDepartments(departments) {
-  const res = await fetch(`${BASE_URL}/settings/departments`, {
+/**
+ * Update enabled departments for a property.
+ * @param {string} [hotelId]
+ * @param {Array<string>} departments
+ */
+export async function updateEnabledDepartments(hotelId, departments) {
+  const url = new URL(`${BASE_URL}/settings/departments`);
+  if (hotelId) url.searchParams.append('hotel_id', hotelId);
+  const res = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ departments }),
