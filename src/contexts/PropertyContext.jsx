@@ -15,18 +15,15 @@ export function PropertyProvider({ children }) {
     setLoading(true);
     setError(null);
     try {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // 1) fetch all hotels for this profile
-      const { data: props, error: propsErr } = await supabase
+      // 1) fetch all hotels owned by this user
+      const { data: owned = [], error: ownedErr } = await supabase
         .from('hotels')
         .select('id, name, type')
         .eq('profile_id', user.id);
-      if (propsErr) throw propsErr;
-      setProperties(props || []);
+      if (ownedErr) throw ownedErr;
 
       // 2) fetch the saved hotel_id
       const { data: profile, error: profErr } = await supabase
@@ -36,11 +33,20 @@ export function PropertyProvider({ children }) {
         .single();
       if (profErr) throw profErr;
 
-      // pick the saved one or default to first
-      const initial =
-        props.find(p => p.id === profile?.hotel_id) ||
-        props[0] ||
-        null;
+      // Merge: if saved hotel isn't in owned, fetch and prepend it
+      let merged = [...owned];
+      if (profile?.hotel_id && !owned.find(p => p.id === profile.hotel_id)) {
+        const { data: extra, error: extraErr } = await supabase
+          .from('hotels')
+          .select('id, name, type')
+          .eq('id', profile.hotel_id)
+          .single();
+        if (!extraErr && extra) merged.unshift(extra);
+      }
+
+      setProperties(merged);
+      // 3) set currentProperty to saved or default
+      const initial = merged.find(p => p.id === profile?.hotel_id) || merged[0] || null;
       setCurrent(initial);
     } catch (err) {
       console.error('PropertyContext.refreshProperties error:', err);
@@ -58,57 +64,30 @@ export function PropertyProvider({ children }) {
   const switchProperty = async property => {
     setCurrent(property);
     try {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
+      const { data: { user } } = await supabase.auth.getUser();
       await supabase
         .from('profiles')
         .update({ hotel_id: property.id })
         .eq('id', user.id);
     } catch (err) {
       console.error('PropertyContext.switchProperty error:', err);
-      // optionally restore previous currentProperty on failure
     }
   };
 
   // Add a new property & switch to it
-  const addProperty = async ({
-    name,
-    type,
-    timezone,
-    address,
-    city,
-    state,
-    zip_code
-  }) => {
+  const addProperty = async data => {
     setLoading(true);
     setError(null);
     try {
-      const {
-        data: { user }
-      } = await supabase.auth.getUser();
-      // 1) insert hotel
+      const { data: { user } } = await supabase.auth.getUser();
+      const hotelPayload = { profile_id: user.id, ...data };
       const { data: newHotel, error: insertErr } = await supabase
         .from('hotels')
-        .insert([
-          {
-            profile_id: user.id,
-            name,
-            type,
-            timezone,
-            address,
-            city,
-            state,
-            zip_code
-          }
-        ])
+        .insert([hotelPayload])
         .select('id, name, type')
         .single();
       if (insertErr) throw insertErr;
-
-      // 2) persist on profile & switch
       await switchProperty(newHotel);
-      // 3) re-load full list (so dropdown shows it)
       await refreshProperties();
     } catch (err) {
       console.error('PropertyContext.addProperty error:', err);
@@ -120,15 +99,7 @@ export function PropertyProvider({ children }) {
 
   return (
     <PropertyContext.Provider
-      value={{
-        properties,
-        currentProperty,
-        loading,
-        error,
-        switchProperty,
-        addProperty,
-        refreshProperties
-      }}
+      value={{ properties, currentProperty, loading, error, switchProperty, addProperty, refreshProperties }}
     >
       {children}
     </PropertyContext.Provider>
