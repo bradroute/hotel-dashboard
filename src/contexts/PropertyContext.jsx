@@ -8,40 +8,67 @@ export function PropertyProvider({ children }) {
   const [properties, setProperties] = useState([]);
   const [currentProperty, setCurrent] = useState(null);
 
-  // load user & their saved property
+  // Helper to load all properties & the saved one
+  const refreshProperties = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+    // 1) fetch all
+    const { data: props } = await supabase
+      .from('hotels')
+      .select('id,name,type')
+      .eq('profile_id', user.id);
+    setProperties(props);
+    // 2) fetch saved hotel_id
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('hotel_id')
+      .eq('id', user.id)
+      .single();
+    const initial = props.find(p => p.id === profile.hotel_id) || props[0];
+    setCurrent(initial);
+  };
+
   useEffect(() => {
-    async function init() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      // fetch all hotels this user owns
-      const { data: props } = await supabase
-        .from('hotels')
-        .select('id,name,type')
-        .eq('profile_id', user.id);
-      setProperties(props);
-      // fetch their last‐selected hotel
-      const { data: { hotel_id } } = await supabase
-        .from('profiles')
-        .select('hotel_id')
-        .eq('id', user.id)
-        .single();
-      const initial = props.find(p => p.id === hotel_id) || props[0];
-      setCurrent(initial);
-    }
-    init();
+    refreshProperties();
   }, []);
 
+  // Switch active property (persist on profile)
   const switchProperty = async (property) => {
     setCurrent(property);
-    // persist on profile row
+    const { data: { user } } = await supabase.auth.getUser();
     await supabase
       .from('profiles')
       .update({ hotel_id: property.id })
-      .eq('id', (await supabase.auth.getUser()).data.user.id);
+      .eq('id', user.id);
+  };
+
+  // Add a new property & switch to it
+  const addProperty = async ({ name, type, timezone, address, city, state, zip_code }) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    // 1) insert hotel
+    const { data: newHotel, error } = await supabase
+      .from('hotels')
+      .insert([{
+        profile_id: user.id,
+        name, type, timezone,
+        address, city, state, zip_code
+      }])
+      .select('id,name,type')
+      .single();
+    if (error) throw error;
+    // 2) set as current
+    await switchProperty(newHotel);
+    // 3) re-load list (so dropdown shows it)
+    await refreshProperties();
   };
 
   return (
-    <PropertyContext.Provider value={{ properties, currentProperty, switchProperty }}>
+    <PropertyContext.Provider value={{
+      properties,
+      currentProperty,
+      switchProperty,
+      addProperty
+    }}>
       {children}
     </PropertyContext.Provider>
   );

@@ -11,6 +11,7 @@ import Navbar from '../components/Navbar';
 import { Elements } from '@stripe/react-stripe-js';
 import { stripePromise } from '../utils/stripe';
 import CardForm from '../components/CardForm';
+import AddPropertyForm from '../components/AddPropertyForm';
 import { PropertyContext } from '../contexts/PropertyContext';
 
 // Base URL of your backend (set in Vercel as REACT_APP_API_URL)
@@ -47,16 +48,25 @@ const DEPARTMENT_LISTS = {
 };
 
 export default function SettingsPage() {
-  const { currentProperty } = useContext(PropertyContext);
+  const { currentProperty, addProperty } = useContext(PropertyContext);
   const propertyId = currentProperty?.id;
+
+  // Show/hide Add Property form
+  const [showAddPropertyForm, setShowAddPropertyForm] = useState(false);
 
   // Core state
   const [userId, setUserId]           = useState(null);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState('');
   const [profile, setProfile]         = useState({
-    name: '', type: '', timezone: '', address: '',
-    city: '', state: '', zip_code: '', phone_number: '',
+    name: '',
+    type: '',
+    timezone: '',
+    address: '',
+    city: '',
+    state: '',
+    zip_code: '',
+    phone_number: '',
   });
   const [departments, setDepartments] = useState([]);
   const [slaSettings, setSlaSettings] = useState([]);
@@ -94,8 +104,13 @@ export default function SettingsPage() {
 
   // Load initial data when property changes
   useEffect(() => {
-    if (!propertyId) return;
-    async function loadData() {
+    if (!propertyId) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    (async () => {
       try {
         // Auth & session
         const { data: { session } } = await supabase.auth.getSession();
@@ -167,21 +182,19 @@ export default function SettingsPage() {
         }
         const { customerId } = await customerRes.json();
         setStripeCustomerId(customerId);
-
       } catch (err) {
         console.error('SettingsPage load error:', err);
         setError(err.message);
       } finally {
         setLoading(false);
       }
-    }
-    loadData();
+    })();
   }, [propertyId, resetDefaults]);
 
   // Load payment methods
   useEffect(() => {
-    async function loadCards() {
-      if (!stripeCustomerId) return;
+    if (!stripeCustomerId) return;
+    (async () => {
       try {
         const res = await fetch(`${API_URL}/api/list-payment-methods/${stripeCustomerId}`);
         if (!res.ok) {
@@ -193,8 +206,7 @@ export default function SettingsPage() {
       } catch (err) {
         console.error('Error loading payment methods:', err);
       }
-    }
-    loadCards();
+    })();
   }, [stripeCustomerId]);
 
   // Stripe lib loaded
@@ -276,189 +288,209 @@ export default function SettingsPage() {
   return (
     <>
       <Navbar />
-      <Elements stripe={stripePromise}>
-        <div className="pt-24 max-w-3xl mx-auto p-6 space-y-8">
 
-          {/* Property Profile */}
-          <section>
-            <h2 className="text-xl font-semibold">Property Profile</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
-              <input
-                value={profile.name}
-                onChange={e => handleProfileChange('name', e.target.value)}
-                placeholder="Property Name"
-                className="border p-2 rounded"
-              />
-              <input
-                value={profile.phone_number}
-                onChange={e => handleProfileChange('phone_number', e.target.value)}
-                placeholder="Phone Number"
-                className="border p-2 rounded"
-              />
-              <select
-                value={profile.type}
-                onChange={e => handleProfileChange('type', e.target.value)}
-                className="border p-2 rounded"
-              >
-                <option value="">Select Type</option>
-                <option value="hotel">Hotel</option>
-                <option value="apartment">Apartment</option>
-                <option value="condo">Condo</option>
-                <option value="restaurant">Restaurant</option>
-              </select>
-              <select
-                value={profile.timezone}
-                onChange={e => handleProfileChange('timezone', e.target.value)}
-                className="border p-2 rounded"
-              >
-                <option value="">Timezone</option>
-                {US_TIMEZONES.map(z => (
-                  <option key={z} value={z}>{z}</option>
+      <div className="pt-24 px-6 max-w-3xl mx-auto">
+        {showAddPropertyForm ? (
+          <AddPropertyForm
+            onClose={() => setShowAddPropertyForm(false)}
+          />
+        ) : (
+          <button
+            onClick={() => setShowAddPropertyForm(true)}
+            className="bg-operon-blue text-white px-4 py-2 rounded mb-6"
+          >
+            + Add Another Property
+          </button>
+        )}
+      </div>
+
+      {!showAddPropertyForm && (
+        <Elements stripe={stripePromise}>
+          <div className="pt-4 max-w-3xl mx-auto p-6 space-y-8">
+            {/* Property Profile */}
+            <section>
+              <h2 className="text-xl font-semibold">Property Profile</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                <input
+                  value={profile.name}
+                  onChange={e => handleProfileChange('name', e.target.value)}
+                  placeholder="Property Name"
+                  className="border p-2 rounded"
+                />
+                <input
+                  value={profile.phone_number}
+                  onChange={e => handleProfileChange('phone_number', e.target.value)}
+                  placeholder="Phone Number"
+                  className="border p-2 rounded"
+                />
+                <select
+                  value={profile.type}
+                  onChange={e => handleProfileChange('type', e.target.value)}
+                  className="border p-2 rounded"
+                >
+                  <option value="">Select Type</option>
+                  <option value="hotel">Hotel</option>
+                  <option value="apartment">Apartment</option>
+                  <option value="condo">Condo</option>
+                  <option value="restaurant">Restaurant</option>
+                </select>
+                <select
+                  value={profile.timezone}
+                  onChange={e => handleProfileChange('timezone', e.target.value)}
+                  className="border p-2 rounded"
+                >
+                  <option value="">Timezone</option>
+                  {US_TIMEZONES.map(z => (
+                    <option key={z} value={z}>{z}</option>
+                  ))}
+                </select>
+                <input
+                  value={profile.address}
+                  onChange={e => handleProfileChange('address', e.target.value)}
+                  placeholder="Address"
+                  className="border p-2 rounded"
+                />
+                <input
+                  value={profile.city}
+                  onChange={e => handleProfileChange('city', e.target.value)}
+                  placeholder="City"
+                  className="border p-2 rounded"
+                />
+                <input
+                  value={profile.state}
+                  onChange={e => handleProfileChange('state', e.target.value)}
+                  placeholder="State"
+                  className="border p-2 rounded"
+                />
+                <input
+                  value={profile.zip_code}
+                  onChange={e => handleProfileChange('zip_code', e.target.value)}
+                  placeholder="ZIP Code"
+                  className="border p-2 rounded"
+                />
+              </div>
+            </section>
+
+            {/* Payment Method */}
+            <section>
+              <h2 className="text-xl font-semibold">Payment Method</h2>
+              <div className="mt-4 space-y-2">
+                {paymentMethods.map(pm => (
+                  <label key={pm.id} className="flex items-center bg-white p-3 rounded shadow">
+                    <input
+                      type="radio"
+                      name="defaultPm"
+                      className="form-radio h-5 w-5 text-operon-blue"
+                      checked={defaultPm === pm.id}
+                      onChange={async () => {
+                        setDefaultPm(pm.id);
+                        await fetch(`${API_URL}/api/set-default-payment-method`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ userId, paymentMethodId: pm.id }),
+                        });
+                      }}
+                    />
+                    <span className="ml-3">
+                      {pm.card.brand.toUpperCase()} •••• {pm.card.last4} exp {pm.card.exp_month}/{pm.card.exp_year}
+                    </span>
+                  </label>
                 ))}
-              </select>
-              <input
-                value={profile.address}
-                onChange={e => handleProfileChange('address', e.target.value)}
-                placeholder="Address"
-                className="border p-2 rounded"
-              />
-              <input
-                value={profile.city}
-                onChange={e => handleProfileChange('city', e.target.value)}
-                placeholder="City"
-                className="border p-2 rounded"
-              />
-              <input
-                value={profile.state}
-                onChange={e => handleProfileChange('state', e.target.value)}
-                placeholder="State"
-                className="border p-2 rounded"
-              />
-              <input
-                value={profile.zip_code}
-                onChange={e => handleProfileChange('zip_code', e.target.value)}
-                placeholder="ZIP Code"
-                className="border p-2 rounded"
-              />
-            </div>
-          </section>
-
-          {/* Payment Methods */}
-          <section>
-            <h2 className="text-xl font-semibold">Payment Method</h2>
-            <div className="mt-4 space-y-2">
-              {paymentMethods.map(pm => (
-                <label key={pm.id} className="flex items-center bg-white p-3 rounded shadow">
-                  <input
-                    type="radio"
-                    name="defaultPm"
-                    className="form-radio h-5 w-5 text-operon-blue"
-                    checked={defaultPm === pm.id}
-                    onChange={async () => {
-                      setDefaultPm(pm.id);
-                      await fetch(`${API_URL}/api/set-default-payment-method`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ userId, paymentMethodId: pm.id }),
-                      });
+                {!showNewCardForm && (
+                  <button
+                    className="text-operon-blue underline mt-1"
+                    onClick={() => setShowNewCardForm(true)}
+                  >
+                    + Add another card
+                  </button>
+                )}
+                {showNewCardForm && (
+                  <CardForm
+                    customerId={stripeCustomerId}
+                    onSuccess={async () => {
+                      setShowNewCardForm(false);
+                      const res = await fetch(`${API_URL}/api/list-payment-methods/${stripeCustomerId}`);
+                      const { paymentMethods: methods } = await res.json();
+                      setPaymentMethods(methods);
                     }}
                   />
-                  <span className="ml-3">
-                    {pm.card.brand.toUpperCase()} •••• {pm.card.last4} exp {pm.card.exp_month}/{pm.card.exp_year}
-                  </span>
-                </label>
-              ))}
-              {!showNewCardForm && (
-                <button
-                  className="text-operon-blue underline mt-1"
-                  onClick={() => setShowNewCardForm(true)}
-                >
-                  + Add another card
-                </button>
-              )}
-              {showNewCardForm && (
-                <CardForm
-                  customerId={stripeCustomerId}
-                  onSuccess={async () => {
-                    setShowNewCardForm(false);
-                    const res = await fetch(`${API_URL}/api/list-payment-methods/${stripeCustomerId}`);
-                    const { paymentMethods: methods } = await res.json();
-                    setPaymentMethods(methods);
-                  }}
-                />
-              )}
-            </div>
-          </section>
+                )}
+              </div>
+            </section>
 
-          {/* Department Settings */}
-          <section>
-            <h2 className="text-xl font-semibold">Department Settings</h2>
-            <ul className="mt-4 space-y-2">
-              {showList.map(dept => {
-                const enabled = departments.find(d => d.department === dept)?.enabled || false;
-                return (
-                  <li key={dept} className="flex justify-between items-center bg-white p-3 rounded shadow">
-                    <span>{dept}</span>
-                    <button
-                      onClick={() => toggleDepartment(dept)}
-                      className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${enabled ? 'bg-operon-blue' : 'bg-gray-300'}`}
-                    >
-                      <div className={`bg-white w-6 h-6 rounded-full shadow transform transition-transform ${enabled ? 'translate-x-6' : 'translate-x-0'}`} />
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
+            {/* Department Settings */}
+            <section>
+              <h2 className="text-xl font-semibold">Department Settings</h2>
+              <ul className="mt-4 space-y-2">
+                {showList.map(dept => {
+                  const enabled = departments.find(d => d.department === dept)?.enabled || false;
+                  return (
+                    <li key={dept} className="flex justify-between items-center bg-white p-3 rounded shadow">
+                      <span>{dept}</span>
+                      <button
+                        onClick={() => toggleDepartment(dept)}
+                        className={`w-14 h-8 flex items-center rounded-full p-1 transition-colors ${
+                          enabled ? 'bg-operon-blue' : 'bg-gray-300'
+                        }`}
+                      >
+                        <div className={`bg-white w-6 h-6 rounded-full shadow transform transition-transform ${
+                          enabled ? 'translate-x-6' : 'translate-x-0'
+                        }`} />
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
 
-          {/* SLA Settings */}
-          <section>
-            <h2 className="text-xl font-semibold">SLA Settings</h2>
-            <div className="mt-4 space-y-2">
-              {showList.map(dept => {
-                const s = slaSettings.find(x => x.department === dept) || { ack_time: 5, res_time: 30, is_active: false };
-                return (
-                  <div key={dept} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-white p-3 rounded shadow">
-                    <span>{dept}</span>
-                    <input
-                      type="number"
-                      min="0"
-                      value={s.ack_time}
-                      onChange={e => handleSlaChange(dept, 'ack_time', +e.target.value)}
-                      placeholder="Ack min"
-                      className="border p-1 rounded"
-                    />
-                    <input
-                      type="number"
-                      min="0"
-                      value={s.res_time}
-                      onChange={e => handleSlaChange(dept, 'res_time', +e.target.value)}
-                      placeholder="Res min"
-                      className="border p-1 rounded"
-                    />
-                    <input
-                      type="checkbox"
-                      checked={s.is_active}
-                      onChange={e => handleSlaChange(dept, 'is_active', e.target.checked)}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          </section>
+            {/* SLA Settings */}
+            <section>
+              <h2 className="text-xl font-semibold">SLA Settings</h2>
+              <div className="mt-4 space-y-2">
+                {showList.map(dept => {
+                  const s = slaSettings.find(x => x.department === dept) || { ack_time: 5, res_time: 30, is_active: false };
+                  return (
+                    <div key={dept} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center bg-white p-3 rounded shadow">
+                      <span>{dept}</span>
+                      <input
+                        type="number"
+                        min="0"
+                        value={s.ack_time}
+                        onChange={e => handleSlaChange(dept, 'ack_time', +e.target.value)}
+                        placeholder="Ack min"
+                        className="border p-1 rounded"
+                      />
+                      <input
+                        type="number"
+                        min="0"
+                        value={s.res_time}
+                        onChange={e => handleSlaChange(dept, 'res_time', +e.target.value)}
+                        placeholder="Res min"
+                        className="border p-1 rounded"
+                      />
+                      <input
+                        type="checkbox"
+                        checked={s.is_active}
+                        onChange={e => handleSlaChange(dept, 'is_active', e.target.checked)}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+            </section>
 
-          {/* Save All */}
-          <button
-            onClick={saveAll}
-            disabled={saving}
-            className="w-full bg-operon-blue text-white py-2 rounded disabled:opacity-50"
-          >
-            {saving ? 'Saving…' : 'Save Changes'}
-          </button>
-          {saveStatus && <p className="text-center text-green-600 mt-2">{saveStatus}</p>}
-
-        </div>
-      </Elements>
+            {/* Save All */}
+            <button
+              onClick={saveAll}
+              disabled={saving}
+              className="w-full bg-operon-blue text-white py-2 rounded disabled:opacity-50"
+            >
+              {saving ? 'Saving…' : 'Save Changes'}
+            </button>
+            {saveStatus && <p className="text-center text-green-600 mt-2">{saveStatus}</p>}
+          </div>
+        </Elements>
+      )}
     </>
   );
 }
