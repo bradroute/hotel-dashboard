@@ -14,6 +14,11 @@ export default function Navbar() {
   // Property context
   const { properties, currentProperty, switchProperty, loading: propLoading } = useContext(PropertyContext);
 
+  // DEBUG
+  useEffect(() => {
+    console.log("Navbar: session", session, "currentProperty", currentProperty);
+  }, [session, currentProperty]);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
