@@ -16,9 +16,7 @@ export default function Navbar() {
 
   useEffect(() => {
     // Fetch Supabase session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => setSession(session)
     );
@@ -32,10 +30,30 @@ export default function Navbar() {
 
   return (
     <nav className="w-full flex items-center justify-between px-6 py-4 bg-white shadow-sm fixed top-0 left-0 z-10">
-      <Link to="/" className="flex items-center gap-2">
-        <img src={logoFull} alt="Operon Logo" className="h-8 sm:h-10" />
-        <span className="text-xl font-bold text-operon-charcoal hidden sm:block">Operon</span>
-      </Link>
+      <div className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
+          <img src={logoFull} alt="Operon Logo" className="h-8 sm:h-10" />
+          <span className="text-xl font-bold text-operon-charcoal hidden sm:block">Operon</span>
+        </Link>
+
+        {/* Property selector dropdown */}
+        {session && properties?.length > 0 && (
+          <select
+            value={currentProperty?.id || ''}
+            onChange={e => {
+              const selected = properties.find(p => p.id === e.target.value);
+              if (selected) switchProperty(selected);
+            }}
+            className="border rounded px-2 py-1 text-sm ml-4"
+          >
+            {properties.map(p => (
+              <option key={p.id} value={p.id}>
+                {p.name} ({p.type})
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
 
       <div className="flex items-center gap-6">
         <Link
@@ -50,24 +68,6 @@ export default function Navbar() {
         >
           Learn More
         </Link>
-
-        {/* Property selector */}
-        {session && properties.length > 0 && (
-          <select
-            value={currentProperty?.id || ''}
-            onChange={e => {
-              const sel = properties.find(p => p.id === e.target.value);
-              switchProperty(sel);
-            }}
-            className="border rounded p-1 text-sm"
-          >
-            {properties.map(p => (
-              <option key={p.id} value={p.id}>
-                {p.name} ({p.type})
-              </option>
-            ))}
-          </select>
-        )}
 
         {session && currentPath !== '/dashboard' && (
           <Link
