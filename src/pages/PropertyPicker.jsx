@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { PropertyContext } from '../contexts/PropertyContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
 export default function PropertyPicker() {
@@ -22,13 +22,13 @@ export default function PropertyPicker() {
 
   const handleSelect = async (property) => {
     setSelecting(true);
-    console.log('Select button clicked. Property:', property); // <-- LOG
+    console.log('Select button clicked. Property:', property);
     try {
       await switchProperty(property);
-      console.log('switchProperty complete, navigating...'); // <-- LOG
+      console.log('switchProperty complete, navigating...');
       navigate(`/dashboard/${property.id}`);
     } catch (e) {
-      console.error('handleSelect error', e); // <-- LOG
+      console.error('handleSelect error', e);
     } finally {
       setSelecting(false);
     }
@@ -68,12 +68,12 @@ export default function PropertyPicker() {
           )}
 
           <div className="text-center mt-8">
-            <button
-              onClick={() => navigate('/onboarding')}
+            <Link
+              to="/onboarding"
               className="text-operon-blue hover:underline text-sm"
             >
               + Add a new property
-            </button>
+            </Link>
           </div>
         </div>
       </div>
