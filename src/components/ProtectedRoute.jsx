@@ -1,4 +1,3 @@
-// src/components/ProtectedRoute.jsx
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
@@ -24,16 +23,23 @@ export default function ProtectedRoute({ children }) {
           return;
         }
 
-        // 2) Fetch profile to see if they've onboarded
+        // 2) Fetch profile (robust: .maybeSingle() instead of .single())
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('hotel_id')
           .eq('id', session.user.id)
-          .single();
-        if (!isMounted) return;
-        if (error) throw error;
+          .maybeSingle();
 
-        setStatus({ loading: false, session, hotelId: profile?.hotel_id });
+        if (!isMounted) return;
+
+        // Handle error or missing profile
+        if (error || !profile) {
+          // No profile (or error): send to onboarding (or handle as needed)
+          setStatus({ loading: false, session, hotelId: null });
+          return;
+        }
+
+        setStatus({ loading: false, session, hotelId: profile.hotel_id });
       } catch (err) {
         console.error('ProtectedRoute bootstrap error', err);
         if (isMounted) setStatus({ loading: false, session: null, hotelId: null });
@@ -56,7 +62,7 @@ export default function ProtectedRoute({ children }) {
 
   const isOnboarding = location.pathname === '/onboarding';
 
-  // Logged in but no hotel_id => force onboarding
+  // No profile or no hotel_id => onboarding (or property picker if you want, as discussed)
   if (!status.hotelId && !isOnboarding) {
     return <Navigate to="/onboarding" replace />;
   }
