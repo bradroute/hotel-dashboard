@@ -1,20 +1,22 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { PropertyContext } from '../contexts/PropertyContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import AddPropertyForm from '../components/AddPropertyForm';
 
 export default function PropertyPicker() {
   const { properties, switchProperty, loading } = useContext(PropertyContext);
   const navigate = useNavigate();
   const [selecting, setSelecting] = useState(false);
 
+  // New state for modal
+  const [showAddModal, setShowAddModal] = useState(false);
+
   useEffect(() => {
     if (!loading && properties.length === 1) {
-      console.log('Auto-selecting the only property:', properties[0]);
       handleSelect(properties[0]);
     }
     if (!loading && properties.length === 0) {
-      console.log('No properties found, redirecting to onboarding');
       navigate('/onboarding');
     }
     // eslint-disable-next-line
@@ -22,13 +24,11 @@ export default function PropertyPicker() {
 
   const handleSelect = async (property) => {
     setSelecting(true);
-    console.log('Select button clicked. Property:', property);
     try {
       await switchProperty(property);
-      console.log('switchProperty complete, navigating...');
       navigate(`/dashboard/${property.id}`);
     } catch (e) {
-      console.error('handleSelect error', e);
+      // handle error
     } finally {
       setSelecting(false);
     }
@@ -68,15 +68,28 @@ export default function PropertyPicker() {
           )}
 
           <div className="text-center mt-8">
-            <Link
-              to="/onboarding"
+            <button
+              onClick={() => setShowAddModal(true)}
               className="text-operon-blue hover:underline text-sm"
             >
               + Add a new property
-            </Link>
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Modal for Add Property */}
+      {showAddModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl relative">
+            <button
+              className="absolute top-2 right-3 text-xl text-gray-500 hover:text-gray-800"
+              onClick={() => setShowAddModal(false)}
+            >×</button>
+            <AddPropertyForm onClose={() => setShowAddModal(false)} />
+          </div>
+        </div>
+      )}
     </>
   );
 }
