@@ -10,10 +10,11 @@ export default function PropertyPicker() {
 
   useEffect(() => {
     if (!loading && properties.length === 1) {
-      // Automatically select if only one property exists
+      console.log('Auto-selecting the only property:', properties[0]);
       handleSelect(properties[0]);
     }
     if (!loading && properties.length === 0) {
+      console.log('No properties found, redirecting to onboarding');
       navigate('/onboarding');
     }
     // eslint-disable-next-line
@@ -21,9 +22,13 @@ export default function PropertyPicker() {
 
   const handleSelect = async (property) => {
     setSelecting(true);
+    console.log('Select button clicked. Property:', property); // <-- LOG
     try {
       await switchProperty(property);
+      console.log('switchProperty complete, navigating...'); // <-- LOG
       navigate(`/dashboard/${property.id}`);
+    } catch (e) {
+      console.error('handleSelect error', e); // <-- LOG
     } finally {
       setSelecting(false);
     }
