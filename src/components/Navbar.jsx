@@ -15,7 +15,6 @@ export default function Navbar() {
   const { properties, currentProperty, switchProperty, loading: propLoading } = useContext(PropertyContext);
 
   useEffect(() => {
-    // Fetch Supabase session
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => setSession(session)
@@ -32,7 +31,8 @@ export default function Navbar() {
     const selected = properties.find(p => p.id === e.target.value);
     if (selected) {
       await switchProperty(selected);
-      navigate('/dashboard'); // Redirect to dashboard after switching property!
+      // Redirect to new property dashboard!
+      navigate(`/dashboard/${selected.id}`);
     }
   };
 
@@ -74,27 +74,27 @@ export default function Navbar() {
           Learn More
         </Link>
 
-        {session && (
+        {session && currentProperty?.id && (
           <>
-            {currentPath !== '/dashboard' && (
+            {currentPath !== `/dashboard/${currentProperty.id}` && (
               <Link
-                to="/dashboard"
+                to={`/dashboard/${currentProperty.id}`}
                 className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
               >
                 Dashboard
               </Link>
             )}
-            {currentPath !== '/analytics' && (
+            {currentPath !== `/analytics/${currentProperty.id}` && (
               <Link
-                to="/analytics"
+                to={`/analytics/${currentProperty.id}`}
                 className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
               >
                 Analytics
               </Link>
             )}
-            {currentPath !== '/settings' && (
+            {currentPath !== `/settings/${currentProperty.id}` && (
               <Link
-                to="/settings"
+                to={`/settings/${currentProperty.id}`}
                 className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
               >
                 Settings
