@@ -1,60 +1,71 @@
 // src/components/ProtectedRoute.jsx
 import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 
+/**
+ * Wrap your routes in <ProtectedRoute> to ensure:
+ *  • the user is signed in
+ *  • the user has completed onboarding (hotel_id set on their profile)
+ */
 export default function ProtectedRoute({ children }) {
-  const [session, setSession] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [status, setStatus] = useState({ loading: true, session: null, hotelId: null });
+  const location = useLocation();
 
   useEffect(() => {
-    // 1) fetch auth session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setLoading(false);
-    });
-
-    // 2) listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-
-        if (session?.user) {
-          // check if user has a hotel_id in their profile
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('hotel_id')
-            .eq('id', session.user.id)
-            .maybeSingle();    // ← use maybeSingle so missing row isn't a 406
-
-          // if there's any real error or no hotel_id, force onboarding
-          setNeedsOnboarding(!!error || !profile?.hotel_id);
+    let isMounted = true;
+    async function bootstrap() {
+      try {
+        // 1) Get session
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+        if (!session) {
+          setStatus({ loading: false, session: null, hotelId: null });
+          return;
         }
 
-        setLoading(false);
-      }
-    );
+        // 2) Fetch profile to see if they've onboarded
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('hotel_id')
+          .eq('id', session.user.id)
+          .single();
+        if (!isMounted) return;
+        if (error) throw error;
 
-    return () => subscription.unsubscribe();
+        setStatus({ loading: false, session, hotelId: profile?.hotel_id });
+      } catch (err) {
+        console.error('ProtectedRoute bootstrap error', err);
+        if (isMounted) setStatus({ loading: false, session: null, hotelId: null });
+      }
+    }
+
+    bootstrap();
+    return () => { isMounted = false; };
   }, []);
 
-  if (loading) {
-    // you can render a spinner here if you like
+  if (status.loading) {
+    // You can render a spinner here if you want
     return null;
   }
 
-  if (!session) {
-    // not signed in → go to login
-    return <Navigate to="/login" replace />;
+  // Not logged in => go to login
+  if (!status.session) {
+    return <Navigate to="/login" replace state={{ from: location }} />;
   }
 
-  if (needsOnboarding) {
-    // signed in but no property set up yet → onboarding
+  const isOnboarding = location.pathname === '/onboarding';
+
+  // Logged in but no hotel_id => force onboarding
+  if (!status.hotelId && !isOnboarding) {
     return <Navigate to="/onboarding" replace />;
   }
 
-  // otherwise, render the protected content
+  // Completed onboarding but still on /onboarding => go to dashboard
+  if (status.hotelId && isOnboarding) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  // All good: render children
   return children;
 }
-
