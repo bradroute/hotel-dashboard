@@ -1,26 +1,32 @@
-import React, { useContext, useEffect } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { PropertyContext } from '../contexts/PropertyContext';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
 export default function PropertyPicker() {
-  const { properties, loading } = useContext(PropertyContext);
+  const { properties, switchProperty, loading } = useContext(PropertyContext);
   const navigate = useNavigate();
+  const [selecting, setSelecting] = useState(false);
 
   useEffect(() => {
-    // If the user has only one property, auto-select it for convenience
     if (!loading && properties.length === 1) {
-      navigate(`/dashboard/${properties[0].id}`);
+      // Automatically select if only one property exists
+      handleSelect(properties[0]);
     }
-    // If user has no properties, redirect to onboarding as a failsafe
     if (!loading && properties.length === 0) {
       navigate('/onboarding');
     }
     // eslint-disable-next-line
-  }, [properties, loading, navigate]);
+  }, [properties, loading]);
 
-  const handleSelect = (property) => {
-    navigate(`/dashboard/${property.id}`);
+  const handleSelect = async (property) => {
+    setSelecting(true);
+    try {
+      await switchProperty(property);
+      navigate(`/dashboard/${property.id}`);
+    } finally {
+      setSelecting(false);
+    }
   };
 
   return (
@@ -31,7 +37,6 @@ export default function PropertyPicker() {
           <h1 className="text-2xl font-semibold mb-6 text-center text-operon-charcoal">
             Select a Property
           </h1>
-
           {loading ? (
             <div className="text-center text-lg">Loading properties…</div>
           ) : (
@@ -47,6 +52,7 @@ export default function PropertyPicker() {
                   </div>
                   <button
                     onClick={() => handleSelect(prop)}
+                    disabled={selecting}
                     className="bg-operon-blue text-white px-4 py-2 rounded hover:bg-blue-400 transition"
                   >
                     Select
