@@ -29,7 +29,7 @@ export default function Dashboard() {
 
   const [requests, setRequests] = useState([]);
   const [departmentOptions, setDepartmentOptions] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   const [showActiveOnly, setShowActiveOnly] = useState(true);
@@ -46,27 +46,20 @@ export default function Dashboard() {
   const [notesError, setNotesError] = useState('');
   const [newNote, setNewNote] = useState('');
 
-  // If property not yet loaded, show a loading state
-  useEffect(() => {
-    if (!propertyId) return;
-    setLoading(true);
-    setError('');
-  }, [propertyId]);
-
   // Load enabled departments for this property
   const fetchEnabledDepartments = useCallback(async () => {
     if (!propertyId) return;
-    const { data: settings, error } = await supabase
-      .from('department_settings')
-      .select('department')
-      .eq('hotel_id', propertyId)
-      .eq('enabled', true);
-
-    if (error) {
-      console.error('Error fetching departments:', error);
-      return;
+    try {
+      const { data: settings, error } = await supabase
+        .from('department_settings')
+        .select('department')
+        .eq('hotel_id', propertyId)
+        .eq('enabled', true);
+      if (error) throw error;
+      setDepartmentOptions(settings.map(d => d.department));
+    } catch (err) {
+      console.error('Error fetching departments:', err);
     }
-    setDepartmentOptions(settings.map(d => d.department));
   }, [propertyId]);
 
   // Load requests for this property
@@ -84,17 +77,17 @@ export default function Dashboard() {
     }
   }, [propertyId]);
 
-  // On mount & whenever the property changes, refresh data (and poll)
+  // On property change, refresh data & poll
   useEffect(() => {
     if (!propertyId) return;
     fetchEnabledDepartments();
     fetchRequests();
-    const interval = setInterval(fetchRequests, 60_000);
+    const interval = setInterval(fetchRequests, 60000);
     return () => clearInterval(interval);
   }, [propertyId, fetchEnabledDepartments, fetchRequests]);
 
   // Notes modal handlers
-  const openNotesModal = async (requestId) => {
+  const openNotesModal = async requestId => {
     setCurrentRequestId(requestId);
     setNotesLoading(true);
     setNotesError('');
@@ -118,46 +111,44 @@ export default function Dashboard() {
       setNotesError(err.message || 'Unknown error adding note');
     }
   };
-  const handleDeleteNote = async (noteId) => {
+  const handleDeleteNote = async noteId => {
     await deleteNote(currentRequestId, noteId);
     setNotes(await getNotes(currentRequestId));
   };
 
   const priorityOptions = ['Normal', 'Urgent', 'Low'];
 
-  // Apply filters, search, and sort
+  // Filters, search, sort
   const filtered = useMemo(() => {
     let list = [...requests];
-    if (showActiveOnly)     list = list.filter(r => !r.completed);
+    if (showActiveOnly) list = list.filter(r => !r.completed);
     if (unacknowledgedOnly) list = list.filter(r => !r.acknowledged);
     if (selectedDepartment !== 'All') list = list.filter(r => r.department === selectedDepartment);
-    if (selectedPriority   !== 'All') list = list.filter(r => r.priority.toLowerCase() === selectedPriority.toLowerCase());
+    if (selectedPriority !== 'All') list = list.filter(
+      r => r.priority.toLowerCase() === selectedPriority.toLowerCase()
+    );
     if (searchTerm.trim()) {
       list = list.filter(r =>
         r.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (r.from_phone  && r.from_phone.includes(searchTerm)) ||
+        (r.from_phone && r.from_phone.includes(searchTerm)) ||
         (r.room_number && r.room_number.toString().includes(searchTerm))
       );
     }
-    list.sort((a, b) =>
+    return list.sort((a, b) =>
       sortOrder === 'oldest'
         ? new Date(a.created_at) - new Date(b.created_at)
         : new Date(b.created_at) - new Date(a.created_at)
     );
-    return list;
-  }, [
-    requests,
-    showActiveOnly,
-    unacknowledgedOnly,
-    selectedDepartment,
-    selectedPriority,
-    sortOrder,
-    searchTerm
-  ]);
+  }, [requests, showActiveOnly, unacknowledgedOnly, selectedDepartment, selectedPriority, sortOrder, searchTerm]);
 
-  if (!propertyId || loading) {
-    return <div className="p-6 text-lg font-medium">Loading…</div>;
+  if (!propertyId) {
+    return <div className="p-6 text-lg">Select a property first.</div>;
   }
+
+  if (loading) {
+    return <div className="p-6 text-lg font-medium">Loading requests…</div>;
+  }
+
   if (error) {
     return <div className="p-6 text-lg text-red-600">Error: {error}</div>;
   }
@@ -191,11 +182,11 @@ export default function Dashboard() {
           <div className="mt-4 w-full">
             <RequestsTable
               requests={filtered}
-              onAcknowledge={async (id) => {
+              onAcknowledge={async id => {
                 await acknowledgeRequest(id, propertyId);
                 fetchRequests();
               }}
-              onComplete={async (id) => {
+              onComplete={async id => {
                 await completeRequest(id, propertyId);
                 fetchRequests();
               }}
@@ -224,14 +215,9 @@ export default function Dashboard() {
             <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
               {notesLoading && <p className="text-gray-600">Loading...</p>}
               {notesError && <p className="text-red-600">{notesError}</p>}
-              {!notesLoading && notes.length === 0 && (
-                <p className="text-gray-500">No notes yet.</p>
-              )}
+              {!notesLoading && notes.length === 0 && <p className="text-gray-500">No notes yet.</p>}
               {notes.map(note => (
-                <div
-                  key={note.id}
-                  className="flex justify-between items-center bg-gray-100 p-2 rounded"
-                >
+                <div key={note.id} className="flex justify-between items-center bg-gray-100 p-2 rounded">
                   <span className="text-operon-charcoal">{note.content}</span>
                   <button
                     onClick={() => handleDeleteNote(note.id)}
