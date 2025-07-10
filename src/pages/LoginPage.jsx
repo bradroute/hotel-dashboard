@@ -94,7 +94,7 @@ export default function LoginPage() {
           <img src={logoFull} alt="Operon" className="h-14 sm:h-16 mx-auto mb-3" />
           <h1 className="text-3xl font-semibold text-operon-charcoal">Welcome to Operon</h1>
           <p className="text-operon-muted text-base mt-3 max-w-xl mx-auto leading-relaxed">
-            Operon is a lightweight yet powerful hotel operations platform that streamlines guest service requests across all departments — in real time.
+            Operon is the modern property operations platform for hotels, apartments, condos, and restaurants. Coordinate and resolve service requests fast, boost team efficiency, and deliver an exceptional experience for your guests or residents—all in one place.
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 mt-6">
