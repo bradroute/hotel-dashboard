@@ -6,7 +6,7 @@ export default function Help() {
       <div className="bg-white rounded-xl shadow-lg p-10 max-w-2xl w-full text-center">
         <h1 className="text-3xl font-semibold text-operon-charcoal mb-5">Need Help?</h1>
         <p className="text-operon-muted text-lg mb-8">
-          Having trouble, need to report a problem, or want support?
+          For support, technical issues, or questions regarding your Operon experience, please contact us using the information below.
         </p>
         <div className="mb-6">
           <p className="text-operon-charcoal text-lg font-medium mb-1">Call Us</p>
