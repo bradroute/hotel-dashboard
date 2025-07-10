@@ -34,7 +34,8 @@ function AppContent({ session }) {
     '/login',
     '/signup',
     '/privacy-policy',
-    '/terms'
+    '/terms',
+    '/help'
   ];
   const showFooter = publicPaths.includes(location.pathname);
 
