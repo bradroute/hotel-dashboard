@@ -22,9 +22,9 @@ import PropertyPicker from './pages/PropertyPicker';
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
 import { supabase } from './utils/supabaseClient';
-import { AnimatePresence } from 'framer-motion'; // <-- Added
+import { AnimatePresence } from 'framer-motion';
 
-function AppRoutes({ session }) {
+function AppContent({ session }) {
   const location = useLocation();
   const publicPaths = [
     '/about',
@@ -37,88 +37,92 @@ function AppRoutes({ session }) {
   const showFooter = publicPaths.includes(location.pathname);
 
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname}>
-        {/* Public routes */}
-        <Route path="/about" element={<About />} />
-        <Route path="/learn-more" element={<LearnMore />} />
-        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-        <Route path="/terms" element={<TermsAndConditions />} />
-        <Route
-          path="/login"
-          element={
-            session
-              ? <Navigate to="/property-picker" replace />
-              : <LoginPage />
-          }
-        />
-        <Route
-          path="/signup"
-          element={
-            session
-              ? <Navigate to="/property-picker" replace />
-              : <SignUp />
-          }
-        />
+    <div className="flex flex-col min-h-screen">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4">
+        <AnimatePresence mode="wait">
+          <Routes location={location} key={location.pathname}>
+            {/* Public routes */}
+            <Route path="/about" element={<About />} />
+            <Route path="/learn-more" element={<LearnMore />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsAndConditions />} />
+            <Route
+              path="/login"
+              element={
+                session
+                  ? <Navigate to="/property-picker" replace />
+                  : <LoginPage />
+              }
+            />
+            <Route
+              path="/signup"
+              element={
+                session
+                  ? <Navigate to="/property-picker" replace />
+                  : <SignUp />
+              }
+            />
 
-        {/* Onboarding route */}
-        <Route
-          path="/onboarding"
-          element={
-            <ProtectedRoute>
-              <OnboardingPage />
-            </ProtectedRoute>
-          }
-        />
+            {/* Onboarding route */}
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <OnboardingPage />
+                </ProtectedRoute>
+              }
+            />
 
-        {/* Property Picker route */}
-        <Route
-          path="/property-picker"
-          element={
-            <ProtectedRoute>
-              <PropertyPicker />
-            </ProtectedRoute>
-          }
-        />
+            {/* Property Picker route */}
+            <Route
+              path="/property-picker"
+              element={
+                <ProtectedRoute>
+                  <PropertyPicker />
+                </ProtectedRoute>
+              }
+            />
 
-        {/* Multi-property routes */}
-        <Route
-          path="/dashboard/:hotelId"
-          element={
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/analytics/:hotelId"
-          element={
-            <ProtectedRoute>
-              <Analytics />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/settings/:hotelId"
-          element={
-            <ProtectedRoute>
-              <SettingsPage />
-            </ProtectedRoute>
-          }
-        />
+            {/* Multi-property routes */}
+            <Route
+              path="/dashboard/:hotelId"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/analytics/:hotelId"
+              element={
+                <ProtectedRoute>
+                  <Analytics />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings/:hotelId"
+              element={
+                <ProtectedRoute>
+                  <SettingsPage />
+                </ProtectedRoute>
+              }
+            />
 
-        {/* Fallback */}
-        <Route
-          path="*"
-          element={
-            session
-              ? <Navigate to="/property-picker" replace />
-              : <Navigate to="/login" replace />
-          }
-        />
-      </Routes>
+            {/* Fallback */}
+            <Route
+              path="*"
+              element={
+                session
+                  ? <Navigate to="/property-picker" replace />
+                  : <Navigate to="/login" replace />
+              }
+            />
+          </Routes>
+        </AnimatePresence>
+      </main>
       {showFooter && <Footer />}
-    </AnimatePresence>
+    </div>
   );
 }
 
@@ -140,9 +144,7 @@ export default function App() {
   return (
     <Router>
       <PropertyProvider>
-        <div className="max-w-7xl mx-auto px-4">
-          <AppRoutes session={session} />
-        </div>
+        <AppContent session={session} />
       </PropertyProvider>
     </Router>
   );
