@@ -17,7 +17,7 @@ import { supabase } from '../utils/supabaseClient';
 import FiltersBar from '../components/FiltersBar';
 import RequestsTable from '../components/RequestsTable';
 import styles from '../styles/Dashboard.module.css';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -230,57 +230,72 @@ export default function Dashboard() {
         </div>
       </motion.div>
 
-      {notesModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2">
-            {/* Modal header */}
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-operon-charcoal">📝 Request Notes</h2>
-              <button
-                onClick={() => setNotesModalOpen(false)}
-                aria-label="Close notes modal"
-                className="text-gray-500 hover:text-gray-800 text-2xl leading-none"
-              >
-                ×
-              </button>
-            </div>
-            {/* Notes list */}
-            <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
-              {notesLoading && <p className="text-gray-600">Loading...</p>}
-              {notesError && <p className="text-red-600">{notesError}</p>}
-              {!notesLoading && notes.length === 0 && <p className="text-gray-500">No notes yet.</p>}
-              {notes.map(note => (
-                <div key={note.id} className="flex justify-between items-center bg-gray-100 p-2 rounded">
-                  <span className="text-operon-charcoal">{note.content}</span>
-                  <button
-                    onClick={() => handleDeleteNote(note.id)}
-                    aria-label="Delete note"
-                    className="text-red-500 hover:text-red-700 ml-2"
-                  >
-                    ×
-                  </button>
-                </div>
-              ))}
-            </div>
-            {/* Add note */}
-            <div className="flex gap-2">
-              <input
-                type="text"
-                placeholder="Add a new note..."
-                value={newNote}
-                onChange={e => setNewNote(e.target.value)}
-                className="flex-grow border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-operon-blue"
-              />
-              <button
-                onClick={handleAddNote}
-                className="bg-operon-blue text-white rounded px-4 py-2 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300"
-              >
-                Add
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {notesModalOpen && (
+          <motion.div
+            key="notes-modal"
+            initial={{ opacity: 0, scale: 0.97, y: 40 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.97, y: 40 }}
+            transition={{ duration: 0.18 }}
+            className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97, y: 40 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 40 }}
+              transition={{ duration: 0.18, delay: 0.05 }}
+              className="bg-white p-6 rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2"
+            >
+              {/* Modal header */}
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold text-operon-charcoal">📝 Request Notes</h2>
+                <button
+                  onClick={() => setNotesModalOpen(false)}
+                  aria-label="Close notes modal"
+                  className="text-gray-500 hover:text-gray-800 text-2xl leading-none"
+                >
+                  ×
+                </button>
+              </div>
+              {/* Notes list */}
+              <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
+                {notesLoading && <p className="text-gray-600">Loading...</p>}
+                {notesError && <p className="text-red-600">{notesError}</p>}
+                {!notesLoading && notes.length === 0 && <p className="text-gray-500">No notes yet.</p>}
+                {notes.map(note => (
+                  <div key={note.id} className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                    <span className="text-operon-charcoal">{note.content}</span>
+                    <button
+                      onClick={() => handleDeleteNote(note.id)}
+                      aria-label="Delete note"
+                      className="text-red-500 hover:text-red-700 ml-2"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+              {/* Add note */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="Add a new note..."
+                  value={newNote}
+                  onChange={e => setNewNote(e.target.value)}
+                  className="flex-grow border border-gray-300 rounded p-2 focus:outline-none focus:ring-2 focus:ring-operon-blue"
+                />
+                <button
+                  onClick={handleAddNote}
+                  className="bg-operon-blue text-white rounded px-4 py-2 hover:bg-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-300"
+                >
+                  Add
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
