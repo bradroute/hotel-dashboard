@@ -93,7 +93,7 @@ export default function Navbar() {
             </>
           )}
 
-          {/* Show dashboard, analytics, settings for logged in user */}
+          {/* Show dashboard, analytics, settings, help for logged in user */}
           {session && currentProperty?.id && (
             <>
               {currentPath !== `/dashboard/${currentProperty.id}` && (
@@ -118,6 +118,14 @@ export default function Navbar() {
                   className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
                 >
                   Settings
+                </Link>
+              )}
+              {currentPath !== '/help' && (
+                <Link
+                  to="/help"
+                  className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
+                >
+                  Help
                 </Link>
               )}
             </>

@@ -19,9 +19,10 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import OnboardingPage from './pages/OnboardingPage';
 import PropertyPicker from './pages/PropertyPicker';
+import Help from './pages/Help'; // <-- Added Help page import
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
-import Navbar from './components/Navbar'; // <-- Add this line
+import Navbar from './components/Navbar';
 import { supabase } from './utils/supabaseClient';
 import { AnimatePresence } from 'framer-motion';
 
@@ -39,7 +40,7 @@ function AppContent({ session }) {
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar /> {/* Always render Navbar here, once */}
+      <Navbar />
       <main className="flex-1 max-w-7xl mx-auto w-full px-4">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
@@ -48,6 +49,7 @@ function AppContent({ session }) {
             <Route path="/learn-more" element={<LearnMore />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsAndConditions />} />
+            <Route path="/help" element={<Help />} /> {/* <-- Added Help route */}
             <Route
               path="/login"
               element={
