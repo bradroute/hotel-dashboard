@@ -5,9 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import styles from '../styles/Dashboard.module.css';
 
 const rowVariants = {
-  initial: { opacity: 0, y: 15 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.23 } },
-  exit: { opacity: 0, y: -10, transition: { duration: 0.16 } },
+  initial: { opacity: 0 },
+  animate: { opacity: 1, transition: { duration: 0.18 } },
+  exit: { opacity: 0, transition: { duration: 0.14 } },
 };
 
 export default function RequestsTable({
@@ -59,7 +59,6 @@ export default function RequestsTable({
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  layout
                 >
                   <td>
                     {new Date(r.created_at).toLocaleString('en-US', {
