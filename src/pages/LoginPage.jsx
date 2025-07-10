@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { useNavigate, Link } from 'react-router-dom';
+import Navbar from '../components/Navbar'; // adjust path as needed
 import logoFull from '../assets/logo-icon2.png';
 import { motion } from 'framer-motion';
 
@@ -69,20 +70,8 @@ export default function LoginPage() {
 
   return (
     <>
-      {/* Top Navigation Bar */}
-      <nav className="w-full flex items-center justify-between px-6 py-4 bg-white shadow-sm fixed top-0 left-0 z-10">
-        <Link to="/" className="flex items-center gap-2">
-          <img src={logoFull} alt="Operon Logo" className="h-8 sm:h-10" />
-          <span className="text-xl font-bold text-operon-charcoal hidden sm:block">Operon</span>
-        </Link>
-        <div className="flex items-center gap-6">
-          <Link to="/about" className="text-operon-blue hover:underline font-medium text-sm sm:text-base">About</Link>
-          <Link to="/learn-more" className="text-operon-blue hover:underline font-medium text-sm sm:text-base">Learn More</Link>
-          <Link to="/signup" className="bg-operon-blue text-white font-medium px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base">Sign Up</Link>
-        </div>
-      </nav>
+      <Navbar />
 
-      {/* Main Content */}
       <motion.div
         variants={pageVariants}
         initial="initial"
@@ -98,8 +87,16 @@ export default function LoginPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row justify-center gap-4 mt-6">
-            <Link to="/learn-more"><button className="px-6 py-2 border border-operon-blue text-operon-blue rounded hover:bg-blue-50 transition text-sm sm:text-base">Learn More</button></Link>
-            <Link to="/signup"><button className="px-6 py-2 bg-operon-blue text-white rounded hover:bg-blue-400 transition text-sm sm:text-base">Sign Up</button></Link>
+            <Link to="/learn-more">
+              <button className="px-6 py-2 border border-operon-blue text-operon-blue rounded hover:bg-blue-50 transition text-sm sm:text-base">
+                Learn More
+              </button>
+            </Link>
+            <Link to="/signup">
+              <button className="px-6 py-2 bg-operon-blue text-white rounded hover:bg-blue-400 transition text-sm sm:text-base">
+                Sign Up
+              </button>
+            </Link>
           </div>
 
           <p className="text-sm text-gray-500 italic mt-4 max-w-sm mx-auto">
@@ -112,12 +109,36 @@ export default function LoginPage() {
 
           {error && <p className="text-center text-red-600 text-sm">{error}</p>}
 
-          <input type="email" placeholder="Email" value={email} onChange={e => setEmail(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-operon-blue" required />
-          <input type="password" placeholder="Password" value={password} onChange={e => setPassword(e.target.value)} className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-operon-blue" required />
+          <input
+            type="email"
+            placeholder="Email"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-operon-blue"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            className="w-full px-4 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-operon-blue"
+            required
+          />
 
-          <button type="submit" className="w-full bg-operon-blue hover:bg-blue-400 text-white py-2 rounded font-medium transition">Login</button>
+          <button
+            type="submit"
+            className="w-full bg-operon-blue hover:bg-blue-400 text-white py-2 rounded font-medium transition"
+          >
+            Login
+          </button>
 
-          <p className="text-center text-sm text-gray-600">Don't have an account? <Link to="/signup" className="text-operon-blue hover:underline">Sign up</Link></p>
+          <p className="text-center text-sm text-gray-600">
+            Don't have an account?{' '}
+            <Link to="/signup" className="text-operon-blue hover:underline">
+              Sign up
+            </Link>
+          </p>
         </form>
       </motion.div>
     </>
