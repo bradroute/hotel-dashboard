@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { PropertyContext } from '../contexts/PropertyContext';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
 import AddPropertyForm from '../components/AddPropertyForm';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -43,7 +42,6 @@ export default function PropertyPicker() {
 
   return (
     <>
-      <Navbar />
       <motion.div
         variants={pageVariants}
         initial="initial"

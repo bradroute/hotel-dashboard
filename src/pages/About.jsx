@@ -1,7 +1,6 @@
 import React from 'react';
 import { FaHotel, FaCheckCircle } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import Navbar from '../components/Navbar';
 import { motion } from 'framer-motion';
 
 const pageVariants = {
@@ -19,7 +18,6 @@ export default function About() {
       exit="exit"
       className="min-h-screen bg-operon-background"
     >
-      <Navbar />
       <div className="flex justify-center items-start min-h-screen pt-28 px-4">
         <div className="bg-white shadow-lg rounded-xl p-10 max-w-3xl w-full">
           <div className="flex items-center mb-5 space-x-3">

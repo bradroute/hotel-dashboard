@@ -7,7 +7,6 @@ import {
   FaComments
 } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-import Navbar from '../components/Navbar';
 import { motion } from 'framer-motion';
 
 const pageVariants = {
@@ -19,7 +18,6 @@ const pageVariants = {
 export default function LearnMore() {
   return (
     <div className="min-h-screen bg-operon-background">
-      <Navbar />
       <motion.div
         variants={pageVariants}
         initial="initial"

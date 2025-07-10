@@ -16,7 +16,6 @@ import {
 import { supabase } from '../utils/supabaseClient';
 import FiltersBar from '../components/FiltersBar';
 import RequestsTable from '../components/RequestsTable';
-import Navbar from '../components/Navbar';
 import styles from '../styles/Dashboard.module.css';
 import { motion } from 'framer-motion';
 
@@ -184,7 +183,6 @@ export default function Dashboard() {
 
   return (
     <>
-      <Navbar />
       <motion.div
         variants={pageVariants}
         initial="initial"

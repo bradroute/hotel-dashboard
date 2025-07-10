@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
-import Navbar from '../components/Navbar';
 import { getDefaultsFor } from '../utils/propertyDefaults';
 import { motion } from 'framer-motion';
 
@@ -107,7 +106,6 @@ export default function OnboardingPage() {
 
   return (
     <>
-      <Navbar />
       <motion.div
         variants={pageVariants}
         initial="initial"

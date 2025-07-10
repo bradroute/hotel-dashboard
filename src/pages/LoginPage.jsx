@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { useNavigate, Link } from 'react-router-dom';
-import Navbar from '../components/Navbar'; // adjust path as needed
 import logoFull from '../assets/logo-icon2.png';
 import { motion } from 'framer-motion';
 
@@ -70,7 +69,6 @@ export default function LoginPage() {
 
   return (
     <>
-      <Navbar />
 
       <motion.div
         variants={pageVariants}

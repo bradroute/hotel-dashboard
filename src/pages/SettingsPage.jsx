@@ -5,7 +5,6 @@ import React, {
 } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { getDefaultsFor } from '../utils/propertyDefaults';
-import Navbar from '../components/Navbar';
 import { Elements } from '@stripe/react-stripe-js';
 import { stripePromise } from '../utils/stripe';
 import CardForm from '../components/CardForm';
@@ -291,7 +290,6 @@ export default function SettingsPage() {
 
   return (
     <>
-      <Navbar />
 
       <motion.div
         variants={pageVariants}

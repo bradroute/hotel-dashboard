@@ -1,6 +1,5 @@
 import React from 'react';
 import { FaFileContract, FaEnvelope } from 'react-icons/fa';
-import Navbar from '../components/Navbar';
 import { motion } from 'framer-motion';
 
 const pageVariants = {
@@ -12,7 +11,6 @@ const pageVariants = {
 export default function TermsAndConditions() {
   return (
     <div className="min-h-screen bg-operon-background">
-      <Navbar />
       <motion.div
         variants={pageVariants}
         initial="initial"

@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import logoFull from '../assets/logo-full.png';
-import Navbar from '../components/Navbar';
 import { motion } from 'framer-motion';
 
 const pageVariants = {
@@ -43,7 +42,6 @@ export default function SignUp() {
 
   return (
     <div className="min-h-screen bg-operon-background">
-      <Navbar />
       <motion.div
         variants={pageVariants}
         initial="initial"

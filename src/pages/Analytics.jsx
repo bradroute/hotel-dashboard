@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 import { useAnalytics } from '../hooks/useAnalytics';
-import Navbar from '../components/Navbar';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip,
   LineChart, Line, CartesianGrid,
@@ -93,7 +92,6 @@ export default function Analytics() {
 
   return (
     <>
-      <Navbar />
       <motion.div
         variants={pageVariants}
         initial="initial"

@@ -21,6 +21,7 @@ import OnboardingPage from './pages/OnboardingPage';
 import PropertyPicker from './pages/PropertyPicker';
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
+import Navbar from './components/Navbar'; // <-- Add this line
 import { supabase } from './utils/supabaseClient';
 import { AnimatePresence } from 'framer-motion';
 
@@ -38,6 +39,7 @@ function AppContent({ session }) {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <Navbar /> {/* Always render Navbar here, once */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
