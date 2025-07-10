@@ -1,9 +1,14 @@
-// src/pages/Login.jsx
 import React, { useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { useNavigate, Link } from 'react-router-dom';
 import logoFull from '../assets/logo-icon2.png';
 import { motion } from 'framer-motion';
+
+const pageVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  exit: { opacity: 0, y: -20, transition: { duration: 0.15 } },
+};
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -78,7 +83,13 @@ export default function LoginPage() {
       </nav>
 
       {/* Main Content */}
-      <div className="flex flex-col items-center justify-center min-h-screen bg-operon-background p-4 pt-24">
+      <motion.div
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        className="flex flex-col items-center justify-center min-h-screen bg-operon-background p-4 pt-24"
+      >
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="text-center mb-12">
           <img src={logoFull} alt="Operon" className="h-14 sm:h-16 mx-auto mb-3" />
           <h1 className="text-3xl font-semibold text-operon-charcoal">Welcome to Operon</h1>
@@ -108,7 +119,7 @@ export default function LoginPage() {
 
           <p className="text-center text-sm text-gray-600">Don't have an account? <Link to="/signup" className="text-operon-blue hover:underline">Sign up</Link></p>
         </form>
-      </div>
+      </motion.div>
     </>
   );
 }

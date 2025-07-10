@@ -1,4 +1,3 @@
-// src/pages/SettingsPage.jsx
 import React, {
   useEffect,
   useState,
@@ -12,8 +11,8 @@ import { stripePromise } from '../utils/stripe';
 import CardForm from '../components/CardForm';
 import AddPropertyForm from '../components/AddPropertyForm';
 import { useParams } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
-// Base URL of your backend (set in Vercel as REACT_APP_API_URL)
 const API_URL = process.env.REACT_APP_API_URL;
 
 const US_TIMEZONES = [
@@ -44,6 +43,12 @@ const DEPARTMENT_LISTS = {
     'Kitchen','Waitstaff','Management',
     'Bar','Host','Cleaning','Reservations',
   ],
+};
+
+const pageVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  exit: { opacity: 0, y: -20, transition: { duration: 0.15 } },
 };
 
 export default function SettingsPage() {
@@ -288,7 +293,13 @@ export default function SettingsPage() {
     <>
       <Navbar />
 
-      <div className="pt-24 px-6 max-w-3xl mx-auto">
+      <motion.div
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        className="pt-24 px-6 max-w-3xl mx-auto"
+      >
         {showAddPropertyForm ? (
           <AddPropertyForm
             onClose={() => setShowAddPropertyForm(false)}
@@ -301,11 +312,17 @@ export default function SettingsPage() {
             + Add Another Property
           </button>
         )}
-      </div>
+      </motion.div>
 
       {!showAddPropertyForm && (
         <Elements stripe={stripePromise}>
-          <div className="pt-4 max-w-3xl mx-auto p-6 space-y-8">
+          <motion.div
+            variants={pageVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className="pt-4 max-w-3xl mx-auto p-6 space-y-8"
+          >
             {/* Property Profile */}
             <section>
               <h2 className="text-xl font-semibold">Property Profile</h2>
@@ -487,7 +504,7 @@ export default function SettingsPage() {
               {saving ? 'Saving…' : 'Save Changes'}
             </button>
             {saveStatus && <p className="text-center text-green-600 mt-2">{saveStatus}</p>}
-          </div>
+          </motion.div>
         </Elements>
       )}
     </>

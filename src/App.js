@@ -22,6 +22,7 @@ import PropertyPicker from './pages/PropertyPicker';
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
 import { supabase } from './utils/supabaseClient';
+import { AnimatePresence } from 'framer-motion'; // <-- Added
 
 function AppRoutes({ session }) {
   const location = useLocation();
@@ -36,8 +37,8 @@ function AppRoutes({ session }) {
   const showFooter = publicPaths.includes(location.pathname);
 
   return (
-    <>
-      <Routes>
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
         {/* Public routes */}
         <Route path="/about" element={<About />} />
         <Route path="/learn-more" element={<LearnMore />} />
@@ -116,10 +117,8 @@ function AppRoutes({ session }) {
           }
         />
       </Routes>
-
-      {/* Footer only on public pages */}
       {showFooter && <Footer />}
-    </>
+    </AnimatePresence>
   );
 }
 

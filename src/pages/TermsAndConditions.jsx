@@ -1,12 +1,25 @@
 import React from 'react';
 import { FaFileContract, FaEnvelope } from 'react-icons/fa';
 import Navbar from '../components/Navbar';
+import { motion } from 'framer-motion';
+
+const pageVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+  exit:    { opacity: 0, y: -20, transition: { duration: 0.18 } },
+};
 
 export default function TermsAndConditions() {
   return (
     <div className="min-h-screen bg-operon-background">
       <Navbar />
-      <div className="flex justify-center items-start min-h-screen pt-28 px-4">
+      <motion.div
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        className="flex justify-center items-start min-h-screen pt-28 px-4"
+      >
         <div className="bg-white shadow-lg rounded-xl p-10 max-w-4xl w-full">
           <div className="mb-6">
             <h1 className="text-3xl font-semibold text-operon-charcoal flex items-center gap-3">
@@ -64,7 +77,7 @@ export default function TermsAndConditions() {
             </a>
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

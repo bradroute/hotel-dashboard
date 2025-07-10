@@ -2,10 +2,23 @@ import React from 'react';
 import { FaHotel, FaCheckCircle } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import { motion } from 'framer-motion';
+
+const pageVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  exit: { opacity: 0, y: -20, transition: { duration: 0.15 } },
+};
 
 export default function About() {
   return (
-    <div className="min-h-screen bg-operon-background">
+    <motion.div
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="min-h-screen bg-operon-background"
+    >
       <Navbar />
       <div className="flex justify-center items-start min-h-screen pt-28 px-4">
         <div className="bg-white shadow-lg rounded-xl p-10 max-w-3xl w-full">
@@ -45,6 +58,6 @@ export default function About() {
           </Link>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

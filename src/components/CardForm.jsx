@@ -1,6 +1,17 @@
-// src/components/CardForm.jsx
 import React, { useState } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const formVariants = {
+  initial: { opacity: 0, y: 24, scale: 0.97 },
+  animate: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.24, ease: [0.4, 0, 0.2, 1] } },
+  exit:    { opacity: 0, y: 10, scale: 0.97, transition: { duration: 0.16 } }
+};
+const errorVariants = {
+  initial: { opacity: 0, y: 4 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.18 } },
+  exit:    { opacity: 0, y: 2, transition: { duration: 0.12 } }
+};
 
 export default function CardForm({ userId, customerId }) {
   const stripe = useStripe();
@@ -55,9 +66,28 @@ export default function CardForm({ userId, customerId }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mt-4 p-4 bg-white rounded shadow">
+    <motion.form
+      onSubmit={handleSubmit}
+      className="mt-4 p-4 bg-white rounded shadow"
+      variants={formVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+    >
       <CardElement options={{ hidePostalCode: true }} />
-      {errorMessage && <p className="text-red-600 mt-2">{errorMessage}</p>}
+      <AnimatePresence>
+        {errorMessage && (
+          <motion.p
+            className="text-red-600 mt-2"
+            variants={errorVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+          >
+            {errorMessage}
+          </motion.p>
+        )}
+      </AnimatePresence>
       <button
         type="submit"
         disabled={!stripe || isSubmitting}
@@ -65,6 +95,6 @@ export default function CardForm({ userId, customerId }) {
       >
         {isSubmitting ? 'Saving…' : 'Save Card'}
       </button>
-    </form>
+    </motion.form>
   );
 }

@@ -2,6 +2,13 @@
 
 import React from 'react';
 import styles from '../styles/Dashboard.module.css';
+import { motion } from 'framer-motion';
+
+const barVariants = {
+  initial: { opacity: 0, y: 16 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.25 } },
+  exit: { opacity: 0, y: 8, transition: { duration: 0.15 } }
+};
 
 export default function FiltersBar({
   showActiveOnly,
@@ -20,7 +27,14 @@ export default function FiltersBar({
   onChangeSearch
 }) {
   return (
-    <div className={styles.filterBar}>
+    <motion.div
+      className={styles.filterBar}
+      variants={barVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      layout
+    >
       <div className={styles.checkboxGroup}>
         <label>
           <input
@@ -87,13 +101,15 @@ export default function FiltersBar({
         </select>
       </label>
 
-      <input
+      <motion.input
         type="text"
         placeholder="Search..."
         className={styles.filterSearch}
         value={searchTerm}
         onChange={(e) => onChangeSearch(e.target.value)}
+        whileFocus={{ scale: 1.025, boxShadow: '0 0 0 2px #47B2FF33' }}
+        transition={{ type: "spring", stiffness: 400, damping: 25 }}
       />
-    </div>
+    </motion.div>
   );
 }

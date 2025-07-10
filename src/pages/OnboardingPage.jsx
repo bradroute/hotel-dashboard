@@ -1,14 +1,20 @@
-// src/pages/OnboardingPage.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 import Navbar from '../components/Navbar';
 import { getDefaultsFor } from '../utils/propertyDefaults';
+import { motion } from 'framer-motion';
 
 const US_TIMEZONES = [
   'America/New_York', 'America/Chicago', 'America/Denver',
   'America/Los_Angeles', 'America/Phoenix', 'America/Anchorage', 'Pacific/Honolulu'
 ];
+
+const pageVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  exit: { opacity: 0, y: -20, transition: { duration: 0.15 } },
+};
 
 export default function OnboardingPage() {
   const [profile, setProfile] = useState({
@@ -102,7 +108,13 @@ export default function OnboardingPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-operon-background pt-24 px-4 flex items-center justify-center">
+      <motion.div
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        className="min-h-screen bg-operon-background pt-24 px-4 flex items-center justify-center"
+      >
         <form onSubmit={handleSubmit} className="w-full max-w-lg bg-white p-8 rounded-lg shadow-lg space-y-6">
           <h1 className="text-2xl font-semibold text-center text-operon-charcoal">
             Welcome! Let’s set up your property
@@ -210,7 +222,7 @@ export default function OnboardingPage() {
             {loading ? 'Setting up…' : 'Get Started'}
           </button>
         </form>
-      </div>
+      </motion.div>
     </>
   );
 }

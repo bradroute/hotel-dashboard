@@ -3,6 +3,13 @@ import { PropertyContext } from '../contexts/PropertyContext';
 import { useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import AddPropertyForm from '../components/AddPropertyForm';
+import { motion, AnimatePresence } from 'framer-motion';
+
+const pageVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  exit: { opacity: 0, y: -20, transition: { duration: 0.15 } },
+};
 
 export default function PropertyPicker() {
   const { properties, switchProperty, loading } = useContext(PropertyContext);
@@ -37,7 +44,13 @@ export default function PropertyPicker() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-operon-background pt-24 flex flex-col items-center justify-start px-4">
+      <motion.div
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        className="min-h-screen bg-operon-background pt-24 flex flex-col items-center justify-start px-4"
+      >
         <div className="w-full max-w-lg bg-white p-8 rounded-lg shadow-lg mt-10">
           <h1 className="text-2xl font-semibold mb-6 text-center text-operon-charcoal">
             Select a Property
@@ -76,20 +89,33 @@ export default function PropertyPicker() {
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Modal for Add Property */}
-      {showAddModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl relative">
-            <button
-              className="absolute top-2 right-3 text-xl text-gray-500 hover:text-gray-800"
-              onClick={() => setShowAddModal(false)}
-            >×</button>
-            <AddPropertyForm onClose={() => setShowAddModal(false)} />
-          </div>
-        </div>
-      )}
+      {/* Modal for Add Property (with animation) */}
+      <AnimatePresence>
+        {showAddModal && (
+          <motion.div
+            className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl relative"
+              initial={{ scale: 0.92, y: 48, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.92, y: 32, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 32 }}
+            >
+              <button
+                className="absolute top-2 right-3 text-xl text-gray-500 hover:text-gray-800"
+                onClick={() => setShowAddModal(false)}
+              >×</button>
+              <AddPropertyForm onClose={() => setShowAddModal(false)} />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

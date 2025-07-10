@@ -1,5 +1,12 @@
 import React, { useState, useContext } from 'react';
 import { PropertyContext } from '../contexts/PropertyContext';
+import { motion } from 'framer-motion';
+
+const formVariants = {
+  initial: { opacity: 0, scale: 0.97, y: 32 },
+  animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.25, ease: [0.4, 0, 0.2, 1] } },
+  exit: { opacity: 0, scale: 0.97, y: 24, transition: { duration: 0.18 } },
+};
 
 export default function AddPropertyForm({ onClose }) {
   const { addProperty } = useContext(PropertyContext);
@@ -33,7 +40,14 @@ export default function AddPropertyForm({ onClose }) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 p-4 bg-white rounded shadow">
+    <motion.form
+      onSubmit={handleSubmit}
+      variants={formVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="space-y-4 p-4 bg-white rounded shadow"
+    >
       {error && <p className="text-red-600">{error}</p>}
       <input
         required placeholder="Property Name"
@@ -95,6 +109,6 @@ export default function AddPropertyForm({ onClose }) {
       >
         {loading ? 'Adding…' : 'Add Property'}
       </button>
-    </form>
+    </motion.form>
   );
 }

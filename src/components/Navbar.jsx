@@ -4,6 +4,12 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
 import { PropertyContext } from '../contexts/PropertyContext';
 import logoFull from '../assets/logo-icon2.png';
+import { motion } from 'framer-motion';
+
+const navVariants = {
+  initial: { opacity: 0, y: -25 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+};
 
 export default function Navbar() {
   const [session, setSession] = useState(null);
@@ -42,7 +48,12 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="w-full flex items-center justify-between px-6 py-4 bg-white shadow-sm fixed top-0 left-0 z-10">
+    <motion.nav
+      className="w-full flex items-center justify-between px-6 py-4 bg-white shadow-sm fixed top-0 left-0 z-10"
+      variants={navVariants}
+      initial="initial"
+      animate="animate"
+    >
       <div className="flex items-center gap-4">
         <Link to="/" className="flex items-center gap-2">
           <img src={logoFull} alt="Operon Logo" className="h-8 sm:h-10" />
@@ -131,6 +142,6 @@ export default function Navbar() {
           </Link>
         )}
       </div>
-    </nav>
+    </motion.nav>
   );
 }

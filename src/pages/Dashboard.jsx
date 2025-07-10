@@ -1,4 +1,3 @@
-// src/pages/Dashboard.jsx
 import React, {
   useEffect,
   useState,
@@ -19,6 +18,13 @@ import FiltersBar from '../components/FiltersBar';
 import RequestsTable from '../components/RequestsTable';
 import Navbar from '../components/Navbar';
 import styles from '../styles/Dashboard.module.css';
+import { motion } from 'framer-motion';
+
+const pageVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  exit: { opacity: 0, y: -20, transition: { duration: 0.15 } },
+};
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -179,7 +185,13 @@ export default function Dashboard() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen bg-operon-background pt-24 px-6 flex flex-col items-center">
+      <motion.div
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        className="min-h-screen bg-operon-background pt-24 px-6 flex flex-col items-center"
+      >
         <div className={`${styles.container} max-w-6xl w-full`}>
           <h1 className="text-4xl font-bold text-operon-charcoal flex items-center gap-2 mb-6">
             <span role="img" aria-label="clipboard">📋</span> {hotel.name} Dashboard
@@ -218,7 +230,7 @@ export default function Dashboard() {
             />
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {notesModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm flex items-center justify-center z-50">

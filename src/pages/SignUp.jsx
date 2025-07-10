@@ -1,9 +1,15 @@
-// src/pages/SignUp.jsx
 import React, { useState } from 'react';
 import { supabase } from '../utils/supabaseClient';
 import { useNavigate } from 'react-router-dom';
 import logoFull from '../assets/logo-full.png';
 import Navbar from '../components/Navbar';
+import { motion } from 'framer-motion';
+
+const pageVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.4 } },
+  exit:    { opacity: 0, y: -20, transition: { duration: 0.18 } },
+};
 
 export default function SignUp() {
   const [accountName, setAccountName] = useState('');
@@ -38,7 +44,13 @@ export default function SignUp() {
   return (
     <div className="min-h-screen bg-operon-background">
       <Navbar />
-      <div className="flex items-center justify-center min-h-[calc(100vh-64px)] p-4">
+      <motion.div
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        className="flex items-center justify-center min-h-[calc(100vh-64px)] p-4"
+      >
         <form
           onSubmit={handleSubmit}
           className="w-full max-w-md bg-white p-8 rounded-lg shadow-lg space-y-6"
@@ -104,7 +116,7 @@ export default function SignUp() {
             </button>
           </p>
         </form>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -9,6 +9,13 @@ import {
   PieChart, Pie, Cell,
   ResponsiveContainer
 } from 'recharts';
+import { motion } from 'framer-motion';
+
+const pageVariants = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+  exit: { opacity: 0, y: -20, transition: { duration: 0.15 } },
+};
 
 export default function Analytics() {
   const { hotelId } = useParams();
@@ -87,12 +94,17 @@ export default function Analytics() {
   return (
     <>
       <Navbar />
-
-      <div className="min-h-screen bg-operon-background pt-24 px-6 flex flex-col items-center">
+      <motion.div
+        variants={pageVariants}
+        initial="initial"
+        animate="animate"
+        exit="exit"
+        className="min-h-screen bg-operon-background pt-24 px-6 flex flex-col items-center"
+      >
         <div className="max-w-6xl w-full space-y-10">
           <h1 className="text-4xl font-bold text-operon-charcoal flex items-center gap-2">
-           <span role="img" aria-label="bar chart">📊</span> {propertyName || 'Property'} Analytics
-         </h1>
+            <span role="img" aria-label="bar chart">📊</span> {propertyName || 'Property'} Analytics
+          </h1>
 
           <div className="flex gap-4 items-center">
             <input
@@ -236,7 +248,7 @@ export default function Analytics() {
             </ChartSection>
           </div>
         </div>
-      </div>
+      </motion.div>
     </>
   );
 }
