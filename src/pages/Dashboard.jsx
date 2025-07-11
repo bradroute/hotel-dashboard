@@ -254,12 +254,10 @@ export default function Dashboard() {
               className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
             >
               <motion.div
-                initial={{ opacity: 0, scale: 0.97, y: 40 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.97, y: 40 }}
-                transition={{ duration: 0.18, delay: 0.05 }}
-                className="bg-white p-6 rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 pointer-events-auto"
-                onClick={e => e.stopPropagation()}
+                layout
+                initial={false}
+                style={{ willChange: 'transform, opacity' }}
+                className="bg-white p-6 rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 pointer-events-auto min-h-[320px]"
               >
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-semibold text-operon-charcoal">📝 Request Notes</h2>
@@ -329,12 +327,10 @@ export default function Dashboard() {
               className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
             >
               <motion.div
-                initial={{ opacity: 0, scale: 0.97, y: 40 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.97, y: 40 }}
-                transition={{ duration: 0.18, delay: 0.05 }}
-                className="bg-white p-6 rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 pointer-events-auto"
-                onClick={e => e.stopPropagation()}
+                layout
+                initial={false}
+                style={{ willChange: 'transform, opacity' }}
+                className="bg-white p-6 rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 pointer-events-auto min-h-[320px]"
               >
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-xl font-semibold text-operon-charcoal">Request Details</h2>
@@ -358,8 +354,8 @@ export default function Dashboard() {
                     <span className="font-semibold">Sentiment: </span>
                     <span className={
                       detailsRequest.sentiment === 'positive' ? 'text-green-600'
-                        : detailsRequest.sentiment === 'negative' ? 'text-red-600'
-                        : 'text-gray-700'
+                      : detailsRequest.sentiment === 'negative' ? 'text-red-600'
+                      : 'text-gray-700'
                     }>
                       {detailsRequest.sentiment || <em>N/A</em>}
                     </span>
@@ -368,8 +364,8 @@ export default function Dashboard() {
                     <span className="font-semibold">AI Priority: </span>
                     <span className={
                       detailsRequest.priority === 'high' ? 'text-red-600'
-                        : detailsRequest.priority === 'low' ? 'text-yellow-500'
-                        : 'text-gray-700'
+                      : detailsRequest.priority === 'low' ? 'text-yellow-500'
+                      : 'text-gray-700'
                     }>
                       {detailsRequest.priority}
                     </span>
