@@ -202,7 +202,7 @@ export default function Dashboard() {
         exit="exit"
         className="min-h-screen bg-operon-background pt-24 px-6 flex flex-col items-center"
       >
-        <div className={`${styles.container} max-w-screen-2xl w-full`}>
+        <div className={`${styles.container} max-w-6xl w-full`}>
           <h1 className="text-4xl font-bold text-operon-charcoal flex items-center gap-2 mb-6">
             <span role="img" aria-label="clipboard">📋</span> {hotel.name} Dashboard
           </h1>
