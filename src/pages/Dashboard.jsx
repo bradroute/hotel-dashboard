@@ -16,6 +16,7 @@ import {
 import { supabase } from '../utils/supabaseClient';
 import FiltersBar from '../components/FiltersBar';
 import RequestsTable from '../components/RequestsTable';
+import RequestDetailsModal from '../components/RequestDetailsModal'; // <-- Import Details Modal
 import styles from '../styles/Dashboard.module.css';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -42,12 +43,17 @@ export default function Dashboard() {
   const [sortOrder, setSortOrder] = useState('newest');
   const [searchTerm, setSearchTerm] = useState('');
 
+  // Notes modal
   const [notesModalOpen, setNotesModalOpen] = useState(false);
   const [currentRequestId, setCurrentRequestId] = useState(null);
   const [notes, setNotes] = useState([]);
   const [notesLoading, setNotesLoading] = useState(false);
   const [notesError, setNotesError] = useState('');
   const [newNote, setNewNote] = useState('');
+
+  // Details modal
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [detailsRequest, setDetailsRequest] = useState(null);
 
   // Load hotel info
   const fetchHotel = useCallback(async () => {
@@ -140,6 +146,12 @@ export default function Dashboard() {
     setNotes(await getNotes(currentRequestId));
   };
 
+  // Details modal handler
+  const openDetailsModal = (request) => {
+    setDetailsRequest(request);
+    setDetailsModalOpen(true);
+  };
+
   const priorityOptions = ['Normal', 'Urgent', 'Low'];
 
   // Filters, search, sort
@@ -225,11 +237,13 @@ export default function Dashboard() {
               }}
               onRowClick={id => navigate(`/request/${id}`)}
               onOpenNotes={openNotesModal}
+              onOpenDetails={openDetailsModal} // <-- Pass details modal handler
             />
           </div>
         </div>
       </motion.div>
 
+      {/* Notes Modal */}
       <AnimatePresence>
         {notesModalOpen && (
           <>
@@ -248,7 +262,7 @@ export default function Dashboard() {
               initial={{ opacity: 0, scale: 0.97, y: 40 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.97, y: 40 }}
-              transition={{ duration: 0.18 }}
+              transition={{ duration: 0.18, delay: 0.05 }}
               className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
             >
               <motion.div
@@ -304,6 +318,38 @@ export default function Dashboard() {
                   </button>
                 </div>
               </motion.div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Details Modal */}
+      <AnimatePresence>
+        {detailsModalOpen && detailsRequest && (
+          <>
+            {/* Fade-in backdrop */}
+            <motion.div
+              key="details-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-50"
+            />
+            {/* Modal panel with slide/scale */}
+            <motion.div
+              key="details-modal"
+              initial={{ opacity: 0, scale: 0.97, y: 40 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.97, y: 40 }}
+              transition={{ duration: 0.18, delay: 0.05 }}
+              className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
+            >
+              <RequestDetailsModal
+                open={detailsModalOpen}
+                onClose={() => setDetailsModalOpen(false)}
+                request={detailsRequest}
+              />
             </motion.div>
           </>
         )}

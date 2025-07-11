@@ -256,3 +256,13 @@
   border-left: 4px solid #3b82f6; /* blue-500 */
   background-color: #f0f9ff; /* very light blue background */
 }
+.detailsBtn {
+  background-color: #14b8a6;
+  color: #fff;
+  min-width: auto;
+  padding: 0 12px;
+  transition: background 0.14s;
+}
+.detailsBtn:hover {
+  background-color: #0d9488;
+}

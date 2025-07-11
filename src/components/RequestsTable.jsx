@@ -1,5 +1,3 @@
-// src/components/RequestsTable.jsx
-
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import styles from '../styles/Dashboard.module.css';
@@ -16,6 +14,7 @@ export default function RequestsTable({
   onComplete,
   onRowClick,
   onOpenNotes,
+  onOpenDetails, // <-- new prop
 }) {
   return (
     <div className={styles.tableContainer}>
@@ -29,6 +28,7 @@ export default function RequestsTable({
             <th style={{ width: '100px', whiteSpace: 'nowrap' }}>Priority</th>
             <th className={styles.messageCol} style={{ minWidth: '300px' }}>Message</th>
             <th style={{ width: '90px', whiteSpace: 'nowrap' }}>Notes</th>
+            <th style={{ width: '110px', whiteSpace: 'nowrap' }}>Details</th>{/* Details button column */}
             <th style={{ width: '130px', whiteSpace: 'nowrap' }}>Acknowledge</th>
             <th style={{ width: '100px', whiteSpace: 'nowrap' }}>Complete</th>
           </tr>
@@ -36,10 +36,12 @@ export default function RequestsTable({
         <tbody>
           <AnimatePresence initial={false}>
             {requests.map((r) => {
+              const priority = r.priority?.toLowerCase?.() || '';
+              // Make high and urgent both RED (fixes your override)
               const priorityClass =
-                r.priority.toLowerCase() === 'urgent'
+                priority === 'urgent' || priority === 'high'
                   ? styles.priorityUrgent
-                  : r.priority.toLowerCase() === 'low'
+                  : priority === 'low'
                   ? styles.priorityLow
                   : styles.priorityNormal;
 
@@ -82,7 +84,7 @@ export default function RequestsTable({
                   </td>
                   <td style={{ textAlign: 'center' }}>{r.department}</td>
                   <td style={{ textAlign: 'center' }}>
-                    <span className={priorityClass}>{r.priority.toUpperCase()}</span>
+                    <span className={priorityClass}>{r.priority?.toUpperCase?.()}</span>
                   </td>
                   <td className={styles.messageCol}>{r.message}</td>
                   <td>
@@ -95,6 +97,18 @@ export default function RequestsTable({
                       }}
                     >
                       Notes
+                    </button>
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      className={`${styles.btn} ${styles.detailsBtn}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onOpenDetails(r); // Pass the whole request
+                      }}
+                    >
+                      Details
                     </button>
                   </td>
                   <td>
