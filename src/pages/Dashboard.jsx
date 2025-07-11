@@ -16,9 +16,9 @@ import {
 import { supabase } from '../utils/supabaseClient';
 import FiltersBar from '../components/FiltersBar';
 import RequestsTable from '../components/RequestsTable';
-import RequestDetailsModal from '../components/RequestDetailsModal';
 import styles from '../styles/Dashboard.module.css';
 import { motion, AnimatePresence } from 'framer-motion';
+import { BadgeAlert, BadgeCheck } from "lucide-react";
 
 const pageVariants = {
   initial: { opacity: 0, y: 20 },
@@ -51,7 +51,7 @@ export default function Dashboard() {
   const [notesError, setNotesError] = useState('');
   const [newNote, setNewNote] = useState('');
 
-  // Details modal
+  // Details modal (inlined now)
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [detailsRequest, setDetailsRequest] = useState(null);
 
@@ -324,7 +324,7 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* Details Modal */}
+      {/* Details Modal (now inlined for smoothness) */}
       <AnimatePresence>
         {detailsModalOpen && detailsRequest && (
           <>
@@ -354,10 +354,65 @@ export default function Dashboard() {
                 transition={{ duration: 0.18, delay: 0.05 }}
                 className="bg-white p-6 rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 pointer-events-auto"
               >
-                <RequestDetailsModal
-                  request={detailsRequest}
-                  onClose={() => setDetailsModalOpen(false)}
-                />
+                {/* Modal header */}
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-semibold text-operon-charcoal">Request Details</h2>
+                  <button
+                    onClick={() => setDetailsModalOpen(false)}
+                    aria-label="Close details modal"
+                    className="text-gray-500 hover:text-gray-800 text-2xl leading-none"
+                  >
+                    ×
+                  </button>
+                </div>
+                {/* Modal content */}
+                <div className="mt-4 space-y-3">
+                  <div>
+                    <span className="font-semibold">Summary: </span>
+                    <span>{detailsRequest.summary || <em>No summary available</em>}</span>
+                  </div>
+                  <div>
+                    <span className="font-semibold">Root Cause: </span>
+                    <span>{detailsRequest.root_cause || <em>N/A</em>}</span>
+                  </div>
+                  <div>
+                    <span className="font-semibold">Sentiment: </span>
+                    <span className={
+                      detailsRequest.sentiment === "positive"
+                        ? "text-green-600"
+                        : detailsRequest.sentiment === "negative"
+                        ? "text-red-600"
+                        : "text-gray-700"
+                    }>
+                      {detailsRequest.sentiment || <em>N/A</em>}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-semibold">AI Priority: </span>
+                    <span className={
+                      detailsRequest.priority === "high"
+                        ? "text-red-600"
+                        : detailsRequest.priority === "low"
+                        ? "text-yellow-500"
+                        : "text-gray-700"
+                    }>
+                      {detailsRequest.priority}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-semibold">Needs Management Attention: </span>
+                    <span>
+                      {detailsRequest.needs_attention
+                        ? <span className="inline-flex items-center text-red-600 font-bold"><BadgeAlert className="w-4 h-4 mr-1"/>Yes</span>
+                        : <span className="inline-flex items-center text-green-600 font-bold"><BadgeCheck className="w-4 h-4 mr-1"/>No</span>
+                      }
+                    </span>
+                  </div>
+                  <div>
+                    <span className="font-semibold">Original Message:</span>
+                    <div className="bg-gray-100 rounded p-2 mt-1 text-gray-700">{detailsRequest.message}</div>
+                  </div>
+                </div>
               </motion.div>
             </motion.div>
           </>
