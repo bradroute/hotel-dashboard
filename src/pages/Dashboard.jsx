@@ -16,7 +16,7 @@ import {
 import { supabase } from '../utils/supabaseClient';
 import FiltersBar from '../components/FiltersBar';
 import RequestsTable from '../components/RequestsTable';
-import RequestDetailsModal from '../components/RequestDetailsModal'; // <-- Import Details Modal
+import RequestDetailsModal from '../components/RequestDetailsModal';
 import styles from '../styles/Dashboard.module.css';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -237,7 +237,7 @@ export default function Dashboard() {
               }}
               onRowClick={id => navigate(`/request/${id}`)}
               onOpenNotes={openNotesModal}
-              onOpenDetails={openDetailsModal} // <-- Pass details modal handler
+              onOpenDetails={openDetailsModal}
             />
           </div>
         </div>
@@ -255,6 +255,7 @@ export default function Dashboard() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.18 }}
               className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-50"
+              onClick={() => setNotesModalOpen(false)}
             />
             {/* Modal panel with slide/scale */}
             <motion.div
@@ -335,6 +336,7 @@ export default function Dashboard() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.18 }}
               className="fixed inset-0 bg-black bg-opacity-60 backdrop-blur-sm z-50"
+              onClick={() => setDetailsModalOpen(false)}
             />
             {/* Modal panel with slide/scale */}
             <motion.div
@@ -345,11 +347,18 @@ export default function Dashboard() {
               transition={{ duration: 0.18, delay: 0.05 }}
               className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
             >
-              <RequestDetailsModal
-                open={detailsModalOpen}
-                onClose={() => setDetailsModalOpen(false)}
-                request={detailsRequest}
-              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.97, y: 40 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.97, y: 40 }}
+                transition={{ duration: 0.18, delay: 0.05 }}
+                className="bg-white p-6 rounded-2xl shadow-2xl w-11/12 md:w-3/4 lg:w-1/2 pointer-events-auto"
+              >
+                <RequestDetailsModal
+                  request={detailsRequest}
+                  onClose={() => setDetailsModalOpen(false)}
+                />
+              </motion.div>
             </motion.div>
           </>
         )}
