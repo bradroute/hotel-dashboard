@@ -64,13 +64,15 @@
   padding: 1rem;
   width: 100%;
 }
+
 .requestsTable {
   width: 100%;
-  min-width: 1000px;
+  min-width: 1300px; 
   border-collapse: collapse;
   text-align: center;
   font-family: 'Inter', sans-serif;
 }
+
 .requestsTable th {
   position: sticky;
   top: 0;
@@ -81,6 +83,7 @@
   background-color: #F3F4F6;
   color: #2D2D2D;
 }
+
 .requestsTable td {
   padding: 10px 8px;
   font-size: 14px;
@@ -89,12 +92,15 @@
   color: #2D2D2D;
   background-color: #fff;
 }
+
 .requestsTable tr:nth-child(even) {
   background-color: #f9fafb;
 }
+
 .requestsTable tr:hover {
   background-color: #f1f5f9;
 }
+
 .messageCol {
   text-align: left !important;
   overflow-wrap: anywhere;
