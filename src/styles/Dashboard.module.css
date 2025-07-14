@@ -68,7 +68,7 @@
 
 .requestsTable {
   width: 100%;
-  /* min-width: 1300px; */  /* REMOVED for flexible, responsive table */
+  /* min-width: 1300px;  ← remove or comment out this line */
   border-collapse: collapse;
   text-align: center;
   font-family: 'Inter', sans-serif;
