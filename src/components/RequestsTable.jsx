@@ -18,19 +18,19 @@ export default function RequestsTable({
 }) {
   return (
     <div className={styles.tableContainer}>
-      <table className={styles.requestsTable}>
+      <table className={styles.requestsTable} style={{ width: '100%' }}>
         <thead>
           <tr>
-            <th style={{ width: '150px', whiteSpace: 'nowrap' }}>Created At</th>
-            <th style={{ width: '70px', whiteSpace: 'nowrap', paddingLeft: '16px' }}>Room</th>
+            <th style={{ whiteSpace: 'nowrap' }}>Created At</th>
+            <th style={{ whiteSpace: 'nowrap', paddingLeft: '16px' }}>Room</th>
             <th style={{ minWidth: '160px', whiteSpace: 'nowrap' }}>From</th>
             <th style={{ whiteSpace: 'nowrap', paddingRight: '24px' }}>Department</th>
-            <th style={{ width: '100px', whiteSpace: 'nowrap' }}>Priority</th>
+            <th style={{ whiteSpace: 'nowrap' }}>Priority</th>
             <th className={styles.messageCol} style={{ minWidth: '300px' }}>Message</th>
-            <th style={{ width: '90px', whiteSpace: 'nowrap' }}>Notes</th>
-            <th style={{ width: '110px', whiteSpace: 'nowrap' }}>Details</th>{/* Details button column */}
-            <th style={{ width: '130px', whiteSpace: 'nowrap' }}>Acknowledge</th>
-            <th style={{ width: '100px', whiteSpace: 'nowrap' }}>Complete</th>
+            <th style={{ whiteSpace: 'nowrap' }}>Notes</th>
+            <th style={{ whiteSpace: 'nowrap' }}>Details</th>
+            <th style={{ whiteSpace: 'nowrap' }}>Acknowledge</th>
+            <th style={{ whiteSpace: 'nowrap' }}>Complete</th>
           </tr>
         </thead>
         <tbody>
