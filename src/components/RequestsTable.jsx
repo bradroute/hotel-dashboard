@@ -82,7 +82,7 @@ export default function RequestsTable({
                       </div>
                     </div>
                   </td>
-                  <td style={{ textAlign: 'center' }}>{r.department}</td>
+                  <td style={{ textAlign: 'center', paddingRight: '24px' }}>{r.department}</td>
                   <td style={{ textAlign: 'center' }}>
                     <span className={priorityClass}>{r.priority?.toUpperCase?.()}</span>
                   </td>
