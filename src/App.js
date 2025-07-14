@@ -42,7 +42,8 @@ function AppContent({ session }) {
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4">
+      {/* Removed max-w-7xl so this can expand full width */}
+      <main className="flex-1 w-full px-4">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
             {/* Public routes */}
@@ -50,7 +51,7 @@ function AppContent({ session }) {
             <Route path="/learn-more" element={<LearnMore />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsAndConditions />} />
-            <Route path="/help" element={<Help />} /> {/* <-- Added Help route */}
+            <Route path="/help" element={<Help />} />
             <Route
               path="/login"
               element={
@@ -68,7 +69,7 @@ function AppContent({ session }) {
               }
             />
 
-            {/* Onboarding route */}
+            {/* Onboarding */}
             <Route
               path="/onboarding"
               element={
@@ -78,7 +79,7 @@ function AppContent({ session }) {
               }
             />
 
-            {/* Property Picker route */}
+            {/* Property Picker */}
             <Route
               path="/property-picker"
               element={
@@ -88,7 +89,7 @@ function AppContent({ session }) {
               }
             />
 
-            {/* Multi-property routes */}
+            {/* Dashboard, Analytics, Settings */}
             <Route
               path="/dashboard/:hotelId"
               element={
@@ -135,11 +136,10 @@ export default function App() {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
-    // Initialize session state
+    // Initialize and subscribe to auth session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
     });
-    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => setSession(session)
     );
