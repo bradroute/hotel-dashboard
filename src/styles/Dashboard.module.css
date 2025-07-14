@@ -3,7 +3,6 @@
 /* Layout */
 .container {
   padding: 2rem;
-  max-width: none; 
   width: 100%;         /* Increased from 1200px */
   margin: 0 auto;
   background-color: #ffffff;
