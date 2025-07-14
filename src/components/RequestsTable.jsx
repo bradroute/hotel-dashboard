@@ -24,7 +24,7 @@ export default function RequestsTable({
             <th style={{ width: '150px', whiteSpace: 'nowrap' }}>Created At</th>
             <th style={{ width: '70px', whiteSpace: 'nowrap' }}>Room</th>
             <th style={{ minWidth: '160px', whiteSpace: 'nowrap' }}>From</th>
-            <th style={{ whiteSpace: 'nowrap' }}>Department</th>
+            <th style={{ whiteSpace: 'nowrap', paddingRight: '24px' }}>Department</th>
             <th style={{ width: '100px', whiteSpace: 'nowrap' }}>Priority</th>
             <th className={styles.messageCol} style={{ minWidth: '300px' }}>Message</th>
             <th style={{ width: '90px', whiteSpace: 'nowrap' }}>Notes</th>
