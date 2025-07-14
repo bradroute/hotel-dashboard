@@ -73,8 +73,9 @@ export default function RequestsTable({
                     })}
                   </td>
                   <td style={{ textAlign: 'center' }}>{r.room_number || '—'}</td>
-                  <td>
-                    <div className="flex flex-col items-start">
+                  {/* ---- UPDATED FROM COLUMN ---- */}
+                  <td style={{ textAlign: 'center' }}>
+                    <div className="flex flex-col items-center">
                       <span>{r.from_phone}</span>
                       <div className="flex gap-1 mt-1">
                         {r.is_vip && <span className={styles.vipBadge}>VIP</span>}
@@ -82,6 +83,7 @@ export default function RequestsTable({
                       </div>
                     </div>
                   </td>
+                  {/* --------------------------- */}
                   <td style={{ textAlign: 'center', paddingRight: '24px' }}>{r.department}</td>
                   <td style={{ textAlign: 'center' }}>
                     <span className={priorityClass}>{r.priority?.toUpperCase?.()}</span>
