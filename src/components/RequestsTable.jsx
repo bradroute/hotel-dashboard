@@ -22,7 +22,7 @@ export default function RequestsTable({
         <thead>
           <tr>
             <th style={{ width: '150px', whiteSpace: 'nowrap' }}>Created At</th>
-            <th style={{ width: '70px', whiteSpace: 'nowrap' }}>Room</th>
+            <th style={{ width: '70px', whiteSpace: 'nowrap', paddingLeft: '16px' }}>Room</th>
             <th style={{ minWidth: '160px', whiteSpace: 'nowrap' }}>From</th>
             <th style={{ whiteSpace: 'nowrap', paddingRight: '24px' }}>Department</th>
             <th style={{ width: '100px', whiteSpace: 'nowrap' }}>Priority</th>
@@ -72,8 +72,7 @@ export default function RequestsTable({
                       minute: 'numeric',
                     })}
                   </td>
-                  <td style={{ textAlign: 'center' }}>{r.room_number || '—'}</td>
-                  {/* ---- UPDATED FROM COLUMN ---- */}
+                  <td style={{ textAlign: 'center', paddingLeft: '16px' }}>{r.room_number || '—'}</td>
                   <td style={{ textAlign: 'center' }}>
                     <div className="flex flex-col items-center">
                       <span>{r.from_phone}</span>
@@ -83,7 +82,6 @@ export default function RequestsTable({
                       </div>
                     </div>
                   </td>
-                  {/* --------------------------- */}
                   <td style={{ textAlign: 'center', paddingRight: '24px' }}>{r.department}</td>
                   <td style={{ textAlign: 'center' }}>
                     <span className={priorityClass}>{r.priority?.toUpperCase?.()}</span>
