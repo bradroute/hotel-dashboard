@@ -14,7 +14,7 @@ export default function ProtectedRoute({ children }) {
     loading: true,
     session: null,
     hotels: [],
-    propertyCount: 0
+    propertyCount: 0,
   });
   const location = useLocation();
 
@@ -25,82 +25,79 @@ export default function ProtectedRoute({ children }) {
         // 1) Get session
         const { data: { session } } = await supabase.auth.getSession();
         if (!isMounted) return;
+
         if (!session) {
           setStatus({ loading: false, session: null, hotels: [], propertyCount: 0 });
           return;
         }
-        // 2) Fetch hotels for this user
+
+        // 2) Fetch hotels for this user (linked by profile_id)
         const { data: hotels, error } = await supabase
           .from('hotels')
           .select('id')
           .eq('profile_id', session.user.id);
+
         if (!isMounted) return;
+
         if (error) {
+          console.error('ProtectedRoute hotels error:', error);
           setStatus({ loading: false, session, hotels: [], propertyCount: 0 });
           return;
         }
+
         setStatus({
           loading: false,
           session,
           hotels: hotels || [],
-          propertyCount: hotels?.length || 0
+          propertyCount: hotels?.length || 0,
         });
       } catch (err) {
         console.error('ProtectedRoute bootstrap error', err);
-        if (isMounted)
+        if (isMounted) {
           setStatus({ loading: false, session: null, hotels: [], propertyCount: 0 });
+        }
       }
     }
+
     bootstrap();
     return () => { isMounted = false; };
-  }, []);
+    // Re-evaluate on navigation so we see the hotel created during onboarding
+  }, [location.pathname]);
 
   if (status.loading) return null;
 
   if (!status.session) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
   const isOnboarding     = location.pathname === '/onboarding';
   const isPropertyPicker = location.pathname === '/property-picker';
-  const isDashboard      = matchPath('/dashboard/:hotelId', location.pathname);
-  const isAnalytics      = matchPath('/analytics/:hotelId', location.pathname);
-  const isSettings       = matchPath('/settings/:hotelId', location.pathname);
+  const isDashboard      = !!matchPath('/dashboard/:hotelId', location.pathname);
+  const isAnalytics      = !!matchPath('/analytics/:hotelId', location.pathname);
+  const isSettings       = !!matchPath('/settings/:hotelId', location.pathname);
 
   // Is this a property route? (dashboard, analytics, settings)
   const isPropertyRoute = isDashboard || isAnalytics || isSettings;
 
-  // ---- THE FIX: allow explicit onboarding access ----
-  if (isOnboarding) {
-    return children;
+  // If we're on onboarding but a property already exists, kick out.
+  if (isOnboarding && status.propertyCount > 0) {
+    return status.propertyCount === 1
+      ? <Navigate to={`/dashboard/${status.hotels[0].id}`} replace />
+      : <Navigate to="/property-picker" replace />;
   }
-  // ---------------------------------------------------
 
-  // No hotels, not onboarding? => must onboard
-  if (status.propertyCount === 0) {
+  // No hotels yet → must onboard (but don't bounce if already there)
+  if (status.propertyCount === 0 && !isOnboarding) {
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Has multiple hotels, not on picker/onboarding/property route? => must pick
+  // Has multiple hotels, not on picker/onboarding/property route? → must pick
   if (
     status.propertyCount > 1 &&
     !isPropertyPicker &&
     !isOnboarding &&
     !isPropertyRoute
   ) {
-    return <Navigate to="/property-picker" replace />;
-  }
-
-  // Just finished onboarding
-  // (Note: we already allow onboarding above, so you can safely keep this for completeness)
-  if (isOnboarding && status.propertyCount > 0) {
-    if (status.propertyCount === 1) {
-      // Redirect to dashboard for single property
-      return (
-        <Navigate to={`/dashboard/${status.hotels[0].id}`} replace />
-      );
-    }
-    // Multi-property: go to picker
     return <Navigate to="/property-picker" replace />;
   }
 
