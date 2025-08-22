@@ -59,7 +59,7 @@ export default function Analytics() {
     estimatedRevenue = 0,
     enhancedLaborTimeSaved = 0,
     serviceScoreEstimate = 0,
-    requestsByHour = [], // ← new field
+    requestsByHour = [],
     topDepartments = [],
     commonWords = [],
     priorityBreakdown = [],
@@ -69,27 +69,32 @@ export default function Analytics() {
     dailyCompletionRate = [],
     weeklyCompletionRate = [],
     monthlyCompletionRate = [],
-    endDayRequests = null, // ← provided by updated hook for Requests Today
+    endDayRequests = null,          // for “Requests Today”
+    sentimentTrend = [],            // NEW: trend data [{date, positive, neutral, negative}]
   } = data || {};
 
-  // Requests Today logic:
-  // - If hook provided a single-day count for the selected end date, use it.
-  // - Else if viewing a single-day range, sum that day's hourly buckets.
-  // - Else, show a dash.
+  // Requests Today
   const isSingleDay = range.start === range.end;
   const singleDaySum = requestsByHour.reduce((sum, r) => sum + (r.count || 0), 0);
   const requestsToday = endDayRequests ?? (isSingleDay ? singleDaySum : '—');
 
-  // New derived metric to fill the last stat slot
+  // Derived stat
   const slaCompliancePct = total ? Math.round(((total - missedSLAs) / total) * 100) : 0;
 
-  const byHourData      = requestsByHour.map(d => ({ hour: d.hour, count: d.count }));
-  const deptData        = topDepartments;
-  const commonData      = commonWords.map(w => ({ name: w.word, value: w.count }));
-  const priorityData    = priorityBreakdown;
-  const scoreTrendData  = serviceScoreTrend.map(d => ({ period: d.period, score: d.avgServiceScore }));
-  const repeatTrendData = repeatGuestTrend.map(d => ({ period: d.period, repeatPct: d.repeatPct }));
-  const perRoomData     = requestsPerOccupiedRoom.map(d => ({ date: d.date, value: d.requestsPerRoom }));
+  // Chart data shaping
+  const byHourData       = requestsByHour.map(d => ({ hour: d.hour, count: d.count }));
+  const deptData         = topDepartments;
+  const commonData       = commonWords.map(w => ({ name: w.word, value: w.count }));
+  const priorityData     = priorityBreakdown;
+  const scoreTrendData   = serviceScoreTrend.map(d => ({ period: d.period, score: d.avgServiceScore }));
+  const repeatTrendData  = repeatGuestTrend.map(d => ({ period: d.period, repeatPct: d.repeatPct }));
+  const perRoomData      = requestsPerOccupiedRoom.map(d => ({ date: d.date, value: d.requestsPerRoom }));
+  const sentimentData    = sentimentTrend.map(d => ({
+    date: d.date,
+    positive: d.positive || 0,
+    neutral: d.neutral || 0,
+    negative: d.negative || 0,
+  }));
 
   const COLORS = ['#47B2FF', '#2D2D2D', '#10b981', '#f59e0b', '#ef4444'];
 
@@ -133,7 +138,6 @@ export default function Analytics() {
             <StatCard title="Labor Saved (min)"    value={enhancedLaborTimeSaved} />
             <StatCard title="Repeat Request %"     value={`${repeatPercent}%`} />
             <StatCard title="Service Score"        value={serviceScoreEstimate} />
-            {/* ➕ New final tile to fill the grid */}
             <StatCard title="SLA Compliance %"     value={`${slaCompliancePct}%`} />
           </div>
 
@@ -145,7 +149,7 @@ export default function Analytics() {
                   <XAxis dataKey="hour" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="count" fill={COLORS[0]} />
+                  <Bar dataKey="count" />
                 </BarChart>
               </ResponsiveContainer>
             </ChartSection>
@@ -157,7 +161,7 @@ export default function Analytics() {
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="value" fill={COLORS[1]} />
+                  <Bar dataKey="value" />
                 </BarChart>
               </ResponsiveContainer>
             </ChartSection>
@@ -168,7 +172,7 @@ export default function Analytics() {
                 <PieChart>
                   <Pie data={priorityData} dataKey="value" nameKey="name" outerRadius={80} label>
                     {priorityData.map((_, i) => (
-                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      <Cell key={i} />
                     ))}
                   </Pie>
                   <Tooltip />
@@ -198,7 +202,7 @@ export default function Analytics() {
                   <XAxis type="number" />
                   <YAxis dataKey="name" type="category" />
                   <Tooltip />
-                  <Bar dataKey="value" fill={COLORS[2]} />
+                  <Bar dataKey="value" />
                 </BarChart>
               </ResponsiveContainer>
             </ChartSection>
@@ -211,7 +215,7 @@ export default function Analytics() {
                   <YAxis />
                   <CartesianGrid strokeDasharray="3 3" />
                   <Tooltip />
-                  <Line type="monotone" dataKey="score" stroke={COLORS[3]} />
+                  <Line type="monotone" dataKey="score" />
                 </LineChart>
               </ResponsiveContainer>
             </ChartSection>
@@ -224,7 +228,7 @@ export default function Analytics() {
                   <YAxis />
                   <CartesianGrid strokeDasharray="3 3" />
                   <Tooltip />
-                  <Line type="monotone" dataKey="repeatPct" stroke={COLORS[4]} />
+                  <Line type="monotone" dataKey="repeatPct" />
                 </LineChart>
               </ResponsiveContainer>
             </ChartSection>
@@ -237,12 +241,24 @@ export default function Analytics() {
                   <YAxis />
                   <CartesianGrid strokeDasharray="3 3" />
                   <Tooltip />
-                  <Line type="monotone" dataKey="value" stroke={COLORS[0]} />
+                  <Line type="monotone" dataKey="value" />
                 </LineChart>
               </ResponsiveContainer>
             </ChartSection>
 
-            {/* Removed: Top Escalation Reasons */}
+            {/* NEW: Guest Sentiment Trend (stacked) */}
+            <ChartSection title="Guest Sentiment Trend">
+              <ResponsiveContainer width="100%" height={250}>
+                <BarChart data={sentimentData}>
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="positive" stackId="s" />
+                  <Bar dataKey="neutral"  stackId="s" />
+                  <Bar dataKey="negative" stackId="s" />
+                </BarChart>
+              </ResponsiveContainer>
+            </ChartSection>
           </div>
         </div>
       </motion.div>
