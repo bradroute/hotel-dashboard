@@ -1,66 +1,83 @@
-// src/hooks/useAnalytics.js
-import { useState, useEffect } from 'react'
-import { supabase } from '../utils/supabaseClient'
+// src/hooks/useAnalytics.js — updated to support hotelId param, tz offset, and correct endDate handling
+import { useState, useEffect } from 'react';
+import { supabase } from '../utils/supabaseClient';
 
 /**
- * Custom hook to fetch analytics scoped by hotel_id.
- * @param {string} startDate - YYYY-MM-DD
- * @param {string} endDate - YYYY-MM-DD
+ * Fetch analytics scoped by hotel_id.
+ * @param {string} startDate - YYYY-MM-DD (inclusive)
+ * @param {string} endDate   - YYYY-MM-DD (inclusive)
+ * @param {string=} hotelIdOverride - Optional hotelId to query (falls back to user profile)
  */
-export function useAnalytics(startDate, endDate) {
-  const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
+export function useAnalytics(startDate, endDate, hotelIdOverride) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function load() {
-      setLoading(true)
-      setError(null)
+    if (!startDate || !endDate) return;
 
+    const ctrl = new AbortController();
+
+    async function load() {
+      setLoading(true);
+      setError(null);
       try {
         // Ensure authenticated
-        const { data: { user } } = await supabase.auth.getUser()
-        if (!user) throw new Error('Not authenticated')
+        const {
+          data: { user },
+          error: authErr,
+        } = await supabase.auth.getUser();
+        if (authErr) throw authErr;
+        if (!user) throw new Error('Not authenticated');
 
-        // Fetch user's profile to get hotel_id
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('hotel_id')
-          .eq('id', user.id)
-          .single()
-        if (!profile) throw new Error('Profile not found')
-
-        const hotelId = profile.hotel_id
-
-        // Extend endDate by one day to include the full current day
-        const endApi = new Date(endDate)
-        endApi.setDate(endApi.getDate() + 1)
-        const endParam = endApi.toISOString().slice(0, 10)
-
-        // Build URL with required query params
-        const urlObj = new URL(`${process.env.REACT_APP_API_URL}/analytics/full`)
-        urlObj.searchParams.append('hotel_id', hotelId)
-        urlObj.searchParams.append('startDate', startDate)
-        urlObj.searchParams.append('endDate', endParam)
-        const url = urlObj.toString()
-
-        const res = await fetch(url)
-        if (!res.ok) {
-          const text = await res.text()
-          throw new Error(`Analytics API ${res.status}: ${text}`)
+        // Resolve hotel id
+        let hotelId = hotelIdOverride;
+        if (!hotelId) {
+          const { data: profile, error: profileErr } = await supabase
+            .from('profiles')
+            .select('hotel_id')
+            .eq('id', user.id)
+            .single();
+          if (profileErr) throw profileErr;
+          if (!profile?.hotel_id) throw new Error('Profile missing hotel_id');
+          hotelId = profile.hotel_id;
         }
 
-        const json = await res.json()
-        setData(json)
+        // Local timezone offset in minutes (e.g., CDT = -300)
+        const tzOffsetMinutes = -new Date().getTimezoneOffset();
+
+        // Build URL with required query params (API normalizes end-of-day itself)
+        const urlObj = new URL(`${process.env.REACT_APP_API_URL}/analytics/full`);
+        urlObj.searchParams.append('hotel_id', hotelId);
+        urlObj.searchParams.append('startDate', startDate);
+        urlObj.searchParams.append('endDate', endDate);
+        urlObj.searchParams.append('tzOffsetMinutes', String(tzOffsetMinutes));
+
+        // Optional: tune common words if you want — safe defaults used by API otherwise
+        // urlObj.searchParams.append('commonTopN', '7');
+        // urlObj.searchParams.append('commonMinLen', '3');
+        // urlObj.searchParams.append('commonMinCount', '2');
+
+        const url = urlObj.toString();
+        const res = await fetch(url, { signal: ctrl.signal });
+        if (!res.ok) {
+          const text = await res.text();
+          throw new Error(`Analytics API ${res.status}: ${text}`);
+        }
+
+        const json = await res.json();
+        setData(json);
       } catch (err) {
-        setError(err.message)
+        if (err.name === 'AbortError') return; // ignore aborted fetch
+        setError(err.message || 'Unknown error');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
-    load()
-  }, [startDate, endDate])
+    load();
+    return () => ctrl.abort();
+  }, [startDate, endDate, hotelIdOverride]);
 
-  return { data, loading, error }
+  return { data, loading, error };
 }

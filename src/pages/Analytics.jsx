@@ -1,3 +1,4 @@
+// src/pages/Analytics.jsx — updated to match new API payload
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
@@ -25,7 +26,7 @@ export default function Analytics() {
   useEffect(() => {
     if (!propertyId) return;
     (async () => {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from('hotels')
         .select('name')
         .eq('id', propertyId)
@@ -36,9 +37,7 @@ export default function Analytics() {
 
   // Date range controls
   const today = new Date().toISOString().slice(0, 10);
-  const weekAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .slice(0, 10);
+  const weekAgo = new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const [range, setRange] = useState({ start: weekAgo, end: today });
 
   // Use analytics for this property
@@ -56,37 +55,34 @@ export default function Analytics() {
     avgAck,
     missedSLAs,
     avgCompletion,
-    vipCount,
     repeatPercent,
     estimatedRevenue,
     enhancedLaborTimeSaved,
     serviceScoreEstimate,
-    requestsPerDay,
-    topDepartments,
-    commonWords,
-    priorityBreakdown,
-    serviceScoreTrend,
-    repeatGuestTrend,
-    requestsPerOccupiedRoom,
-    topEscalationReasons,
+    requestsByHour = [], // ← new field
+    topDepartments = [],
+    commonWords = [],
+    priorityBreakdown = [],
+    serviceScoreTrend = [],
+    repeatGuestTrend = [],
+    requestsPerOccupiedRoom = [],
     dailyCompletionRate = [],
     weeklyCompletionRate = [],
-    monthlyCompletionRate = []
-  } = data;
+    monthlyCompletionRate = [],
+  } = data || {};
 
-  const todayCount = requestsPerDay.find(d => d.date === range.end)?.count || 0;
-  const dailyPct   = dailyCompletionRate.at(-1)?.completionRate || 0;
-  const weeklyPct  = weeklyCompletionRate.at(-1)?.completionRate || 0;
-  const monthlyPct = monthlyCompletionRate.at(-1)?.completionRate || 0;
+  const isSingleDay = range.start === range.end;
+  const selectedDayCount = isSingleDay
+    ? requestsByHour.reduce((sum, r) => sum + (r.count || 0), 0)
+    : null;
 
-  const dailyData      = requestsPerDay.map(d => ({ date: d.date, count: d.count }));
-  const deptData       = topDepartments;
-  const commonData     = commonWords.map(w => ({ name: w.word, value: w.count }));
-  const priorityData   = priorityBreakdown;
-  const scoreTrendData = serviceScoreTrend.map(d => ({ period: d.period, score: d.avgServiceScore }));
-  const repeatTrendData= repeatGuestTrend.map(d => ({ period: d.period, repeatPct: d.repeatPct }));
-  const perRoomData    = requestsPerOccupiedRoom.map(d => ({ date: d.date, value: d.requestsPerRoom }));
-  const escData        = topEscalationReasons.map(d => ({ reason: d.reason, count: d.count }));
+  const byHourData      = requestsByHour.map(d => ({ hour: d.hour, count: d.count }));
+  const deptData        = topDepartments;
+  const commonData      = commonWords.map(w => ({ name: w.word, value: w.count }));
+  const priorityData    = priorityBreakdown;
+  const scoreTrendData  = serviceScoreTrend.map(d => ({ period: d.period, score: d.avgServiceScore }));
+  const repeatTrendData = repeatGuestTrend.map(d => ({ period: d.period, repeatPct: d.repeatPct }));
+  const perRoomData     = requestsPerOccupiedRoom.map(d => ({ date: d.date, value: d.requestsPerRoom }));
 
   const COLORS = ['#47B2FF', '#2D2D2D', '#10b981', '#f59e0b', '#ef4444'];
 
@@ -122,28 +118,27 @@ export default function Analytics() {
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
             <StatCard title="Total Requests"       value={total} />
-            <StatCard title="Requests Today"       value={todayCount} />
+            <StatCard title="Requests Today"       value={isSingleDay ? selectedDayCount : '—'} />
             <StatCard title="Missed SLAs"          value={missedSLAs} />
             <StatCard title="Avg Ack Time (min)"   value={avgAck} />
             <StatCard title="Avg Completion (min)" value={avgCompletion} />
             <StatCard title="Revenue"              value={`$${estimatedRevenue}`} />
             <StatCard title="Labor Saved (min)"    value={enhancedLaborTimeSaved} />
-            <StatCard title="VIP Guests"           value={vipCount} />
+            {/* Removed VIP Guests */}
             <StatCard title="Repeat Request %"     value={`${repeatPercent}%`} />
             <StatCard title="Service Score"        value={serviceScoreEstimate} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            {/* Requests Per Day */}
-            <ChartSection title="Requests Per Day">
+            {/* Requests by Hour (replaces Requests Per Day) */}
+            <ChartSection title="Requests by Hour (0–23)">
               <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={dailyData}>
-                  <XAxis dataKey="date" padding={{ left: 10, right: 10 }} />
+                <BarChart data={byHourData}>
+                  <XAxis dataKey="hour" />
                   <YAxis />
-                  <CartesianGrid strokeDasharray="3 3" />
                   <Tooltip />
-                  <Line type="monotone" dataKey="count" stroke={COLORS[0]} />
-                </LineChart>
+                  <Bar dataKey="count" fill={COLORS[0]} />
+                </BarChart>
               </ResponsiveContainer>
             </ChartSection>
 
@@ -176,9 +171,9 @@ export default function Analytics() {
             {/* Percent Complete */}
             <ChartSection title="Percent Complete">
               <div className="h-full flex flex-col items-center justify-center space-y-2">
-                <p className="text-xl font-semibold text-operon-charcoal">Per Day: {dailyPct}%</p>
-                <p className="text-xl font-semibold text-operon-charcoal">Per Week: {weeklyPct}%</p>
-                <p className="text-xl font-semibold text-operon-charcoal">Per Month: {monthlyPct}%</p>
+                <p className="text-xl font-semibold text-operon-charcoal">Per Day: {dailyCompletionRate.at(-1)?.completionRate || 0}%</p>
+                <p className="text-xl font-semibold text-operon-charcoal">Per Week: {weeklyCompletionRate.at(-1)?.completionRate || 0}%</p>
+                <p className="text-xl font-semibold text-operon-charcoal">Per Month: {monthlyCompletionRate.at(-1)?.completionRate || 0}%</p>
               </div>
             </ChartSection>
 
@@ -188,7 +183,7 @@ export default function Analytics() {
                 <BarChart data={commonData} layout="vertical">
                   <XAxis type="number" />
                   <YAxis dataKey="name" type="category" />
-                  <Tooltip />  
+                  <Tooltip />
                   <Bar dataKey="value" fill={COLORS[2]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -233,17 +228,7 @@ export default function Analytics() {
               </ResponsiveContainer>
             </ChartSection>
 
-            {/* Top Escalation Reasons */}
-            <ChartSection title="Top Escalation Reasons">
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={escData} layout="vertical">
-                  <XAxis type="number" />
-                  <YAxis dataKey="reason" type="category" />
-                  <Tooltip />
-                  <Bar dataKey="count" fill={COLORS[1]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartSection>
+            {/* Removed: Top Escalation Reasons */}
           </div>
         </div>
       </motion.div>
