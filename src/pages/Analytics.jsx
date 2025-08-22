@@ -51,14 +51,14 @@ export default function Analytics() {
   }
 
   const {
-    total,
-    avgAck,
-    missedSLAs,
-    avgCompletion,
-    repeatPercent,
-    estimatedRevenue,
-    enhancedLaborTimeSaved,
-    serviceScoreEstimate,
+    total = 0,
+    avgAck = 0,
+    missedSLAs = 0,
+    avgCompletion = 0,
+    repeatPercent = 0,
+    estimatedRevenue = 0,
+    enhancedLaborTimeSaved = 0,
+    serviceScoreEstimate = 0,
     requestsByHour = [], // ← new field
     topDepartments = [],
     commonWords = [],
@@ -69,12 +69,19 @@ export default function Analytics() {
     dailyCompletionRate = [],
     weeklyCompletionRate = [],
     monthlyCompletionRate = [],
+    endDayRequests = null, // ← provided by updated hook for Requests Today
   } = data || {};
 
+  // Requests Today logic:
+  // - If hook provided a single-day count for the selected end date, use it.
+  // - Else if viewing a single-day range, sum that day's hourly buckets.
+  // - Else, show a dash.
   const isSingleDay = range.start === range.end;
-  const selectedDayCount = isSingleDay
-    ? requestsByHour.reduce((sum, r) => sum + (r.count || 0), 0)
-    : null;
+  const singleDaySum = requestsByHour.reduce((sum, r) => sum + (r.count || 0), 0);
+  const requestsToday = endDayRequests ?? (isSingleDay ? singleDaySum : '—');
+
+  // New derived metric to fill the last stat slot
+  const slaCompliancePct = total ? Math.round(((total - missedSLAs) / total) * 100) : 0;
 
   const byHourData      = requestsByHour.map(d => ({ hour: d.hour, count: d.count }));
   const deptData        = topDepartments;
@@ -118,15 +125,16 @@ export default function Analytics() {
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
             <StatCard title="Total Requests"       value={total} />
-            <StatCard title="Requests Today"       value={isSingleDay ? selectedDayCount : '—'} />
+            <StatCard title="Requests Today"       value={requestsToday} />
             <StatCard title="Missed SLAs"          value={missedSLAs} />
             <StatCard title="Avg Ack Time (min)"   value={avgAck} />
             <StatCard title="Avg Completion (min)" value={avgCompletion} />
             <StatCard title="Revenue"              value={`$${estimatedRevenue}`} />
             <StatCard title="Labor Saved (min)"    value={enhancedLaborTimeSaved} />
-            {/* Removed VIP Guests */}
             <StatCard title="Repeat Request %"     value={`${repeatPercent}%`} />
             <StatCard title="Service Score"        value={serviceScoreEstimate} />
+            {/* ➕ New final tile to fill the grid */}
+            <StatCard title="SLA Compliance %"     value={`${slaCompliancePct}%`} />
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -171,9 +179,15 @@ export default function Analytics() {
             {/* Percent Complete */}
             <ChartSection title="Percent Complete">
               <div className="h-full flex flex-col items-center justify-center space-y-2">
-                <p className="text-xl font-semibold text-operon-charcoal">Per Day: {dailyCompletionRate.at(-1)?.completionRate || 0}%</p>
-                <p className="text-xl font-semibold text-operon-charcoal">Per Week: {weeklyCompletionRate.at(-1)?.completionRate || 0}%</p>
-                <p className="text-xl font-semibold text-operon-charcoal">Per Month: {monthlyCompletionRate.at(-1)?.completionRate || 0}%</p>
+                <p className="text-xl font-semibold text-operon-charcoal">
+                  Per Day: {dailyCompletionRate.at(-1)?.completionRate || 0}%
+                </p>
+                <p className="text-xl font-semibold text-operon-charcoal">
+                  Per Week: {weeklyCompletionRate.at(-1)?.completionRate || 0}%
+                </p>
+                <p className="text-xl font-semibold text-operon-charcoal">
+                  Per Month: {monthlyCompletionRate.at(-1)?.completionRate || 0}%
+                </p>
               </div>
             </ChartSection>
 

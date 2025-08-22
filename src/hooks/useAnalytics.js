@@ -1,4 +1,4 @@
-// src/hooks/useAnalytics.js — updated to support hotelId param, tz offset, and correct endDate handling
+// src/hooks/useAnalytics.js
 import { useState, useEffect } from 'react';
 import { supabase } from '../utils/supabaseClient';
 
@@ -6,7 +6,7 @@ import { supabase } from '../utils/supabaseClient';
  * Fetch analytics scoped by hotel_id.
  * @param {string} startDate - YYYY-MM-DD (inclusive)
  * @param {string} endDate   - YYYY-MM-DD (inclusive)
- * @param {string=} hotelIdOverride - Optional hotelId to query (falls back to user profile)
+ * @param {string=} hotelIdOverride
  */
 export function useAnalytics(startDate, endDate, hotelIdOverride) {
   const [data, setData] = useState(null);
@@ -15,18 +15,13 @@ export function useAnalytics(startDate, endDate, hotelIdOverride) {
 
   useEffect(() => {
     if (!startDate || !endDate) return;
-
     const ctrl = new AbortController();
 
     async function load() {
       setLoading(true);
       setError(null);
       try {
-        // Ensure authenticated
-        const {
-          data: { user },
-          error: authErr,
-        } = await supabase.auth.getUser();
+        const { data: { user }, error: authErr } = await supabase.auth.getUser();
         if (authErr) throw authErr;
         if (!user) throw new Error('Not authenticated');
 
@@ -43,32 +38,41 @@ export function useAnalytics(startDate, endDate, hotelIdOverride) {
           hotelId = profile.hotel_id;
         }
 
-        // Local timezone offset in minutes (e.g., CDT = -300)
         const tzOffsetMinutes = -new Date().getTimezoneOffset();
+        const base = new URL(`${process.env.REACT_APP_API_URL}/analytics/full`);
+        base.searchParams.append('hotel_id', hotelId);
+        base.searchParams.append('tzOffsetMinutes', String(tzOffsetMinutes));
 
-        // Build URL with required query params (API normalizes end-of-day itself)
-        const urlObj = new URL(`${process.env.REACT_APP_API_URL}/analytics/full`);
-        urlObj.searchParams.append('hotel_id', hotelId);
-        urlObj.searchParams.append('startDate', startDate);
-        urlObj.searchParams.append('endDate', endDate);
-        urlObj.searchParams.append('tzOffsetMinutes', String(tzOffsetMinutes));
+        // Full-range fetch
+        const urlFull = new URL(base);
+        urlFull.searchParams.append('startDate', startDate);
+        urlFull.searchParams.append('endDate', endDate);
 
-        // Optional: tune common words if you want — safe defaults used by API otherwise
-        // urlObj.searchParams.append('commonTopN', '7');
-        // urlObj.searchParams.append('commonMinLen', '3');
-        // urlObj.searchParams.append('commonMinCount', '2');
-
-        const url = urlObj.toString();
-        const res = await fetch(url, { signal: ctrl.signal });
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(`Analytics API ${res.status}: ${text}`);
+        const resFull = await fetch(urlFull.toString(), { signal: ctrl.signal });
+        if (!resFull.ok) {
+          const text = await resFull.text();
+          throw new Error(`Analytics API ${resFull.status}: ${text}`);
         }
+        const jsonFull = await resFull.json();
 
-        const json = await res.json();
-        setData(json);
+        // Single-day fetch for the selected END date (for “Requests Today”)
+        const urlDay = new URL(base);
+        urlDay.searchParams.append('startDate', endDate);
+        urlDay.searchParams.append('endDate', endDate);
+
+        const resDay = await fetch(urlDay.toString(), { signal: ctrl.signal });
+        if (!resDay.ok) {
+          const text = await resDay.text();
+          throw new Error(`Analytics API (day) ${resDay.status}: ${text}`);
+        }
+        const jsonDay = await resDay.json();
+        const endDayRequests = Array.isArray(jsonDay.requestsByHour)
+          ? jsonDay.requestsByHour.reduce((s, r) => s + (r.count || 0), 0)
+          : 0;
+
+        setData({ ...jsonFull, endDayRequests });
       } catch (err) {
-        if (err.name === 'AbortError') return; // ignore aborted fetch
+        if (err.name === 'AbortError') return;
         setError(err.message || 'Unknown error');
       } finally {
         setLoading(false);
