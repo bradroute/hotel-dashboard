@@ -4,8 +4,10 @@ import { useNavigate, Link } from 'react-router-dom';
 import logoFull from '../assets/logo-icon2.png';
 import { motion } from 'framer-motion';
 
+const SHOW_GRID_BG = false; // set to true if you want the subtle grid back
+
 const fade = {
-  initial: { opacity: 0, y: 18 },
+  initial: { opacity: 0, y: 16 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
 };
 
@@ -14,6 +16,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
+  const [showPw, setShowPw] = useState(false);
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
@@ -21,16 +24,19 @@ export default function LoginPage() {
     setError(null);
     setBusy(true);
 
+    // 1) Auth
     const { data, error: authErr } = await supabase.auth.signInWithPassword({ email, password });
     if (authErr) { setBusy(false); setError(authErr.message); return; }
     const userId = data.user.id;
 
+    // 2) Owner’s properties
     const { data: hotels, error: hotelsErr } = await supabase
       .from('hotels')
       .select('id')
       .eq('profile_id', userId);
     if (hotelsErr) { setBusy(false); setError('Login succeeded but failed to fetch properties.'); return; }
 
+    // 3) Active property
     const { data: profile, error: profileErr } = await supabase
       .from('profiles')
       .select('hotel_id')
@@ -38,54 +44,61 @@ export default function LoginPage() {
       .single();
     if (profileErr) { setBusy(false); setError('Login succeeded but failed to fetch profile.'); return; }
 
+    // 4) Route
     if (!hotels || hotels.length === 0) { setBusy(false); navigate('/onboarding'); return; }
-    if (!profile?.hotel_id)         { setBusy(false); navigate('/property-picker'); return; }
+    if (!profile?.hotel_id) { setBusy(false); navigate('/property-picker'); return; }
 
     setBusy(false);
-    // if your router uses /dashboard/:id, swap for: navigate(`/dashboard/${profile.hotel_id}`)
+    // If your app uses /dashboard/:id, swap this:
+    // navigate(`/dashboard/${profile.hotel_id}`);
     navigate('/dashboard');
   }
 
   return (
     <main className="relative min-h-screen pt-24 overflow-hidden bg-operon-background">
-      {/* --- Background: soft grid + gradient orbs --- */}
+      {/* background accents */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(17,24,39,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(17,24,39,0.06) 1px, transparent 1px)',
-          backgroundSize: '40px 40px, 40px 40px',
-          maskImage: 'radial-gradient(ellipse at center, black 60%, transparent 100%)',
-          WebkitMaskImage: 'radial-gradient(ellipse at center, black 60%, transparent 100%)',
-        }}
+        className="pointer-events-none absolute -top-48 -left-40 h-[34rem] w-[34rem] rounded-full blur-3xl"
+        style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-40 -left-40 h-[28rem] w-[28rem] rounded-full blur-3xl"
-        style={{ background: 'radial-gradient(closest-side, rgba(99,179,237,.25), transparent)' }}
+        className="pointer-events-none absolute -bottom-56 -right-40 h-[38rem] w-[38rem] rounded-full blur-[90px]"
+        style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
       />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-40 -right-40 h-[32rem] w-[32rem] rounded-full blur-3xl"
-        style={{ background: 'radial-gradient(closest-side, rgba(56,189,248,.25), transparent)' }}
-      />
+      {SHOW_GRID_BG && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[.25]"
+          style={{
+            backgroundImage:
+              'linear-gradient(rgba(17,24,39,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(17,24,39,0.08) 1px, transparent 1px)',
+            backgroundSize: '42px 42px, 42px 42px',
+            maskImage: 'radial-gradient(ellipse at center, black 65%, transparent 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at center, black 65%, transparent 100%)',
+          }}
+        />
+      )}
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid md:grid-cols-2 gap-10 lg:gap-16 items-center">
-          {/* ---------- Left: premium hero ---------- */}
+        <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* ----------- HERO ----------- */}
           <motion.section variants={fade} initial="initial" animate="animate">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 bg-white/10 text-xs text-operon-muted tracking-wide mb-4">
               Hotels • Apartments • Condos • Restaurants
             </div>
 
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-3">
               <img src={logoFull} alt="Operon" className="h-12 sm:h-14" />
-              <p className="text-sm text-operon-muted hidden sm:block">Modern property operations</p>
+              <span className="text-sm text-operon-muted hidden sm:block">Modern property operations</span>
             </div>
 
-            <h1 className="text-4xl sm:text-5xl font-extrabold leading-[1.1] text-operon-charcoal">
-              The modern <span className="bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent">operations platform</span>
+            <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight text-operon-charcoal">
+              The modern{' '}
+              <span className="bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent">
+                operations platform
+              </span>
             </h1>
 
             <p className="mt-4 text-[17px] text-operon-muted max-w-2xl leading-relaxed">
@@ -108,30 +121,21 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            {/* Trust row */}
             <p className="mt-5 text-sm italic text-gray-500">
               “Operon cut our response times in half.” — Front Desk Manager
             </p>
 
-            <div className="mt-6 flex flex-wrap gap-2">
-              {[
-                'Real-time Dashboard',
-                'AI Classification',
-                'Analytics & SLAs',
-                'Role-based Access',
-                'Secure & Compliant',
-              ].map((pill) => (
-                <span
-                  key={pill}
-                  className="text-xs text-operon-muted px-3 py-1 rounded-full border border-white/15 bg-white/5"
-                >
-                  {pill}
-                </span>
-              ))}
-            </div>
+            <ul className="mt-6 flex flex-wrap gap-2">
+              {['Real-time Dashboard', 'AI Classification', 'Analytics & SLAs', 'Role-based Access', 'Secure & Compliant']
+                .map((pill) => (
+                  <li key={pill} className="text-xs text-operon-muted px-3 py-1 rounded-full border border-white/15 bg-white/5">
+                    {pill}
+                  </li>
+                ))}
+            </ul>
           </motion.section>
 
-          {/* ---------- Right: glassy auth card ---------- */}
+          {/* ----------- AUTH CARD ----------- */}
           <motion.aside
             variants={fade}
             initial="initial"
@@ -140,18 +144,14 @@ export default function LoginPage() {
             className="w-full"
           >
             <div className="relative">
+              {/* soft glow border */}
               <div
                 aria-hidden="true"
-                className="absolute -inset-0.5 rounded-2xl blur opacity-60"
-                style={{
-                  background:
-                    'linear-gradient(135deg, rgba(59,130,246,.35), rgba(34,211,238,.25))',
-                }}
+                className="absolute -inset-0.5 rounded-2xl blur opacity-70"
+                style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.35), rgba(34,211,238,.25))' }}
               />
               <div className="relative bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 p-6 sm:p-8 max-w-md mx-auto">
-                <h2 className="text-2xl font-semibold text-operon-charcoal text-center mb-2">
-                  Login
-                </h2>
+                <h2 className="text-2xl font-semibold text-operon-charcoal text-center mb-2">Login</h2>
 
                 {error && (
                   <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700" role="alert">
@@ -176,15 +176,25 @@ export default function LoginPage() {
 
                   <label className="block">
                     <span className="block text-sm text-gray-600 mb-1">Password</span>
-                    <input
-                      type="password"
-                      autoComplete="current-password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-operon-blue"
-                      required
-                    />
+                    <div className="relative">
+                      <input
+                        type={showPw ? 'text' : 'password'}
+                        autoComplete="current-password"
+                        placeholder="••••••••"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="w-full px-4 py-2 pr-14 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-operon-blue"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPw((v) => !v)}
+                        className="absolute inset-y-0 right-2 my-1 px-2 text-xs rounded-md border text-gray-600 hover:text-operon-blue"
+                        aria-label={showPw ? 'Hide password' : 'Show password'}
+                      >
+                        {showPw ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
                   </label>
 
                   <button
@@ -199,14 +209,20 @@ export default function LoginPage() {
                     <Link to="/reset" className="hover:underline">Forgot password?</Link>
                     <Link to="/signup" className="text-operon-blue hover:underline">Create account</Link>
                   </div>
+
+                  <p className="text-[12px] text-gray-500 text-center pt-2">
+                    By continuing you agree to our{' '}
+                    <Link to="/terms" className="underline hover:text-operon-blue">Terms</Link> and{' '}
+                    <Link to="/privacy-policy" className="underline hover:text-operon-blue">Privacy Policy</Link>.
+                  </p>
                 </form>
               </div>
             </div>
           </motion.aside>
         </div>
 
-        {/* ---------- Optional: slim “as seen in / fits brand” bar ---------- */}
-        <div className="mt-16 mb-10 grid grid-cols-2 sm:grid-cols-4 gap-6 opacity-70">
+        {/* slim feature ticks */}
+        <div className="mt-16 mb-10 grid grid-cols-2 sm:grid-cols-4 gap-6 opacity-80">
           {['Real-time', 'AI-first', 'SLA-aware', 'Secure by design'].map((t) => (
             <div key={t} className="flex items-center gap-3">
               <span className="h-2 w-2 rounded-full bg-blue-400" />
