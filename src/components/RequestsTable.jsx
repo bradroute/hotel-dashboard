@@ -1,28 +1,12 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle2, StickyNote, Info } from 'lucide-react';
 import styles from '../styles/Dashboard.module.css';
 
 const rowVariants = {
   initial: { opacity: 0 },
-  animate: { opacity: 1, transition: { duration: 0.16 } },
-  exit: { opacity: 0, transition: { duration: 0.12 } },
+  animate: { opacity: 1, transition: { duration: 0.18 } },
+  exit: { opacity: 0, transition: { duration: 0.14 } },
 };
-
-function formatDate(dt) {
-  try {
-    return new Date(dt).toLocaleString('en-US', {
-      timeZone: 'America/Chicago', // keep your current behavior (can be made a prop later)
-      year: 'numeric',
-      month: 'numeric',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-    });
-  } catch {
-    return '—';
-  }
-}
 
 export default function RequestsTable({
   requests,
@@ -30,150 +14,110 @@ export default function RequestsTable({
   onComplete,
   onRowClick,
   onOpenNotes,
-  onOpenDetails,
+  onOpenDetails, // <-- new prop
 }) {
   return (
-    <div className={`${styles.tableContainer} overflow-x-auto`}>
-      <table className={`${styles.requestsTable} w-full text-sm`}>
-        <thead className="sticky top-0 z-[1] bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+    <div className={styles.tableContainer}>
+      <table className={styles.requestsTable} style={{ width: '100%' }}>
+        <thead>
           <tr>
-            <th className="whitespace-nowrap text-left px-3 py-2">Created</th>
-            <th className="whitespace-nowrap text-center px-3 py-2">Room</th>
-            <th className="whitespace-nowrap text-center px-3 py-2 min-w-[160px]">From</th>
-            <th className="whitespace-nowrap text-center px-3 py-2">Department</th>
-            <th className="whitespace-nowrap text-center px-3 py-2">Priority</th>
-            <th className={`${styles.messageCol} px-3 py-2 min-w-[300px] text-left`}>Message</th>
-            <th className="whitespace-nowrap text-center px-3 py-2">Notes</th>
-            <th className="whitespace-nowrap text-center px-3 py-2">Details</th>
-            <th className="whitespace-nowrap text-center px-3 py-2">Acknowledge</th>
-            <th className="whitespace-nowrap text-center px-3 py-2">Complete</th>
+            <th style={{ whiteSpace: 'nowrap' }}>Created At</th>
+            <th style={{ whiteSpace: 'nowrap', paddingLeft: '16px' }}>Room</th>
+            <th style={{ minWidth: '160px', whiteSpace: 'nowrap' }}>From</th>
+            <th style={{ whiteSpace: 'nowrap', paddingRight: '24px' }}>Department</th>
+            <th style={{ whiteSpace: 'nowrap' }}>Priority</th>
+            <th className={styles.messageCol} style={{ minWidth: '300px' }}>Message</th>
+            <th style={{ whiteSpace: 'nowrap' }}>Notes</th>
+            <th style={{ whiteSpace: 'nowrap' }}>Details</th>
+            <th style={{ whiteSpace: 'nowrap' }}>Acknowledge</th>
+            <th style={{ whiteSpace: 'nowrap' }}>Complete</th>
           </tr>
         </thead>
-
         <tbody>
           <AnimatePresence initial={false}>
             {requests.map((r) => {
-              const priority = (r.priority || '').toLowerCase();
-              const isUrgent = priority === 'urgent' || priority === 'high';
-
+              const priority = r.priority?.toLowerCase?.() || '';
+              // Make high and urgent both RED (fixes your override)
               const priorityClass =
-                isUrgent
+                priority === 'urgent' || priority === 'high'
                   ? styles.priorityUrgent
                   : priority === 'low'
                   ? styles.priorityLow
                   : styles.priorityNormal;
 
-              const baseRow =
-                `${styles.row} ${r.is_vip ? styles.vipRow : ''} ${r.is_staff ? styles.staffRow : ''}`;
-
-              const hoverRow =
-                'group cursor-pointer transition-colors hover:bg-operon-background focus:bg-operon-background outline-none';
+              const rowClass = [
+                styles.row,
+                r.is_vip ? styles.vipRow : '',
+                r.is_staff ? styles.staffRow : '',
+                'cursor-pointer transition',
+              ].join(' ');
 
               return (
                 <motion.tr
                   key={r.id}
-                  className={`${baseRow} ${hoverRow}`}
+                  onClick={() => onRowClick(r.id)}
+                  className={rowClass}
                   variants={rowVariants}
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  onClick={() => onRowClick(r.id)}
-                  tabIndex={0}
-                  role="button"
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      onRowClick(r.id);
-                    }
-                  }}
                 >
-                  {/* Created */}
-                  <td className="px-3 py-2 align-top">
-                    <time dateTime={r.created_at}>{formatDate(r.created_at)}</time>
+                  <td>
+                    {new Date(r.created_at).toLocaleString('en-US', {
+                      timeZone: 'America/Chicago',
+                      year: 'numeric',
+                      month: 'numeric',
+                      day: 'numeric',
+                      hour: 'numeric',
+                      minute: 'numeric',
+                    })}
                   </td>
-
-                  {/* Room */}
-                  <td className="px-3 py-2 align-top text-center">
-                    {r.room_number || '—'}
-                  </td>
-
-                  {/* From + badges */}
-                  <td className="px-3 py-2 align-top text-center">
+                  <td style={{ textAlign: 'center', paddingLeft: '16px' }}>{r.room_number || '—'}</td>
+                  <td style={{ textAlign: 'center' }}>
                     <div className="flex flex-col items-center">
-                      <span className="font-medium text-operon-charcoal">{r.from_phone || '—'}</span>
+                      <span>{r.from_phone}</span>
                       <div className="flex gap-1 mt-1">
-                        {r.is_vip && <span className={`${styles.vipBadge}`}>VIP</span>}
-                        {r.is_staff && <span className={`${styles.staffBadge}`}>STAFF</span>}
+                        {r.is_vip && <span className={styles.vipBadge}>VIP</span>}
+                        {r.is_staff && <span className={styles.staffBadge}>STAFF</span>}
                       </div>
                     </div>
                   </td>
-
-                  {/* Department */}
-                  <td className="px-3 py-2 align-top text-center">
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-blue-50 text-operon-blue border border-blue-100 text-xs">
-                      {r.department || '—'}
-                    </span>
+                  <td style={{ textAlign: 'center', paddingRight: '24px' }}>{r.department}</td>
+                  <td style={{ textAlign: 'center' }}>
+                    <span className={priorityClass}>{r.priority?.toUpperCase?.()}</span>
                   </td>
-
-                  {/* Priority */}
-                  <td className="px-3 py-2 align-top text-center">
-                    <span className={`${priorityClass} inline-block`}>
-                      {(r.priority || '').toUpperCase() || '—'}
-                    </span>
-                  </td>
-
-                  {/* Message */}
-                  <td
-                    className={`${styles.messageCol} px-3 py-2 align-top text-gray-700`}
-                    title={r.message}
-                  >
-                    <div className="truncate max-w-[48rem]">{r.message}</div>
-                  </td>
-
-                  {/* Notes */}
-                  <td className="px-3 py-2 align-top text-center">
+                  <td className={styles.messageCol}>{r.message}</td>
+                  <td>
                     <button
                       type="button"
-                      aria-label="Open notes"
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50 active:scale-[.99]"
+                      className={`${styles.btn} ${styles.notesBtn}`}
                       onClick={(e) => {
                         e.stopPropagation();
                         onOpenNotes(r.id);
                       }}
                     >
-                      <StickyNote className="w-3.5 h-3.5" />
                       Notes
                     </button>
                   </td>
-
-                  {/* Details */}
-                  <td className="px-3 py-2 align-top text-center">
+                  <td>
                     <button
                       type="button"
-                      aria-label="Open details"
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 px-3 py-1.5 text-xs hover:bg-gray-50 active:scale-[.99]"
+                      className={`${styles.btn} ${styles.detailsBtn}`}
                       onClick={(e) => {
                         e.stopPropagation();
-                        onOpenDetails(r); // pass entire request
+                        onOpenDetails(r); // Pass the whole request
                       }}
                     >
-                      <Info className="w-3.5 h-3.5" />
                       Details
                     </button>
                   </td>
-
-                  {/* Acknowledge */}
-                  <td className="px-3 py-2 align-top text-center">
+                  <td>
                     {r.acknowledged ? (
-                      <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
-                        <CheckCircle2 className="w-4 h-4" />
-                        Ack’d
-                      </span>
+                      <span className={styles.doneIcon} aria-label="acknowledged">✔️</span>
                     ) : (
                       <button
                         type="button"
-                        aria-label="Acknowledge request"
-                        className="inline-flex items-center gap-2 rounded-lg bg-blue-50 text-operon-blue px-3 py-1.5 text-xs hover:bg-blue-100 active:scale-[.99]"
+                        className={`${styles.btn} ${styles.ackBtn}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           onAcknowledge(r.id);
@@ -183,19 +127,13 @@ export default function RequestsTable({
                       </button>
                     )}
                   </td>
-
-                  {/* Complete */}
-                  <td className="px-3 py-2 align-top text-center">
+                  <td>
                     {r.completed ? (
-                      <span className="inline-flex items-center gap-1 text-emerald-600 font-medium">
-                        <CheckCircle2 className="w-4 h-4" />
-                        Done
-                      </span>
+                      <span className={styles.doneIcon} aria-label="completed">✔️</span>
                     ) : (
                       <button
                         type="button"
-                        aria-label="Complete request"
-                        className="inline-flex items-center gap-2 rounded-lg bg-emerald-50 text-emerald-700 px-3 py-1.5 text-xs hover:bg-emerald-100 active:scale-[.99]"
+                        className={`${styles.btn} ${styles.completeBtn}`}
                         onClick={(e) => {
                           e.stopPropagation();
                           onComplete(r.id);
