@@ -105,7 +105,7 @@ export default function Dashboard() {
     fetchHotel();
     fetchEnabledDepartments();
     fetchRequests();
-    const interval = setInterval(fetchRequests, 60000);
+    const interval = setInterval(fetchRequests, 60000); // auto-refresh each minute
     return () => clearInterval(interval);
   }, [hotelId, fetchHotel, fetchEnabledDepartments, fetchRequests]);
 
@@ -174,8 +174,7 @@ export default function Dashboard() {
         (r) =>
           (r.message || '').toLowerCase().includes(q) ||
           (r.from_phone && r.from_phone.includes(searchTerm)) ||
-          (r.room_number && r.room_number.toString().includes(searchTerm)
-        )
+          (r.room_number && r.room_number.toString().includes(searchTerm))
       );
     }
     return list.sort((a, b) =>
@@ -220,14 +219,7 @@ export default function Dashboard() {
         className="relative min-h-dvh bg-operon-background pt-24 overflow-x-clip"
       >
         {/* background accents (scroll with page) */}
-        <div
-          aria-hidden="true"
-          className="
-            pointer-events-none absolute top-[-12rem] left-0 -ml-px -translate-x-24
-            h-[34rem] w-[34rem] rounded-full blur-3xl
-          "
-          style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
-        />
+        {/* Removed the global top-left orb — we place a local orb behind KPI #1 instead */}
         <div
           aria-hidden="true"
           className="
@@ -260,23 +252,37 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* KPI tiles */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3 mb-6">
-            {[
-              { label: 'Active', value: metrics.active },
-              { label: 'Unacknowledged', value: metrics.unacknowledged },
-              { label: 'Urgent', value: metrics.urgent },
-              { label: 'Today', value: metrics.today },
-              { label: 'All', value: metrics.total },
-            ].map(({ label, value }) => (
-              <div
-                key={label}
-                className="rounded-xl bg-white shadow-lg ring-1 ring-black/5 p-4 text-center"
-              >
-                <div className="text-2xl font-bold text-operon-charcoal">{value}</div>
-                <div className="text-xs text-gray-500 mt-1">{label}</div>
-              </div>
-            ))}
+          {/* KPI tiles with local orb behind the first block */}
+          <div className="relative mb-6">
+            {/* orb behind KPI #1 */}
+            <div
+              aria-hidden="true"
+              className="
+                pointer-events-none absolute -z-10
+                -top-8 -left-6 sm:-top-10 sm:-left-8
+                h-72 w-72 sm:h-80 sm:w-80 rounded-full blur-3xl
+              "
+              style={{
+                background: 'radial-gradient(closest-side, rgba(59,130,246,.28), transparent)',
+              }}
+            />
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
+              {[
+                { label: 'Active', value: metrics.active },
+                { label: 'Unacknowledged', value: metrics.unacknowledged },
+                { label: 'Urgent', value: metrics.urgent },
+                { label: 'Today', value: metrics.today },
+                { label: 'All', value: metrics.total },
+              ].map(({ label, value }) => (
+                <div
+                  key={label}
+                  className="rounded-xl bg-white shadow-lg ring-1 ring-black/5 p-4 text-center relative"
+                >
+                  <div className="text-2xl font-bold text-operon-charcoal">{value}</div>
+                  <div className="text-xs text-gray-500 mt-1">{label}</div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Glassy card: Filters + Table */}
