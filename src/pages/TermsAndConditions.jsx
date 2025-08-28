@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const SHOW_GRID_BG = false; // toggle the faint grid if you want
+const SHOW_GRID_BG = false;
 
 const fade = {
   initial: { opacity: 0, y: 16 },
@@ -21,21 +21,20 @@ export default function TermsAndConditions() {
   );
 
   return (
-    <main className="relative min-h-screen pt-24 overflow-x-hidden bg-operon-background">
-      {/* background accents */}
+    // isolate = new stacking context so abs. decorations never create their own scroll area
+    <main className="relative isolate min-h-dvh pt-24 overflow-x-hidden bg-operon-background">
+      {/* background accents (anchored, no layout-affecting negative offsets) */}
       <div
         aria-hidden="true"
-        className="
-          pointer-events-none absolute -top-48 left-0 -ml-px -translate-x-40
-          h-[34rem] w-[34rem] rounded-full blur-3xl
-        "
+        className="pointer-events-none absolute left-0 -ml-px -top-32 h-[34rem] w-[34rem] rounded-full blur-3xl"
         style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -bottom-56 -right-40 h-[38rem] w-[38rem] rounded-full blur-[90px]"
+        className="pointer-events-none absolute right-0 bottom-0 translate-y-1/3 h-[38rem] w-[38rem] rounded-full blur-[90px]"
         style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
       />
+
       {SHOW_GRID_BG && (
         <div
           aria-hidden="true"
@@ -50,12 +49,13 @@ export default function TermsAndConditions() {
         />
       )}
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+      {/* pb-8 trims the footer gap without creating an inner scroll */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-8">
         <motion.section variants={fade} initial="initial" animate="animate" className="relative">
-          {/* glow */}
+          {/* glow kept inside the card bounds (no negative inset) */}
           <div
             aria-hidden="true"
-            className="absolute -inset-0.5 rounded-2xl blur opacity-70"
+            className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-70"
             style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.35), rgba(34,211,238,.25))' }}
           />
 
@@ -63,7 +63,6 @@ export default function TermsAndConditions() {
             {/* header */}
             <div className="flex items-center gap-3 mb-2">
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-operon-blue">
-                {/* document icon */}
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path d="M6 2h8l4 4v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="2"/>
                   <path d="M14 2v6h6" stroke="currentColor" strokeWidth="2"/>
@@ -195,7 +194,6 @@ export default function TermsAndConditions() {
                     href="mailto:support@operonops.com?subject=Terms%20Inquiry"
                     className="inline-flex items-center gap-2 text-operon-blue hover:underline"
                   >
-                    {/* mail icon */}
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                       <path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="2"/>
                       <path d="m22 7-10 7L2 7" stroke="currentColor" strokeWidth="2"/>
