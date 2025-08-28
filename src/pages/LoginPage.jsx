@@ -13,8 +13,8 @@ const fade = {
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
+  const [busy,   setBusy]   = useState(false);
+  const [error,  setError]  = useState(null);
   const [showPw, setShowPw] = useState(false);
   const navigate = useNavigate();
 
@@ -39,26 +39,27 @@ export default function LoginPage() {
     if (!profile?.hotel_id)           { setBusy(false); navigate('/property-picker'); return; }
 
     setBusy(false);
-    navigate('/dashboard'); // or navigate(`/dashboard/${profile.hotel_id}`);
+    // If your routing uses property ids, use: navigate(`/dashboard/${profile.hotel_id}`);
+    navigate('/dashboard');
   }
 
   return (
-    // content sits above the page accents
+    // content sits above page accents
     <main className="relative z-10 min-h-screen pt-24 bg-operon-background">
-      {/* Light, corner-only accents that SCROLL with the page (absolute, not fixed) */}
+      {/* Light, corner-only accents (slightly stronger) that scroll with the page */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-visible">
-        {/* top-left blue (subtle & off-canvas) */}
+        {/* top-left blue */}
         <div
-          className="absolute -left-[50vmin] -top-[45vmin] w-[110vmin] h-[110vmin] rounded-full blur-[100px] opacity-70"
+          className="absolute -left-[46vmin] -top-[42vmin] w-[110vmin] h-[110vmin] rounded-full blur-[90px] opacity-80"
           style={{
-            background: 'radial-gradient(closest-side, rgba(59,130,246,0.16), rgba(59,130,246,0) 70%)',
+            background: 'radial-gradient(closest-side, rgba(59,130,246,0.22), rgba(59,130,246,0) 72%)',
           }}
         />
-        {/* bottom-right cyan (subtle & off-canvas) */}
+        {/* bottom-right cyan */}
         <div
-          className="absolute -right-[55vmin] -bottom-[55vmin] w-[130vmin] h-[130vmin] rounded-full blur-[110px] opacity-70"
+          className="absolute -right-[50vmin] -bottom-[50vmin] w-[130vmin] h-[130vmin] rounded-full blur-[100px] opacity-80"
           style={{
-            background: 'radial-gradient(closest-side, rgba(34,211,238,0.14), rgba(34,211,238,0) 70%)',
+            background: 'radial-gradient(closest-side, rgba(34,211,238,0.20), rgba(34,211,238,0) 72%)',
           }}
         />
       </div>
