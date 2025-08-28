@@ -105,7 +105,7 @@ export default function Dashboard() {
     fetchHotel();
     fetchEnabledDepartments();
     fetchRequests();
-    const interval = setInterval(fetchRequests, 60000); // auto-refresh each minute
+    const interval = setInterval(fetchRequests, 60000);
     return () => clearInterval(interval);
   }, [hotelId, fetchHotel, fetchEnabledDepartments, fetchRequests]);
 
@@ -174,7 +174,8 @@ export default function Dashboard() {
         (r) =>
           (r.message || '').toLowerCase().includes(q) ||
           (r.from_phone && r.from_phone.includes(searchTerm)) ||
-          (r.room_number && r.room_number.toString().includes(searchTerm))
+          (r.room_number && r.room_number.toString().includes(searchTerm)
+        )
       );
     }
     return list.sort((a, b) =>
@@ -193,11 +194,11 @@ export default function Dashboard() {
   ]);
 
   if (!hotelId) {
-    return <div className="p-6 text-lg">No property selected.</div>;
+    return <div className="min-h-dvh pt-24 bg-operon-background px-6">No property selected.</div>;
   }
   if (error) {
     return (
-      <div className="min-h-screen pt-24 bg-operon-background px-6">
+      <div className="min-h-dvh pt-24 bg-operon-background px-6">
         <div className="max-w-5xl mx-auto">
           <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 p-4">
             <div className="font-semibold">Something went wrong</div>
@@ -215,21 +216,28 @@ export default function Dashboard() {
         initial="initial"
         animate="animate"
         exit="exit"
-        className="relative min-h-screen bg-operon-background pt-24 overflow-hidden"
+        // Match Terms: dvh height, horizontal clip only, orbs scroll with page, seam fix
+        className="relative min-h-dvh bg-operon-background pt-24 overflow-x-clip"
       >
-        {/* background accents */}
+        {/* background accents (scroll with page) */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -top-48 -left-40 h-[34rem] w-[34rem] rounded-full blur-3xl"
+          className="
+            pointer-events-none absolute top-[-12rem] left-0 -ml-px -translate-x-24
+            h-[34rem] w-[34rem] rounded-full blur-3xl
+          "
           style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -bottom-56 -right-40 h-[38rem] w-[38rem] rounded-full blur-[90px]"
+          className="
+            pointer-events-none absolute bottom-[-14rem] right-0
+            h-[38rem] w-[38rem] rounded-full blur-[90px]
+          "
           style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
         />
 
-        <div className={`${styles.container} w-full max-w-7xl mx-auto px-4 sm:px-6`}>
+        <div className={`${styles.container} w-full max-w-7xl mx-auto px-4 sm:px-6 pb-8`}>
           {/* Header row */}
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
             <div>
@@ -273,10 +281,10 @@ export default function Dashboard() {
 
           {/* Glassy card: Filters + Table */}
           <div className="relative">
-            {/* glow ring */}
+            {/* glow ring (kept inside bounds to avoid horizontal scrollbars) */}
             <div
               aria-hidden="true"
-              className="absolute -inset-0.5 rounded-2xl blur opacity-60"
+              className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-60"
               style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.30), rgba(34,211,238,.22))' }}
             />
             <div className="relative bg-white rounded-2xl shadow-2xl ring-1 ring-black/5">
@@ -304,7 +312,6 @@ export default function Dashboard() {
               <div className="p-0 sm:p-2">
                 {loading ? (
                   <div className="p-6">
-                    {/* simple skeleton list */}
                     <div className="space-y-3">
                       {[0,1,2,3,4].map(i => (
                         <div key={i} className="h-12 rounded bg-gray-100 animate-pulse" />
@@ -354,10 +361,10 @@ export default function Dashboard() {
               className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
             >
               <div className="relative pointer-events-auto w-11/12 md:w-3/4 lg:w-1/2">
-                {/* glow */}
+                {/* glow (kept inside bounds) */}
                 <div
                   aria-hidden="true"
-                  className="absolute -inset-0.5 rounded-2xl blur opacity-60"
+                  className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-60"
                   style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.30), rgba(34,211,238,.22))' }}
                 />
                 <div className="relative bg-white p-6 rounded-2xl shadow-2xl min-h-[320px]">
@@ -432,10 +439,10 @@ export default function Dashboard() {
               className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
             >
               <div className="relative pointer-events-auto w-11/12 md:w-3/4 lg:w-1/2">
-                {/* glow */}
+                {/* glow (kept inside bounds) */}
                 <div
                   aria-hidden="true"
-                  className="absolute -inset-0.5 rounded-2xl blur opacity-60"
+                  className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-60"
                   style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.30), rgba(34,211,238,.22))' }}
                 />
                 <div className="relative bg-white p-6 rounded-2xl shadow-2xl min-h-[320px]">
