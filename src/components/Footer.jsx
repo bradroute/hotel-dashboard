@@ -20,8 +20,8 @@ export default function Footer() {
       variants={footerVariants}
       initial="initial"
       animate="animate"
-      className="relative mt-16 border-t bg-white"
       role="contentinfo"
+      className="relative isolate z-30 mt-16 border-t bg-white shadow-[0_-1px_0_rgba(0,0,0,0.04)]"
     >
       {/* Top section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
@@ -72,7 +72,6 @@ export default function Footer() {
               Follow
             </h3>
             <div className="flex items-center gap-3">
-              {/* Replace # with your profiles */}
               <a href="#" aria-label="LinkedIn" className="p-2 rounded border hover:border-operon-blue hover:text-operon-blue text-gray-600">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.86 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1 4.98 2.12 4.98 3.5zM.5 8h4V23h-4zM8.5 8h3.8v2.05h.05c.53-1 1.85-2.05 3.8-2.05 4.07 0 4.82 2.68 4.82 6.16V23h-4v-7.1c0-1.69-.03-3.86-2.35-3.86-2.35 0-2.71 1.84-2.71 3.75V23h-4z"/></svg>
               </a>

@@ -13,8 +13,8 @@ const fade = {
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [busy,   setBusy]   = useState(false);
-  const [error,  setError]  = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState(null);
   const [showPw, setShowPw] = useState(false);
   const navigate = useNavigate();
 
@@ -39,15 +39,22 @@ export default function LoginPage() {
     if (!profile?.hotel_id)           { setBusy(false); navigate('/property-picker'); return; }
 
     setBusy(false);
-    // If your routing uses property ids, use: navigate(`/dashboard/${profile.hotel_id}`);
+    // If routing uses property IDs, swap for: navigate(`/dashboard/${profile.hotel_id}`);
     navigate('/dashboard');
   }
 
   return (
-    // content sits above page accents
-    <main className="relative z-10 min-h-screen pt-24 bg-operon-background">
-      {/* Light, corner-only accents (slightly stronger) that scroll with the page */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-visible">
+    // Note: pb-10 + overflow-hidden and a mask on the accents to fade before the footer
+    <main className="relative z-10 min-h-screen pt-24 pb-10 overflow-hidden bg-operon-background">
+      {/* Decorative corner accents (scroll with page) */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 -z-10 overflow-visible"
+        style={{
+          maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+        }}
+      >
         {/* top-left blue */}
         <div
           className="absolute -left-[46vmin] -top-[42vmin] w-[110vmin] h-[110vmin] rounded-full blur-[90px] opacity-80"
