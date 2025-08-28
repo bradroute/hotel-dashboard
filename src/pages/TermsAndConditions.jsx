@@ -21,11 +21,14 @@ export default function TermsAndConditions() {
   );
 
   return (
-    <main className="relative min-h-screen pt-24 overflow-hidden bg-operon-background">
+    <main className="relative min-h-screen pt-24 overflow-x-hidden bg-operon-background">
       {/* background accents */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-48 -left-40 h-[34rem] w-[34rem] rounded-full blur-3xl"
+        className="
+          pointer-events-none absolute -top-48 left-0 -ml-px -translate-x-40
+          h-[34rem] w-[34rem] rounded-full blur-3xl
+        "
         style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
       />
       <div
