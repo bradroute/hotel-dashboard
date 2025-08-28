@@ -23,79 +23,44 @@ export default function LoginPage() {
     setError(null);
     setBusy(true);
 
-    // 1) Auth
     const { data, error: authErr } = await supabase.auth.signInWithPassword({ email, password });
     if (authErr) { setBusy(false); setError(authErr.message); return; }
     const userId = data.user.id;
 
-    // 2) Owner’s properties
     const { data: hotels, error: hotelsErr } = await supabase
-      .from('hotels')
-      .select('id')
-      .eq('profile_id', userId);
+      .from('hotels').select('id').eq('profile_id', userId);
     if (hotelsErr) { setBusy(false); setError('Login succeeded but failed to fetch properties.'); return; }
 
-    // 3) Active property
     const { data: profile, error: profileErr } = await supabase
-      .from('profiles')
-      .select('hotel_id')
-      .eq('id', userId)
-      .single();
+      .from('profiles').select('hotel_id').eq('id', userId).single();
     if (profileErr) { setBusy(false); setError('Login succeeded but failed to fetch profile.'); return; }
 
-    // 4) Routing
     if (!hotels || hotels.length === 0) { setBusy(false); navigate('/onboarding'); return; }
     if (!profile?.hotel_id)           { setBusy(false); navigate('/property-picker'); return; }
 
     setBusy(false);
-    // If you route by property id, use: navigate(`/dashboard/${profile.hotel_id}`);
-    navigate('/dashboard');
+    navigate('/dashboard'); // or navigate(`/dashboard/${profile.hotel_id}`);
   }
 
   return (
-    // Keep content above the fixed backgrounds
+    // content sits above the page accents
     <main className="relative z-10 min-h-screen pt-24 bg-operon-background">
-      {/* Stronger, fixed background accents (no seams) */}
-      <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-10 overflow-hidden">
-        {/* LEFT / TOP — blue */}
-        <div className="absolute -left-[24vmin] -top-[20vmin] w-[100vmin] h-[100vmin]">
-          {/* core */}
-          <div
-            className="absolute inset-0 rounded-full blur-[48px] opacity-85"
-            style={{
-              background:
-                'radial-gradient(closest-side, rgba(59,130,246,0.48) 0%, rgba(59,130,246,0.24) 38%, rgba(59,130,246,0.10) 58%, rgba(59,130,246,0) 72%)',
-            }}
-          />
-          {/* ambient glow */}
-          <div
-            className="absolute inset-0 rounded-full blur-[90px] opacity-70"
-            style={{
-              background:
-                'radial-gradient(closest-side, rgba(59,130,246,0.22), rgba(59,130,246,0) 70%)',
-            }}
-          />
-        </div>
-
-        {/* RIGHT / BOTTOM — cyan */}
-        <div className="absolute -right-[28vmin] -bottom-[24vmin] w-[120vmin] h-[120vmin]">
-          {/* core */}
-          <div
-            className="absolute inset-0 rounded-full blur-[56px] opacity-85"
-            style={{
-              background:
-                'radial-gradient(closest-side, rgba(34,211,238,0.46) 0%, rgba(34,211,238,0.22) 36%, rgba(34,211,238,0.10) 58%, rgba(34,211,238,0) 72%)',
-            }}
-          />
-          {/* ambient glow */}
-          <div
-            className="absolute inset-0 rounded-full blur-[100px] opacity-70"
-            style={{
-              background:
-                'radial-gradient(closest-side, rgba(34,211,238,0.20), rgba(34,211,238,0) 70%)',
-            }}
-          />
-        </div>
+      {/* Light, corner-only accents that SCROLL with the page (absolute, not fixed) */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 overflow-visible">
+        {/* top-left blue (subtle & off-canvas) */}
+        <div
+          className="absolute -left-[50vmin] -top-[45vmin] w-[110vmin] h-[110vmin] rounded-full blur-[100px] opacity-70"
+          style={{
+            background: 'radial-gradient(closest-side, rgba(59,130,246,0.16), rgba(59,130,246,0) 70%)',
+          }}
+        />
+        {/* bottom-right cyan (subtle & off-canvas) */}
+        <div
+          className="absolute -right-[55vmin] -bottom-[55vmin] w-[130vmin] h-[130vmin] rounded-full blur-[110px] opacity-70"
+          style={{
+            background: 'radial-gradient(closest-side, rgba(34,211,238,0.14), rgba(34,211,238,0) 70%)',
+          }}
+        />
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
