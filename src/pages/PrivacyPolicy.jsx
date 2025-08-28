@@ -30,32 +30,28 @@ export default function PrivacyPolicy() {
   );
 
   return (
-    // Only change here: pb-10 + masked, larger corner orbs (no gaps), they scroll with page
-    <main className="relative min-h-screen pt-24 pb-10 overflow-hidden bg-operon-background">
-      {/* Background accents (masked so they fade before footer; no hard edges) */}
+    <main className="relative min-h-screen pt-24 overflow-hidden bg-operon-background">
+      {/* background accents (same look, just larger & farther off-screen to remove gaps) */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 -z-10 overflow-visible"
-        style={{
-          maskImage: 'linear-gradient(to bottom, black 84%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 84%, transparent 100%)',
-        }}
       >
-        {/* top-left blue orb */}
+        {/* top-left blue */}
         <div
-          className="absolute -left-[46vmin] -top-[42vmin] w-[110vmin] h-[110vmin] rounded-full blur-[90px] opacity-80"
+          className="absolute -left-[44vmin] -top-[42vmin] w-[118vmin] h-[118vmin] rounded-full blur-[90px] opacity-100"
           style={{
-            background: 'radial-gradient(closest-side, rgba(59,130,246,0.22), rgba(59,130,246,0) 72%)',
+            background:
+              'radial-gradient(closest-side, rgba(59,130,246,0.25), rgba(59,130,246,0) 72%)',
           }}
         />
-        {/* bottom-right cyan orb */}
+        {/* bottom-right cyan */}
         <div
-          className="absolute -right-[50vmin] -bottom-[50vmin] w-[130vmin] h-[130vmin] rounded-full blur-[100px] opacity-80"
+          className="absolute -right-[48vmin] -bottom-[50vmin] w-[128vmin] h-[128vmin] rounded-full blur-[100px] opacity-100"
           style={{
-            background: 'radial-gradient(closest-side, rgba(34,211,238,0.20), rgba(34,211,238,0) 72%)',
+            background:
+              'radial-gradient(closest-side, rgba(34,211,238,0.22), rgba(34,211,238,0) 72%)',
           }}
         />
-
         {SHOW_GRID_BG && (
           <div
             aria-hidden="true"
@@ -64,8 +60,6 @@ export default function PrivacyPolicy() {
               backgroundImage:
                 'linear-gradient(rgba(17,24,39,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(17,24,39,0.08) 1px, transparent 1px)',
               backgroundSize: '42px 42px, 42px 42px',
-              maskImage: 'linear-gradient(to bottom, black 84%, transparent 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 84%, transparent 100%)',
             }}
           />
         )}
@@ -84,7 +78,6 @@ export default function PrivacyPolicy() {
             {/* header */}
             <div className="flex items-center gap-3 mb-2">
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-operon-blue">
-                {/* lock icon */}
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path d="M6 10V7a6 6 0 1 1 12 0v3" stroke="currentColor" strokeWidth="2"/>
                   <rect x="4" y="10" width="16" height="10" rx="2" stroke="currentColor" strokeWidth="2"/>
@@ -181,7 +174,6 @@ export default function PrivacyPolicy() {
                     href="mailto:support@operonops.com?subject=Privacy%20Request"
                     className="inline-flex items-center gap-2 text-operon-blue hover:underline"
                   >
-                    {/* mail icon */}
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                       <path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="2"/>
                       <path d="m22 7-10 7L2 7" stroke="currentColor" strokeWidth="2"/>
