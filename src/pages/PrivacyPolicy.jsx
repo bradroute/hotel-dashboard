@@ -1,3 +1,4 @@
+// src/pages/PrivacyPolicy.jsx
 import React from 'react';
 import { motion } from 'framer-motion';
 
@@ -29,31 +30,46 @@ export default function PrivacyPolicy() {
   );
 
   return (
-    <main className="relative min-h-screen pt-24 overflow-hidden bg-operon-background">
-      {/* background accents */}
+    // Only change here: pb-10 + masked, larger corner orbs (no gaps), they scroll with page
+    <main className="relative min-h-screen pt-24 pb-10 overflow-hidden bg-operon-background">
+      {/* Background accents (masked so they fade before footer; no hard edges) */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-48 -left-40 h-[34rem] w-[34rem] rounded-full blur-3xl"
-        style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-56 -right-40 h-[38rem] w-[38rem] rounded-full blur-[90px]"
-        style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
-      />
-      {SHOW_GRID_BG && (
+        className="pointer-events-none absolute inset-0 -z-10 overflow-visible"
+        style={{
+          maskImage: 'linear-gradient(to bottom, black 84%, transparent 100%)',
+          WebkitMaskImage: 'linear-gradient(to bottom, black 84%, transparent 100%)',
+        }}
+      >
+        {/* top-left blue orb */}
         <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[.25]"
+          className="absolute -left-[46vmin] -top-[42vmin] w-[110vmin] h-[110vmin] rounded-full blur-[90px] opacity-80"
           style={{
-            backgroundImage:
-              'linear-gradient(rgba(17,24,39,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(17,24,39,0.08) 1px, transparent 1px)',
-            backgroundSize: '42px 42px, 42px 42px',
-            maskImage: 'radial-gradient(ellipse at center, black 65%, transparent 100%)',
-            WebkitMaskImage: 'radial-gradient(ellipse at center, black 65%, transparent 100%)',
+            background: 'radial-gradient(closest-side, rgba(59,130,246,0.22), rgba(59,130,246,0) 72%)',
           }}
         />
-      )}
+        {/* bottom-right cyan orb */}
+        <div
+          className="absolute -right-[50vmin] -bottom-[50vmin] w-[130vmin] h-[130vmin] rounded-full blur-[100px] opacity-80"
+          style={{
+            background: 'radial-gradient(closest-side, rgba(34,211,238,0.20), rgba(34,211,238,0) 72%)',
+          }}
+        />
+
+        {SHOW_GRID_BG && (
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 opacity-[.25]"
+            style={{
+              backgroundImage:
+                'linear-gradient(rgba(17,24,39,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(17,24,39,0.08) 1px, transparent 1px)',
+              backgroundSize: '42px 42px, 42px 42px',
+              maskImage: 'linear-gradient(to bottom, black 84%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 84%, transparent 100%)',
+            }}
+          />
+        )}
+      </div>
 
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
         <motion.section variants={fade} initial="initial" animate="animate" className="relative">
