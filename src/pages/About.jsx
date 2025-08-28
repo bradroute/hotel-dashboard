@@ -12,16 +12,23 @@ const fade = {
 
 export default function About() {
   return (
-    <main className="relative min-h-screen pt-24 overflow-hidden bg-operon-background">
-      {/* background accents */}
+    // Match Terms page: dvh, orbs that scroll, left seam fix, no nested scrollbars
+    <main className="relative min-h-dvh pt-24 overflow-x-clip bg-operon-background">
+      {/* background accents (scroll with page) */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-48 -left-40 h-[34rem] w-[34rem] rounded-full blur-3xl"
+        className="
+          pointer-events-none absolute top-[-12rem] left-0 -ml-px -translate-x-24
+          h-[34rem] w-[34rem] rounded-full blur-3xl
+        "
         style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -bottom-56 -right-40 h-[38rem] w-[38rem] rounded-full blur-[90px]"
+        className="
+          pointer-events-none absolute bottom-[-14rem] right-0
+          h-[38rem] w-[38rem] rounded-full blur-[90px]
+        "
         style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
       />
       {SHOW_GRID_BG && (
@@ -38,17 +45,17 @@ export default function About() {
         />
       )}
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-8">
         <motion.section
           variants={fade}
           initial="initial"
           animate="animate"
           className="relative"
         >
-          {/* glow behind the card */}
+          {/* glow behind the card (kept inside bounds) */}
           <div
             aria-hidden="true"
-            className="absolute -inset-0.5 rounded-2xl blur opacity-70"
+            className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-70"
             style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.35), rgba(34,211,238,.25))' }}
           />
 

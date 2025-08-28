@@ -30,47 +30,45 @@ export default function PrivacyPolicy() {
   );
 
   return (
-    <main className="relative min-h-screen pt-24 overflow-hidden bg-operon-background">
-      {/* background accents (same look, just larger & farther off-screen to remove gaps) */}
+    // Match Terms: dvh height, horizontal clip only, orbs scroll with page, seam fix
+    <main className="relative min-h-dvh pt-24 overflow-x-clip bg-operon-background">
+      {/* background accents (scroll with page) */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 overflow-visible"
-      >
-        {/* top-left blue */}
+        className="
+          pointer-events-none absolute top-[-12rem] left-0 -ml-px -translate-x-24
+          h-[34rem] w-[34rem] rounded-full blur-3xl
+        "
+        style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
+      />
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none absolute bottom-[-14rem] right-0
+          h-[38rem] w-[38rem] rounded-full blur-[90px]
+        "
+        style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
+      />
+      {SHOW_GRID_BG && (
         <div
-          className="absolute -left-[44vmin] -top-[42vmin] w-[118vmin] h-[118vmin] rounded-full blur-[90px] opacity-100"
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 opacity-[.25]"
           style={{
-            background:
-              'radial-gradient(closest-side, rgba(59,130,246,0.25), rgba(59,130,246,0) 72%)',
+            backgroundImage:
+              'linear-gradient(rgba(17,24,39,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(17,24,39,0.08) 1px, transparent 1px)',
+            backgroundSize: '42px 42px, 42px 42px',
+            maskImage: 'radial-gradient(ellipse at center, black 65%, transparent 100%)',
+            WebkitMaskImage: 'radial-gradient(ellipse at center, black 65%, transparent 100%)',
           }}
         />
-        {/* bottom-right cyan */}
-        <div
-          className="absolute -right-[48vmin] -bottom-[50vmin] w-[128vmin] h-[128vmin] rounded-full blur-[100px] opacity-100"
-          style={{
-            background:
-              'radial-gradient(closest-side, rgba(34,211,238,0.22), rgba(34,211,238,0) 72%)',
-          }}
-        />
-        {SHOW_GRID_BG && (
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 opacity-[.25]"
-            style={{
-              backgroundImage:
-                'linear-gradient(rgba(17,24,39,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(17,24,39,0.08) 1px, transparent 1px)',
-              backgroundSize: '42px 42px, 42px 42px',
-            }}
-          />
-        )}
-      </div>
+      )}
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-8">
         <motion.section variants={fade} initial="initial" animate="animate" className="relative">
-          {/* glow */}
+          {/* glow (kept inside card bounds) */}
           <div
             aria-hidden="true"
-            className="absolute -inset-0.5 rounded-2xl blur opacity-70"
+            className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-70"
             style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.35), rgba(34,211,238,.25))' }}
           />
 

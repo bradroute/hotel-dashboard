@@ -211,8 +211,8 @@ export default function SettingsPage() {
     }
   };
 
-  if (loading) return <div className="min-h-screen pt-24 px-6">Loading…</div>;
-  if (error)   return <div className="min-h-screen pt-24 px-6 text-red-600">Error: {error}</div>;
+  if (loading) return <div className="min-h-dvh pt-24 px-6 bg-operon-background">Loading…</div>;
+  if (error)   return <div className="min-h-dvh pt-24 px-6 text-red-600 bg-operon-background">Error: {error}</div>;
 
   const showList = DEPARTMENT_LISTS[profile.type] || getDefaultsFor(profile.type);
 
@@ -222,21 +222,28 @@ export default function SettingsPage() {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="relative min-h-screen bg-operon-background pt-24 overflow-hidden"
+      // Match Terms: dvh height, horizontal clip only, orbs scroll with page, seam fix
+      className="relative min-h-dvh bg-operon-background pt-24 overflow-x-clip"
     >
-      {/* background accents */}
+      {/* background accents (scroll with page) */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -top-48 -left-40 h-[34rem] w-[34rem] rounded-full blur-3xl"
+        className="
+          pointer-events-none absolute top-[-12rem] left-0 -ml-px -translate-x-24
+          h-[34rem] w-[34rem] rounded-full blur-3xl
+        "
         style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -bottom-56 -right-40 h-[38rem] w-[38rem] rounded-full blur-[90px]"
+        className="
+          pointer-events-none absolute bottom-[-14rem] right-0
+          h-[38rem] w-[38rem] rounded-full blur-[90px]
+        "
         style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
       />
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pb-8">
         {/* Header + Add property CTA */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-6">
           <h1 className="text-3xl sm:text-4xl font-extrabold text-operon-charcoal">
@@ -497,9 +504,10 @@ export default function SettingsPage() {
 function GlowCard({ children, className = '' }) {
   return (
     <div className={`relative ${className}`}>
+      {/* keep glow inside card bounds to avoid horizontal scrollbars */}
       <div
         aria-hidden="true"
-        className="absolute -inset-0.5 rounded-2xl blur opacity-60"
+        className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-60"
         style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.30), rgba(34,211,238,.22))' }}
       />
       <section className="relative bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 p-6">

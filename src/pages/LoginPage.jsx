@@ -39,39 +39,31 @@ export default function LoginPage() {
     if (!profile?.hotel_id)           { setBusy(false); navigate('/property-picker'); return; }
 
     setBusy(false);
-    // If routing uses property IDs, swap for: navigate(`/dashboard/${profile.hotel_id}`);
     navigate('/dashboard');
   }
 
   return (
-    // Note: pb-10 + overflow-hidden and a mask on the accents to fade before the footer
-    <main className="relative z-10 min-h-screen pt-24 pb-10 overflow-hidden bg-operon-background">
-      {/* Decorative corner accents (scroll with page) */}
+    // Match Terms: dvh height, horizontal clip only, orbs scroll with page, seam fix
+    <main className="relative min-h-dvh pt-24 overflow-x-clip bg-operon-background">
+      {/* background accents (scroll with page) */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 overflow-visible"
-        style={{
-          maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
-          WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
-        }}
-      >
-        {/* top-left blue */}
-        <div
-          className="absolute -left-[46vmin] -top-[42vmin] w-[110vmin] h-[110vmin] rounded-full blur-[90px] opacity-80"
-          style={{
-            background: 'radial-gradient(closest-side, rgba(59,130,246,0.22), rgba(59,130,246,0) 72%)',
-          }}
-        />
-        {/* bottom-right cyan */}
-        <div
-          className="absolute -right-[50vmin] -bottom-[50vmin] w-[130vmin] h-[130vmin] rounded-full blur-[100px] opacity-80"
-          style={{
-            background: 'radial-gradient(closest-side, rgba(34,211,238,0.20), rgba(34,211,238,0) 72%)',
-          }}
-        />
-      </div>
+        className="
+          pointer-events-none absolute top-[-12rem] left-0 -ml-px -translate-x-24
+          h-[34rem] w-[34rem] rounded-full blur-3xl
+        "
+        style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
+      />
+      <div
+        aria-hidden="true"
+        className="
+          pointer-events-none absolute bottom-[-14rem] right-0
+          h-[38rem] w-[38rem] rounded-full blur-[90px]
+        "
+        style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
+      />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
         <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* ----------- HERO ----------- */}
           <motion.section variants={fade} initial="initial" animate="animate">
@@ -134,10 +126,10 @@ export default function LoginPage() {
             className="w-full"
           >
             <div className="relative">
-              {/* soft glow border */}
+              {/* soft glow border (kept inside card bounds) */}
               <div
                 aria-hidden="true"
-                className="absolute -inset-0.5 rounded-2xl blur opacity-70"
+                className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-70"
                 style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.35), rgba(34,211,238,.25))' }}
               />
               <div className="relative bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 p-6 sm:p-8 max-w-md mx-auto">
@@ -212,7 +204,7 @@ export default function LoginPage() {
         </div>
 
         {/* slim feature ticks */}
-        <div className="mt-16 mb-10 grid grid-cols-2 sm:grid-cols-4 gap-6 opacity-80">
+        <div className="mt-16 mb-8 grid grid-cols-2 sm:grid-cols-4 gap-6 opacity-80">
           {['Real-time', 'AI-first', 'SLA-aware', 'Secure by design'].map((t) => (
             <div key={t} className="flex items-center gap-3">
               <span className="h-2 w-2 rounded-full bg-blue-400" />
