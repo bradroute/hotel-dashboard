@@ -82,7 +82,7 @@ export default function LearnMore() {
                 Start Free
               </Link>
               <a
-                href="mailto:support@operonops.com"
+                href="mailto:info@operonops.com"
                 className="px-5 py-2.5 rounded-lg border border-operon-blue text-operon-blue hover:bg-blue-50 transition text-sm sm:text-base text-center"
               >
                 Contact Sales

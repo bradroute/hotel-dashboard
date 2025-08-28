@@ -82,7 +82,7 @@ export default function Help() {
               </a>
 
               <a
-                href="mailto:support@operonops.com?subject=Operon%20Support%20Request&body=Describe%20your%20issue%20and%20include%20screenshots%20if%20possible."
+                href="mailto:info@operonops.com?subject=Operon%20Support%20Request&body=Describe%20your%20issue%20and%20include%20screenshots%20if%20possible."
                 className="group rounded-xl bg-white shadow-lg ring-1 ring-black/5 p-5 flex items-start gap-3 hover:shadow-xl transition"
               >
                 <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-operon-blue">
@@ -94,7 +94,7 @@ export default function Help() {
                 </span>
                 <div>
                   <div className="text-operon-charcoal font-semibold">Email Support</div>
-                  <div className="text-operon-blue group-hover:underline">support@operonops.com</div>
+                  <div className="text-operon-blue group-hover:underline">info@operonops.com</div>
                   <div className="text-xs text-gray-500 mt-1">We aim to reply within one business day.</div>
                 </div>
               </a>

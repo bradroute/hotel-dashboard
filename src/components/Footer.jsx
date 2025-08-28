@@ -57,7 +57,7 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2">
               <li>
-                <a href="mailto:support@operonops.com" className={linkClass}>
+                <a href="mailto:info@operonops.com" className={linkClass}>
                   Contact Support
                 </a>
               </li>

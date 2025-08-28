@@ -169,14 +169,14 @@ export default function PrivacyPolicy() {
               <Section id="contact" title="8. Contact">
                 <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
                   <a
-                    href="mailto:support@operonops.com?subject=Privacy%20Request"
+                    href="mailto:info@operonops.com?subject=Privacy%20Request"
                     className="inline-flex items-center gap-2 text-operon-blue hover:underline"
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                       <path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="2"/>
                       <path d="m22 7-10 7L2 7" stroke="currentColor" strokeWidth="2"/>
                     </svg>
-                    support@operonops.com
+                    info@operonops.com
                   </a>
                   <span className="text-gray-400 hidden sm:inline">•</span>
                   <a href="tel:6513469559" className="text-operon-blue hover:underline">
