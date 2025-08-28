@@ -12,13 +12,14 @@ const fade = {
 
 export default function LearnMore() {
   return (
-    // Match Terms: dvh height, horizontal clip only, orbs scroll with page, seam fix
-    <main className="relative min-h-dvh pt-24 overflow-x-clip bg-operon-background">
-      {/* background accents (scroll with page) */}
+    // Match Terms: dvh height, horizontal clip only; 'isolate' creates a stacking context
+    <main className="relative isolate min-h-dvh pt-24 overflow-x-clip bg-operon-background">
+      {/* background accents (scroll with page, forced behind via -z-10) */}
       <div
         aria-hidden="true"
         className="
-          pointer-events-none absolute top-[-12rem] left-0 -ml-px -translate-x-24
+          pointer-events-none absolute -z-10
+          top-[-12rem] left-0 -ml-px -translate-x-24
           h-[34rem] w-[34rem] rounded-full blur-3xl
         "
         style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
@@ -26,7 +27,8 @@ export default function LearnMore() {
       <div
         aria-hidden="true"
         className="
-          pointer-events-none absolute bottom-[-14rem] right-0
+          pointer-events-none absolute -z-10
+          bottom-[-14rem] right-0
           h-[38rem] w-[38rem] rounded-full blur-[90px]
         "
         style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
@@ -34,7 +36,7 @@ export default function LearnMore() {
       {SHOW_GRID_BG && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[.25]"
+          className="pointer-events-none absolute inset-0 opacity-[.25] -z-10"
           style={{
             backgroundImage:
               'linear-gradient(rgba(17,24,39,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(17,24,39,0.08) 1px, transparent 1px)',
@@ -45,7 +47,8 @@ export default function LearnMore() {
         />
       )}
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-8">
+      {/* z-10 ensures all content layers above the -z-10 orbs */}
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pb-8">
         {/* ---------- Hero card ---------- */}
         <motion.section variants={fade} initial="initial" animate="animate" className="relative">
           {/* keep glow inside bounds (no negative inset) */}
