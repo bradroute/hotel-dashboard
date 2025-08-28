@@ -1,4 +1,3 @@
-// src/App.js
 import React, { useState, useEffect } from 'react';
 import {
   BrowserRouter as Router,
@@ -19,12 +18,15 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import OnboardingPage from './pages/OnboardingPage';
 import PropertyPicker from './pages/PropertyPicker';
-import Help from './pages/Help'; 
+import Help from './pages/Help';
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
 import Navbar from './components/Navbar';
 import { supabase } from './utils/supabaseClient';
 import { AnimatePresence } from 'framer-motion';
+
+// ✅ NEW: global fixed gradient background
+import BackgroundOrbs from './components/BackgroundOrbs';
 
 function AppContent({ session }) {
   const location = useLocation();
@@ -40,10 +42,14 @@ function AppContent({ session }) {
   const showFooter = publicPaths.includes(location.pathname);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <Navbar />
-      {/* Removed max-w-7xl so this can expand full width */}
-      <main className="flex-1 w-full px-4">
+    // isolate creates a clean stacking context; orbs sit behind everything
+    <div className="relative isolate min-h-screen flex flex-col bg-operon-background">
+      <BackgroundOrbs /> {/* rendered once for the whole app */}
+
+      <Navbar /> {/* already has its own z-index */}
+
+      {/* lift all routed content above the background */}
+      <main className="relative z-10 flex-1 w-full px-4">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
             {/* Public routes */}
@@ -54,19 +60,11 @@ function AppContent({ session }) {
             <Route path="/help" element={<Help />} />
             <Route
               path="/login"
-              element={
-                session
-                  ? <Navigate to="/property-picker" replace />
-                  : <LoginPage />
-              }
+              element={session ? <Navigate to="/property-picker" replace /> : <LoginPage />}
             />
             <Route
               path="/signup"
-              element={
-                session
-                  ? <Navigate to="/property-picker" replace />
-                  : <SignUp />
-              }
+              element={session ? <Navigate to="/property-picker" replace /> : <SignUp />}
             />
 
             {/* Onboarding */}
@@ -127,7 +125,13 @@ function AppContent({ session }) {
           </Routes>
         </AnimatePresence>
       </main>
-      {showFooter && <Footer />}
+
+      {/* keep footer above background too */}
+      {showFooter && (
+        <div className="relative z-10">
+          <Footer />
+        </div>
+      )}
     </div>
   );
 }
@@ -136,10 +140,7 @@ export default function App() {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
-    // Initialize and subscribe to auth session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => setSession(session)
     );

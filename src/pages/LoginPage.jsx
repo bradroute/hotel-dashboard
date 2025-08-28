@@ -4,8 +4,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import logoFull from '../assets/logo-icon2.png';
 import { motion } from 'framer-motion';
 
-const SHOW_GRID_BG = false; // set to true if you want the subtle grid back
-
 const fade = {
   initial: { opacity: 0, y: 16 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
@@ -24,63 +22,29 @@ export default function LoginPage() {
     setError(null);
     setBusy(true);
 
-    // 1) Auth
     const { data, error: authErr } = await supabase.auth.signInWithPassword({ email, password });
     if (authErr) { setBusy(false); setError(authErr.message); return; }
     const userId = data.user.id;
 
-    // 2) Owner’s properties
     const { data: hotels, error: hotelsErr } = await supabase
-      .from('hotels')
-      .select('id')
-      .eq('profile_id', userId);
+      .from('hotels').select('id').eq('profile_id', userId);
     if (hotelsErr) { setBusy(false); setError('Login succeeded but failed to fetch properties.'); return; }
 
-    // 3) Active property
     const { data: profile, error: profileErr } = await supabase
-      .from('profiles')
-      .select('hotel_id')
-      .eq('id', userId)
-      .single();
+      .from('profiles').select('hotel_id').eq('id', userId).single();
     if (profileErr) { setBusy(false); setError('Login succeeded but failed to fetch profile.'); return; }
 
-    // 4) Route
     if (!hotels || hotels.length === 0) { setBusy(false); navigate('/onboarding'); return; }
-    if (!profile?.hotel_id) { setBusy(false); navigate('/property-picker'); return; }
+    if (!profile?.hotel_id)           { setBusy(false); navigate('/property-picker'); return; }
 
     setBusy(false);
-    // If your app uses /dashboard/:id, swap this:
-    // navigate(`/dashboard/${profile.hotel_id}`);
-    navigate('/dashboard');
+    navigate('/dashboard'); // or navigate(`/dashboard/${profile.hotel_id}`);
   }
 
   return (
-    <main className="relative min-h-screen pt-24 overflow-hidden bg-operon-background">
-      {/* background accents */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-48 -left-40 h-[34rem] w-[34rem] rounded-full blur-3xl"
-        style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-56 -right-40 h-[38rem] w-[38rem] rounded-full blur-[90px]"
-        style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
-      />
-      {SHOW_GRID_BG && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[.25]"
-          style={{
-            backgroundImage:
-              'linear-gradient(rgba(17,24,39,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(17,24,39,0.08) 1px, transparent 1px)',
-            backgroundSize: '42px 42px, 42px 42px',
-            maskImage: 'radial-gradient(ellipse at center, black 65%, transparent 100%)',
-            WebkitMaskImage: 'radial-gradient(ellipse at center, black 65%, transparent 100%)',
-          }}
-        />
-      )}
-
+    // ↑ important: relative z-10 so this content sits above the global BackgroundOrbs
+    <main className="relative z-10 min-h-screen pt-24 bg-operon-background">
+      {/* ⛔️ Removed page-local gradient orbs and grid background */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* ----------- HERO ----------- */}
@@ -136,13 +100,7 @@ export default function LoginPage() {
           </motion.section>
 
           {/* ----------- AUTH CARD ----------- */}
-          <motion.aside
-            variants={fade}
-            initial="initial"
-            animate="animate"
-            transition={{ delay: 0.05 }}
-            className="w-full"
-          >
+          <motion.aside variants={fade} initial="initial" animate="animate" transition={{ delay: 0.05 }} className="w-full">
             <div className="relative">
               {/* soft glow border */}
               <div

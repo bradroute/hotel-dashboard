@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* src/index.css */
+html, body { overflow-x: hidden; }
+
 body {
   @apply bg-operon-background text-operon-charcoal font-sans antialiased;
 }
