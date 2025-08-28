@@ -118,7 +118,7 @@ export default function Analytics() {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="relative min-h-screen bg-operon-background pt-24 overflow-hidden"
+      className="relative min-h-dvh bg-operon-background pt-24 overflow-x-clip"
     >
       {/* background accents */}
       <div
@@ -203,7 +203,7 @@ export default function Analytics() {
         {loading ? (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {[...Array(9)].map((_, i) => (
-              <div key={i} className="relative rounded-2xl p-4 bg-white shadow-2xl ring-1 ring-black/5">
+              <div key={i} className="relative rounded-2xl p-4 bg-white shadow-2xl ring-1 ring-black/5 min-h-[300px]">
                 <div className="h-5 w-40 bg-gray-200 rounded mb-4 animate-pulse" />
                 <div className="h-40 bg-gray-100 rounded animate-pulse" />
               </div>
@@ -246,17 +246,20 @@ export default function Analytics() {
               </ResponsiveContainer>
             </ChartSection>
 
+            {/* ---- Percent Complete now same size as others ---- */}
             <ChartSection title="Percent Complete">
-              <div className="h-full flex flex-col items-center justify-center space-y-2">
-                <p className="text-xl font-semibold text-operon-charcoal">
-                  Per Day: {dailyCompletionRate.at(-1)?.completionRate ?? 0}%
-                </p>
-                <p className="text-xl font-semibold text-operon-charcoal">
-                  Per Week: {weeklyCompletionRate.at(-1)?.completionRate ?? 0}%
-                </p>
-                <p className="text-xl font-semibold text-operon-charcoal">
-                  Per Month: {monthlyCompletionRate.at(-1)?.completionRate ?? 0}%
-                </p>
+              <div className="h-[250px] w-full flex items-center justify-center">
+                <div className="space-y-2 text-center">
+                  <p className="text-xl font-semibold text-operon-charcoal">
+                    Per Day: {dailyCompletionRate.at(-1)?.completionRate ?? 0}%
+                  </p>
+                  <p className="text-xl font-semibold text-operon-charcoal">
+                    Per Week: {weeklyCompletionRate.at(-1)?.completionRate ?? 0}%
+                  </p>
+                  <p className="text-xl font-semibold text-operon-charcoal">
+                    Per Month: {monthlyCompletionRate.at(-1)?.completionRate ?? 0}%
+                  </p>
+                </div>
               </div>
             </ChartSection>
 
@@ -352,7 +355,8 @@ function ChartSection({ title, children }) {
         className="absolute -inset-0.5 rounded-2xl blur opacity-60"
         style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.30), rgba(34,211,238,.22))' }}
       />
-      <div className="relative bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 p-4">
+      {/* min-h ensures uniform tile height (≈ title + 250px chart area) */}
+      <div className="relative bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 p-4 min-h-[300px]">
         <h2 className="text-lg font-semibold text-operon-charcoal mb-2">{title}</h2>
         {children}
       </div>
