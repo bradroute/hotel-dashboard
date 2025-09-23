@@ -4,6 +4,7 @@ import { supabase } from '../utils/supabaseClient';
 import { useNavigate, Link } from 'react-router-dom';
 import logoFull from '../assets/logo-icon2.png';
 import { motion } from 'framer-motion';
+import ForgotPasswordModal from '../components/auth/ForgotPasswordModal';
 
 const fade = {
   initial: { opacity: 0, y: 16 },
@@ -16,6 +17,7 @@ export default function LoginPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [showPw, setShowPw] = useState(false);
+  const [forgotOpen, setForgotOpen] = useState(false);
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
@@ -39,33 +41,26 @@ export default function LoginPage() {
     if (!profile?.hotel_id)           { setBusy(false); navigate('/property-picker'); return; }
 
     setBusy(false);
-    navigate('/dashboard');
+    navigate(`/dashboard/${profile.hotel_id}`);
   }
 
   return (
-    // Match Terms: dvh height, horizontal clip only, orbs scroll with page, seam fix
     <main className="relative min-h-dvh pt-24 overflow-x-clip bg-operon-background">
-      {/* background accents (scroll with page) */}
+      {/* background accents */}
       <div
         aria-hidden="true"
-        className="
-          pointer-events-none absolute top-[-12rem] left-0 -ml-px -translate-x-24
-          h-[34rem] w-[34rem] rounded-full blur-3xl
-        "
+        className="pointer-events-none absolute top-[-12rem] left-0 -ml-px -translate-x-24 h-[34rem] w-[34rem] rounded-full blur-3xl"
         style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
       />
       <div
         aria-hidden="true"
-        className="
-          pointer-events-none absolute bottom-[-14rem] right-0
-          h-[38rem] w-[38rem] rounded-full blur-[90px]
-        "
+        className="pointer-events-none absolute bottom-[-14rem] right-0 h-[38rem] w-[38rem] rounded-full blur-[90px]"
         style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
         <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* ----------- HERO ----------- */}
+          {/* HERO */}
           <motion.section variants={fade} initial="initial" animate="animate">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 bg-white/10 text-xs text-operon-muted tracking-wide mb-4">
               Hotels • Apartments • Condos • Restaurants
@@ -117,7 +112,7 @@ export default function LoginPage() {
             </ul>
           </motion.section>
 
-          {/* ----------- AUTH CARD ----------- */}
+          {/* AUTH CARD */}
           <motion.aside
             variants={fade}
             initial="initial"
@@ -126,7 +121,6 @@ export default function LoginPage() {
             className="w-full"
           >
             <div className="relative">
-              {/* soft glow border (kept inside card bounds) */}
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-70"
@@ -151,7 +145,8 @@ export default function LoginPage() {
                       placeholder="you@company.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-operon-blue"
+                      disabled={busy}
+                      className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-operon-blue disabled:opacity-60"
                       required
                     />
                   </label>
@@ -165,7 +160,8 @@ export default function LoginPage() {
                         placeholder="••••••••"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full px-4 py-2 pr-14 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-operon-blue"
+                        disabled={busy}
+                        className="w-full px-4 py-2 pr-14 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-operon-blue disabled:opacity-60"
                         required
                       />
                       <button
@@ -188,7 +184,13 @@ export default function LoginPage() {
                   </button>
 
                   <div className="flex items-center justify-between text-sm text-gray-600">
-                    <Link to="/reset" className="hover:underline">Forgot password?</Link>
+                    <button
+                      type="button"
+                      onClick={() => setForgotOpen(true)}
+                      className="hover:underline"
+                    >
+                      Forgot password?
+                    </button>
                     <Link to="/signup" className="text-operon-blue hover:underline">Create account</Link>
                   </div>
 
@@ -203,7 +205,6 @@ export default function LoginPage() {
           </motion.aside>
         </div>
 
-        {/* slim feature ticks */}
         <div className="mt-16 mb-8 grid grid-cols-2 sm:grid-cols-4 gap-6 opacity-80">
           {['Real-time', 'AI-first', 'SLA-aware', 'Secure by design'].map((t) => (
             <div key={t} className="flex items-center gap-3">
@@ -213,6 +214,8 @@ export default function LoginPage() {
           ))}
         </div>
       </div>
+
+      <ForgotPasswordModal open={forgotOpen} onClose={() => setForgotOpen(false)} />
     </main>
   );
 }

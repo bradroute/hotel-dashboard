@@ -19,7 +19,8 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsAndConditions from './pages/TermsAndConditions';
 import OnboardingPage from './pages/OnboardingPage';
 import PropertyPicker from './pages/PropertyPicker';
-import Help from './pages/Help'; 
+import Help from './pages/Help';
+import ResetPasswordPage from './pages/ResetPassword'; // ← NEW
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
 import Navbar from './components/Navbar';
@@ -28,6 +29,8 @@ import { AnimatePresence } from 'framer-motion';
 
 function AppContent({ session }) {
   const location = useLocation();
+
+  // Pages that keep the marketing footer visible
   const publicPaths = [
     '/about',
     '/learn-more',
@@ -36,13 +39,13 @@ function AppContent({ session }) {
     '/privacy-policy',
     '/terms',
     '/help'
+    // Intentionally NOT including /reset so the reset view stays distraction-free
   ];
   const showFooter = publicPaths.includes(location.pathname);
 
   return (
     <div className="flex flex-col min-h-screen">
       <Navbar />
-      {/* Removed max-w-7xl so this can expand full width */}
       <main className="flex-1 w-full px-4">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
@@ -54,20 +57,15 @@ function AppContent({ session }) {
             <Route path="/help" element={<Help />} />
             <Route
               path="/login"
-              element={
-                session
-                  ? <Navigate to="/property-picker" replace />
-                  : <LoginPage />
-              }
+              element={session ? <Navigate to="/property-picker" replace /> : <LoginPage />}
             />
             <Route
               path="/signup"
-              element={
-                session
-                  ? <Navigate to="/property-picker" replace />
-                  : <SignUp />
-              }
+              element={session ? <Navigate to="/property-picker" replace /> : <SignUp />}
             />
+
+            {/* Password reset (public) */}
+            <Route path="/reset" element={<ResetPasswordPage />} />
 
             {/* Onboarding */}
             <Route
@@ -89,7 +87,7 @@ function AppContent({ session }) {
               }
             />
 
-            {/* Dashboard, Analytics, Settings */}
+            {/* App pages */}
             <Route
               path="/dashboard/:hotelId"
               element={
@@ -136,12 +134,9 @@ export default function App() {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
-    // Initialize and subscribe to auth session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => setSession(session)
+    supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) =>
+      setSession(session)
     );
     return () => subscription.unsubscribe();
   }, []);
