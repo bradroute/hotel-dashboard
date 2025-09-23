@@ -1,7 +1,7 @@
 // route: /reset
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { supabase } from '../lib/Supabase';
+import { supabase } from '../../utils/supabaseClient';
 
 export default function ResetPasswordPage() {
   const [params] = useSearchParams();
