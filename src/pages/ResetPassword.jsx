@@ -1,4 +1,4 @@
-// route: /reset
+// src/pages/ResetPassword.jsx
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
@@ -39,18 +39,41 @@ export default function ResetPasswordPage() {
 
   if (stage === 'verifying') return <Shell><p>Verifying link…</p></Shell>;
   if (stage === 'invalid')  return <Shell><h2>Invalid or expired link</h2><p>Request a new reset link from the login page.</p></Shell>;
-  if (stage === 'done')     return <Shell><h2>Password updated</h2><p>You can now log in with your new password.</p><button onClick={() => navigate('/login')}>Back to Login</button></Shell>;
+  if (stage === 'done')     return <Shell><h2>Password updated</h2><p>You can now log in with your new password.</p><button onClick={() => navigate('/login')} className="mt-3 rounded-lg bg-operon-blue px-4 py-2 text-white">Back to Login</button></Shell>;
 
   return (
     <Shell>
-      <h2>Create a new password</h2>
-      <form onSubmit={submitNewPassword}>
-        <label>New password</label>
-        <input type="password" value={pwd} onChange={(e)=>setPwd(e.target.value)} autoFocus required />
-        <label>Confirm password</label>
-        <input type="password" value={pwd2} onChange={(e)=>setPwd2(e.target.value)} required />
-        {err && <div className="error">{err}</div>}
-        <button disabled={loading}>{loading ? 'Saving…' : 'Update password'}</button>
+      <h2 className="text-2xl font-semibold text-operon-charcoal mb-2">Create a new password</h2>
+      <form onSubmit={submitNewPassword} className="space-y-4">
+        <label className="block">
+          <span className="block text-sm text-gray-600 mb-1">New password</span>
+          <input
+            type="password"
+            value={pwd}
+            onChange={(e)=>setPwd(e.target.value)}
+            autoFocus
+            required
+            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-operon-blue"
+          />
+        </label>
+        <label className="block">
+          <span className="block text-sm text-gray-600 mb-1">Confirm password</span>
+          <input
+            type="password"
+            value={pwd2}
+            onChange={(e)=>setPwd2(e.target.value)}
+            required
+            className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-operon-blue"
+          />
+        </label>
+        {err && <div className="text-sm text-red-600">{err}</div>}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-lg bg-operon-blue px-4 py-2 text-white hover:bg-blue-400 disabled:opacity-60"
+        >
+          {loading ? 'Saving…' : 'Update password'}
+        </button>
       </form>
     </Shell>
   );
@@ -58,8 +81,10 @@ export default function ResetPasswordPage() {
 
 function Shell({ children }) {
   return (
-    <div className="auth-shell">
-      <div className="card">{children}</div>
+    <div className="min-h-dvh grid place-items-center bg-operon-background px-4">
+      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-black/5">
+        {children}
+      </div>
     </div>
   );
 }
