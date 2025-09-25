@@ -1,3 +1,4 @@
+// src/pages/ResetPassword.jsx
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { supabase } from '../utils/supabaseClient';
@@ -6,59 +7,52 @@ export default function ResetPasswordPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
 
-  const [stage, setStage] = useState('verifying'); // verifying | form | done | invalid
+  const [stage, setStage] = useState('verifying'); // verifying|form|done|invalid
   const [pwd, setPwd] = useState('');
   const [pwd2, setPwd2] = useState('');
   const [err, setErr] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [debug, setDebug] = useState('');
 
-  // parse token_hash from query or hash fragment
-  function getTokenHash() {
-    const qToken = params.get('token_hash');
-    if (qToken) return qToken;
-    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-    return hash.get('token_hash');
-  }
-  function getType() {
-    const q = params.get('type') || new URLSearchParams(window.location.hash.replace(/^#/, '')).get('type');
-    return q;
+  function pick(k) {
+    const fromQuery = params.get(k);
+    if (fromQuery) return fromQuery;
+    const h = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    return h.get(k);
   }
 
   useEffect(() => {
-    const type = getType();
-    const token_hash = getTokenHash();
+    const type = pick('type');
+    const token_hash = pick('token_hash');
+
+    setDebug(`href=${window.location.href} | type=${type || '-'} | token=${token_hash ? 'present' : 'missing'}`);
 
     if (type === 'recovery' && token_hash) {
       supabase.auth.verifyOtp({ type: 'recovery', token_hash })
         .then(({ error }) => setStage(error ? 'invalid' : 'form'));
-      return;
+    } else {
+      // Fallback when provider sends ?code=...
+      const code = pick('code');
+      if (code) {
+        supabase.auth.exchangeCodeForSession(window.location.href)
+          .then(({ error }) => setStage(error ? 'invalid' : 'form'));
+      } else {
+        setStage('invalid');
+      }
     }
-
-    // Fallback for providers that send ?code=... (rare in recovery)
-    const code = params.get('code');
-    if (code) {
-      supabase.auth.exchangeCodeForSession(window.location.href)
-        .then(({ error }) => setStage(error ? 'invalid' : 'form'));
-      return;
-    }
-
-    setStage('invalid');
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function submitNewPassword(e) {
     e.preventDefault();
     if (pwd.length < 8) { setErr('Use at least 8 characters.'); return; }
     if (pwd !== pwd2)   { setErr('Passwords do not match.'); return; }
-    setLoading(true); setErr(null);
     const { error } = await supabase.auth.updateUser({ password: pwd });
-    setLoading(false);
     if (error) setErr(error.message);
     else setStage('done');
   }
 
   if (stage === 'verifying') return <Shell><p>Verifying link…</p></Shell>;
-  if (stage === 'invalid')  return <Shell><Notice title="Invalid or expired link" text="Request a new reset link from the login page." /></Shell>;
+  if (stage === 'invalid')  return <Shell><Notice title="Invalid or expired link" text="Request a new reset link from the login page." debug={debug} /></Shell>;
   if (stage === 'done')     return <Shell><Notice title="Password updated" text="You can now log in with your new password." button={{label:'Back to Login', onClick:()=>navigate('/login')}} /></Shell>;
 
   return (
@@ -76,9 +70,9 @@ export default function ResetPasswordPage() {
                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-operon-blue"/>
         </label>
         {err && <div className="text-sm text-red-600">{err}</div>}
-        <button type="submit" disabled={loading}
-                className="w-full rounded-lg bg-operon-blue px-4 py-2 text-white hover:bg-blue-400 disabled:opacity-60">
-          {loading ? 'Saving…' : 'Update password'}
+        <button type="submit"
+                className="w-full rounded-lg bg-operon-blue px-4 py-2 text-white hover:bg-blue-400">
+          Update password
         </button>
       </form>
     </Shell>
@@ -95,11 +89,12 @@ function Shell({ children }) {
   );
 }
 
-function Notice({ title, text, button }) {
+function Notice({ title, text, button, debug }) {
   return (
     <div className="rounded-xl border bg-white px-5 py-4 shadow">
       <div className="text-base font-medium text-operon-charcoal">{title}</div>
       <div className="text-sm text-gray-600 mt-1">{text}</div>
+      {debug && <div className="mt-3 text-[11px] text-gray-400 break-all">{debug}</div>}
       {button && (
         <button onClick={button.onClick}
                 className="mt-3 rounded-lg bg-operon-blue px-4 py-2 text-white hover:bg-blue-400">

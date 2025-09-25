@@ -20,7 +20,7 @@ import TermsAndConditions from './pages/TermsAndConditions';
 import OnboardingPage from './pages/OnboardingPage';
 import PropertyPicker from './pages/PropertyPicker';
 import Help from './pages/Help';
-import ResetPasswordPage from './pages/ResetPassword'; // ← NEW
+import ResetPasswordPage from './pages/ResetPassword';
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
 import Navbar from './components/Navbar';
@@ -29,8 +29,8 @@ import { AnimatePresence } from 'framer-motion';
 
 function AppContent({ session }) {
   const location = useLocation();
+  const isReset = location.pathname.startsWith('/reset');
 
-  // Pages that keep the marketing footer visible
   const publicPaths = [
     '/about',
     '/learn-more',
@@ -39,17 +39,17 @@ function AppContent({ session }) {
     '/privacy-policy',
     '/terms',
     '/help'
-    // Intentionally NOT including /reset so the reset view stays distraction-free
+    // keep /reset excluded for a distraction-free recovery screen
   ];
   const showFooter = publicPaths.includes(location.pathname);
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar />
+      {!isReset && <Navbar />}
       <main className="flex-1 w-full px-4">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
-            {/* Public routes */}
+            {/* Public */}
             <Route path="/about" element={<About />} />
             <Route path="/learn-more" element={<LearnMore />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -63,7 +63,6 @@ function AppContent({ session }) {
               path="/signup"
               element={session ? <Navigate to="/property-picker" replace /> : <SignUp />}
             />
-
             {/* Password reset (public) */}
             <Route path="/reset" element={<ResetPasswordPage />} />
 
@@ -117,9 +116,7 @@ function AppContent({ session }) {
             <Route
               path="*"
               element={
-                session
-                  ? <Navigate to="/property-picker" replace />
-                  : <Navigate to="/login" replace />
+                session ? <Navigate to="/property-picker" replace /> : <Navigate to="/login" replace />
               }
             />
           </Routes>
