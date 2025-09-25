@@ -7,100 +7,183 @@ export default function ResetPasswordPage() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
 
-  const [stage, setStage] = useState('verifying'); // verifying|form|done|invalid
+  const [stage, setStage] = useState('verifying'); // verifying | form | done | invalid
   const [pwd, setPwd] = useState('');
   const [pwd2, setPwd2] = useState('');
   const [err, setErr] = useState(null);
-  const [debug, setDebug] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  function pick(k) {
-    const fromQuery = params.get(k);
-    if (fromQuery) return fromQuery;
-    const h = new URLSearchParams(window.location.hash.replace(/^#/, ''));
-    return h.get(k);
-  }
+  // read from ?query or #hash
+  const pick = (k) => params.get(k) || new URLSearchParams(location.hash.replace(/^#/, '')).get(k);
 
   useEffect(() => {
     const type = pick('type');
     const token_hash = pick('token_hash');
 
-    setDebug(`href=${window.location.href} | type=${type || '-'} | token=${token_hash ? 'present' : 'missing'}`);
-
     if (type === 'recovery' && token_hash) {
       supabase.auth.verifyOtp({ type: 'recovery', token_hash })
         .then(({ error }) => setStage(error ? 'invalid' : 'form'));
-    } else {
-      // Fallback when provider sends ?code=...
-      const code = pick('code');
-      if (code) {
-        supabase.auth.exchangeCodeForSession(window.location.href)
-          .then(({ error }) => setStage(error ? 'invalid' : 'form'));
-      } else {
-        setStage('invalid');
-      }
+      return;
     }
+
+    const code = pick('code');
+    if (code) {
+      supabase.auth.exchangeCodeForSession(window.location.href)
+        .then(({ error }) => setStage(error ? 'invalid' : 'form'));
+      return;
+    }
+
+    setStage('invalid');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function submitNewPassword(e) {
+  async function submit(e) {
     e.preventDefault();
     if (pwd.length < 8) { setErr('Use at least 8 characters.'); return; }
     if (pwd !== pwd2)   { setErr('Passwords do not match.'); return; }
+    setErr(null);
+    setSaving(true);
     const { error } = await supabase.auth.updateUser({ password: pwd });
+    setSaving(false);
     if (error) setErr(error.message);
     else setStage('done');
   }
 
-  if (stage === 'verifying') return <Shell><p>Verifying link…</p></Shell>;
-  if (stage === 'invalid')  return <Shell><Notice title="Invalid or expired link" text="Request a new reset link from the login page." debug={debug} /></Shell>;
-  if (stage === 'done')     return <Shell><Notice title="Password updated" text="You can now log in with your new password." button={{label:'Back to Login', onClick:()=>navigate('/login')}} /></Shell>;
-
   return (
-    <Shell>
-      <h2 className="text-2xl font-semibold text-operon-charcoal mb-2">Create a new password</h2>
-      <form onSubmit={submitNewPassword} className="space-y-4">
-        <label className="block">
-          <span className="block text-sm text-gray-600 mb-1">New password</span>
-          <input type="password" value={pwd} onChange={(e)=>setPwd(e.target.value)} autoFocus required
-                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-operon-blue"/>
-        </label>
-        <label className="block">
-          <span className="block text-sm text-gray-600 mb-1">Confirm password</span>
-          <input type="password" value={pwd2} onChange={(e)=>setPwd2(e.target.value)} required
-                 className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-operon-blue"/>
-        </label>
-        {err && <div className="text-sm text-red-600">{err}</div>}
-        <button type="submit"
-                className="w-full rounded-lg bg-operon-blue px-4 py-2 text-white hover:bg-blue-400">
-          Update password
-        </button>
-      </form>
-    </Shell>
-  );
-}
+    <main className="relative min-h-dvh overflow-x-clip bg-operon-background pt-24 px-4">
+      {/* background accents */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -top-48 -left-40 h-[34rem] w-[34rem] rounded-full blur-3xl"
+        style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-56 -right-40 h-[38rem] w-[38rem] rounded-full blur-[90px]"
+        style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
+      />
 
-function Shell({ children }) {
-  return (
-    <div className="min-h-dvh grid place-items-center bg-operon-background px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl ring-1 ring-black/5">
-        {children}
+      <div className="mx-auto max-w-7xl">
+        {/* Title */}
+        <div className="mb-6 text-center">
+          <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight text-operon-charcoal">
+            Secure{' '}
+            <span className="bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent">
+              password reset
+            </span>
+          </h1>
+          <p className="mt-3 text-sm text-operon-muted">
+            Follow the steps below to set a new password.
+          </p>
+        </div>
+
+        {/* Card with glow */}
+        <section className="mx-auto max-w-md">
+          <div className="relative">
+            <div
+              aria-hidden="true"
+              className="absolute -inset-0.5 rounded-2xl blur opacity-70"
+              style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.35), rgba(34,211,238,.25))' }}
+            />
+            <div className="relative rounded-2xl bg-white p-6 sm:p-8 shadow-2xl ring-1 ring-black/5">
+              {stage === 'verifying' && (
+                <StateCard title="Verifying link…" subtitle="One moment while we check your request." />
+              )}
+
+              {stage === 'invalid' && (
+                <StateCard
+                  title="Invalid or expired link"
+                  subtitle="Request a new reset link from the login page."
+                  actions={
+                    <button
+                      onClick={() => navigate('/login')}
+                      className="mt-3 w-full rounded-lg bg-operon-blue px-4 py-2 text-white hover:bg-blue-400"
+                    >
+                      Back to Login
+                    </button>
+                  }
+                />
+              )}
+
+              {stage === 'done' && (
+                <StateCard
+                  title="Password updated"
+                  subtitle="You can now log in with your new password."
+                  actions={
+                    <button
+                      onClick={() => navigate('/login')}
+                      className="mt-3 w-full rounded-lg bg-operon-blue px-4 py-2 text-white hover:bg-blue-400"
+                    >
+                      Back to Login
+                    </button>
+                  }
+                />
+              )}
+
+              {stage === 'form' && (
+                <>
+                  <h2 className="text-2xl font-semibold text-operon-charcoal mb-2 text-center">
+                    Create a new password
+                  </h2>
+
+                  <form onSubmit={submit} className="space-y-4">
+                    <label className="block">
+                      <span className="mb-1 block text-sm text-gray-600">New password</span>
+                      <input
+                        type="password"
+                        value={pwd}
+                        onChange={(e) => setPwd(e.target.value)}
+                        autoFocus
+                        required
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-operon-blue"
+                      />
+                    </label>
+
+                    <label className="block">
+                      <span className="mb-1 block text-sm text-gray-600">Confirm password</span>
+                      <input
+                        type="password"
+                        value={pwd2}
+                        onChange={(e) => setPwd2(e.target.value)}
+                        required
+                        className="w-full rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-operon-blue"
+                      />
+                    </label>
+
+                    <p className="text-xs text-gray-500">
+                      Use at least 8 characters. Avoid common or reused passwords.
+                    </p>
+
+                    {err && (
+                      <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+                        {err}
+                      </div>
+                    )}
+
+                    <button
+                      type="submit"
+                      disabled={saving}
+                      className="w-full rounded-lg bg-operon-blue px-4 py-2 font-medium text-white hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {saving ? 'Saving…' : 'Update password'}
+                    </button>
+                  </form>
+                </>
+              )}
+            </div>
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
 
-function Notice({ title, text, button, debug }) {
+function StateCard({ title, subtitle, actions }) {
   return (
-    <div className="rounded-xl border bg-white px-5 py-4 shadow">
-      <div className="text-base font-medium text-operon-charcoal">{title}</div>
-      <div className="text-sm text-gray-600 mt-1">{text}</div>
-      {debug && <div className="mt-3 text-[11px] text-gray-400 break-all">{debug}</div>}
-      {button && (
-        <button onClick={button.onClick}
-                className="mt-3 rounded-lg bg-operon-blue px-4 py-2 text-white hover:bg-blue-400">
-          {button.label}
-        </button>
-      )}
+    <div className="text-center">
+      <div className="text-lg font-medium text-operon-charcoal">{title}</div>
+      <div className="mt-1 text-sm text-gray-600">{subtitle}</div>
+      {actions}
     </div>
   );
 }
