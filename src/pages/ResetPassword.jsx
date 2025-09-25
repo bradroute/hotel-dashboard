@@ -13,7 +13,7 @@ export default function ResetPasswordPage() {
   const [err, setErr] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  // Pull values from ?query or #hash (eslint: use window.location)
+  // Read from ?query or #hash (eslint: use window.location)
   const qs = new URLSearchParams(window.location.search);
   const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
   const pick = (k) => qs.get(k) || hash.get(k);
@@ -56,6 +56,11 @@ export default function ResetPasswordPage() {
 
     if (error) setErr(error.message);
     else setStage('done');
+  }
+
+  async function goToLogin() {
+    try { await supabase.auth.signOut(); } catch (_) {}
+    navigate('/login', { replace: true });
   }
 
   return (
@@ -103,7 +108,7 @@ export default function ResetPasswordPage() {
                   subtitle="Request a new reset link from the login page."
                   actions={
                     <button
-                      onClick={() => navigate('/login')}
+                      onClick={goToLogin}
                       className="mt-3 w-full rounded-lg bg-operon-blue px-4 py-2 text-white hover:bg-blue-400"
                     >
                       Back to Login
@@ -118,7 +123,7 @@ export default function ResetPasswordPage() {
                   subtitle="You can now log in with your new password."
                   actions={
                     <button
-                      onClick={() => navigate('/login')}
+                      onClick={goToLogin}
                       className="mt-3 w-full rounded-lg bg-operon-blue px-4 py-2 text-white hover:bg-blue-400"
                     >
                       Go to Login
