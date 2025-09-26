@@ -12,7 +12,7 @@ import {
 import { supabase } from '../utils/supabaseClient';
 import FiltersBar from '../components/FiltersBar';
 import RequestsTable from '../components/RequestsTable';
-import RequestHistory from '../components/RequestHistory'; // ← NEW
+import RequestHistory from '../components/RequestHistory';
 import styles from '../styles/Dashboard.module.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BadgeAlert, BadgeCheck, RefreshCw } from 'lucide-react';
@@ -20,7 +20,7 @@ import { BadgeAlert, BadgeCheck, RefreshCw } from 'lucide-react';
 const pageVariants = {
   initial: { opacity: 0, y: 16 },
   animate: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
-  exit:    { opacity: 0, y: -16, transition: { duration: 0.18 } },
+  exit: { opacity: 0, y: -16, transition: { duration: 0.18 } },
 };
 
 export default function Dashboard() {
@@ -164,37 +164,49 @@ export default function Dashboard() {
 
   // Filtering, search, sort
   const filtered = useMemo(() => {
-  let list = [...requests];
-  if (showActiveOnly) list = list.filter((r) => !r.completed);
-  if (unacknowledgedOnly) list = list.filter((r) => !r.acknowledged);
-  if (selectedDepartment !== 'All') list = list.filter((r) => r.department === selectedDepartment);
-  if (selectedPriority !== 'All')
-    list = list.filter(
-      (r) => (r.priority || '').toLowerCase() === selectedPriority.toLowerCase()
+    let list = [...requests];
+
+    // Unacknowledged queue takes precedence: actionable = not acknowledged and not completed
+    if (unacknowledgedOnly) {
+      list = list.filter((r) => !r.acknowledged && !r.completed);
+    } else if (showActiveOnly) {
+      // Otherwise show only active if toggled
+      list = list.filter((r) => !r.completed);
+    }
+    // else include all
+
+    if (selectedDepartment !== 'All') {
+      list = list.filter((r) => r.department === selectedDepartment);
+    }
+    if (selectedPriority !== 'All') {
+      list = list.filter(
+        (r) => (r.priority || '').toLowerCase() === selectedPriority.toLowerCase()
+      );
+    }
+    if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
+      list = list.filter(
+        (r) =>
+          (r.message || '').toLowerCase().includes(q) ||
+          (r.from_phone && r.from_phone.includes(searchTerm)) ||
+          (r.room_number && r.room_number.toString().includes(searchTerm))
+      );
+    }
+
+    return list.sort((a, b) =>
+      sortOrder === 'oldest'
+        ? new Date(a.created_at) - new Date(b.created_at)
+        : new Date(b.created_at) - new Date(a.created_at)
     );
-  if (searchTerm.trim()) {
-    const q = searchTerm.toLowerCase();
-    list = list.filter(
-      (r) =>
-        (r.message || '').toLowerCase().includes(q) ||
-        (r.from_phone && r.from_phone.includes(searchTerm)) ||
-        (r.room_number && r.room_number.toString().includes(searchTerm))
-    );
-  }
-  return list.sort((a, b) =>
-    sortOrder === 'oldest'
-      ? new Date(a.created_at) - new Date(b.created_at)
-      : new Date(b.created_at) - new Date(a.created_at)
-  );
-}, [
-  requests,
-  showActiveOnly,
-  unacknowledgedOnly,
-  selectedDepartment,
-  selectedPriority,
-  searchTerm,
-  sortOrder,
-]);
+  }, [
+    requests,
+    showActiveOnly,
+    unacknowledgedOnly,
+    selectedDepartment,
+    selectedPriority,
+    searchTerm,
+    sortOrder,
+  ]);
 
   if (!hotelId) {
     return <div className="min-h-dvh pt-24 bg-operon-background px-6">No property selected.</div>;
@@ -203,7 +215,7 @@ export default function Dashboard() {
     return (
       <div className="min-h-dvh pt-24 bg-operon-background px-6">
         <div className="max-w-5xl mx-auto">
-          <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 p-4">
+          <div className="rounded-xl border border-red-2 00 bg-red-50 text-red-700 p-4">
             <div className="font-semibold">Something went wrong</div>
             <div className="text-sm mt-1">{error}</div>
           </div>
@@ -266,7 +278,10 @@ export default function Dashboard() {
                 { label: 'Today', value: metrics.today },
                 { label: 'All', value: metrics.total },
               ].map(({ label, value }) => (
-                <div key={label} className="rounded-xl bg-white shadow-lg ring-1 ring-black/5 p-4 text-center relative">
+                <div
+                  key={label}
+                  className="rounded-xl bg-white shadow-lg ring-1 ring-black/5 p-4 text-center relative"
+                >
                   <div className="text-2xl font-bold text-operon-charcoal">{value}</div>
                   <div className="text-xs text-gray-500 mt-1">{label}</div>
                 </div>
@@ -305,7 +320,7 @@ export default function Dashboard() {
                 {loading ? (
                   <div className="p-6">
                     <div className="space-y-3">
-                      {[0,1,2,3,4].map(i => (
+                      {[0, 1, 2, 3, 4].map((i) => (
                         <div key={i} className="h-12 rounded bg-gray-100 animate-pulse" />
                       ))}
                     </div>
@@ -313,15 +328,23 @@ export default function Dashboard() {
                 ) : (
                   <RequestsTable
                     requests={filtered}
-                    onAcknowledge={async (id) => { await acknowledgeRequest(id, hotelId); fetchRequests(); }}
-                    onComplete={async (id) => { await completeRequest(id, hotelId); fetchRequests(); }}
+                    onAcknowledge={async (id) => {
+                      await acknowledgeRequest(id, hotelId);
+                      fetchRequests();
+                    }}
+                    onComplete={async (id) => {
+                      await completeRequest(id, hotelId);
+                      fetchRequests();
+                    }}
                     onRowClick={(id) => navigate(`/request/${id}`)}
                     onOpenNotes={openNotesModal}
                     onOpenDetails={openDetailsModal}
                   />
                 )}
                 {!loading && filtered.length === 0 && (
-                  <div className="p-10 text-center text-sm text-gray-500">No requests match your filters.</div>
+                  <div className="p-10 text-center text-sm text-gray-500">
+                    No requests match your filters.
+                  </div>
                 )}
               </div>
             </div>
@@ -354,7 +377,9 @@ export default function Dashboard() {
                 <div
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-60"
-                  style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.30), rgba(34,211,238,.22))' }}
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(59,130,246,.30), rgba(34,211,238,.22))',
+                  }}
                 />
                 <div className="relative bg-white p-6 rounded-2xl shadow-2xl min-h-[320px]">
                   <div className="flex justify-between items-center mb-4">
@@ -370,9 +395,14 @@ export default function Dashboard() {
                   <div className="space-y-2 mb-4 max-h-64 overflow-y-auto">
                     {notesLoading && <p className="text-gray-600">Loading…</p>}
                     {notesError && <p className="text-red-600">{notesError}</p>}
-                    {!notesLoading && notes.length === 0 && <p className="text-gray-500">No notes yet.</p>}
+                    {!notesLoading && notes.length === 0 && (
+                      <p className="text-gray-500">No notes yet.</p>
+                    )}
                     {notes.map((note) => (
-                      <div key={note.id} className="flex justify-between items-center bg-gray-100 p-2 rounded">
+                      <div
+                        key={note.id}
+                        className="flex justify-between items-center bg-gray-100 p-2 rounded"
+                      >
                         <span className="text-operon-charcoal">{note.content}</span>
                         <button
                           onClick={() => handleDeleteNote(note.id)}
@@ -406,7 +436,7 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* Details Modal (now includes History) */}
+      {/* Details Modal (includes History) */}
       <AnimatePresence>
         {detailsModalOpen && detailsRequest && (
           <>
@@ -431,14 +461,18 @@ export default function Dashboard() {
                 <div
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-60"
-                  style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.30), rgba(34,211,238,.22))' }}
+                  style={{
+                    background: 'linear-gradient(135deg, rgba(59,130,246,.30), rgba(34,211,238,.22))',
+                  }}
                 />
                 <div className="relative bg-white p-6 rounded-2xl shadow-2xl min-h-[360px]">
                   <div className="flex justify-between items-center mb-4">
                     <div>
                       <h2 className="text-xl font-semibold text-operon-charcoal">Request Details</h2>
                       <div className="text-xs text-gray-500">
-                        #{detailsRequest.id} • {new Date(detailsRequest.created_at).toLocaleString()} • Room {detailsRequest.room_number || '—'}
+                        #{detailsRequest.id} •{' '}
+                        {new Date(detailsRequest.created_at).toLocaleString()} • Room{' '}
+                        {detailsRequest.room_number || '—'}
                       </div>
                     </div>
                     <button
@@ -465,9 +499,11 @@ export default function Dashboard() {
                         <span className="font-semibold">Sentiment: </span>
                         <span
                           className={
-                            detailsRequest.sentiment === 'positive' ? 'text-green-600'
-                            : detailsRequest.sentiment === 'negative' ? 'text-red-600'
-                            : 'text-gray-700'
+                            detailsRequest.sentiment === 'positive'
+                              ? 'text-green-600'
+                              : detailsRequest.sentiment === 'negative'
+                              ? 'text-red-600'
+                              : 'text-gray-700'
                           }
                         >
                           {detailsRequest.sentiment || <em>N/A</em>}
@@ -477,9 +513,11 @@ export default function Dashboard() {
                         <span className="font-semibold">AI Priority: </span>
                         <span
                           className={
-                            (detailsRequest.priority || '').toLowerCase() === 'high' ? 'text-red-600'
-                            : (detailsRequest.priority || '').toLowerCase() === 'low' ? 'text-yellow-500'
-                            : 'text-gray-700'
+                            (detailsRequest.priority || '').toLowerCase() === 'high'
+                              ? 'text-red-600'
+                              : (detailsRequest.priority || '').toLowerCase() === 'low'
+                              ? 'text-yellow-500'
+                              : 'text-gray-700'
                           }
                         >
                           {detailsRequest.priority || <em>N/A</em>}
@@ -490,11 +528,13 @@ export default function Dashboard() {
                         <span>
                           {detailsRequest.needs_attention ? (
                             <span className="inline-flex items-center text-red-600 font-bold">
-                              <BadgeAlert className="w-4 h-4 mr-1" />Yes
+                              <BadgeAlert className="w-4 h-4 mr-1" />
+                              Yes
                             </span>
                           ) : (
                             <span className="inline-flex items-center text-green-600 font-bold">
-                              <BadgeCheck className="w-4 h-4 mr-1" />No
+                              <BadgeCheck className="w-4 h-4 mr-1" />
+                              No
                             </span>
                           )}
                         </span>
