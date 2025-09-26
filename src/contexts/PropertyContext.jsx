@@ -5,24 +5,22 @@ import { supabase } from '../utils/supabaseClient';
 export const PropertyContext = createContext();
 
 export function PropertyProvider({ children }) {
-  const [properties, setProperties]       = useState([]);
-  const [currentProperty, setCurrent]     = useState(null);
-  const [loading, setLoading]             = useState(true);
-  const [error, setError]                 = useState(null);
-  const [session, setSession]             = useState(null);
+  const [properties, setProperties]   = useState([]);
+  const [currentProperty, setCurrent] = useState(null); // no auto-select
+  const [loading, setLoading]         = useState(true);
+  const [error, setError]             = useState(null);
+  const [session, setSession]         = useState(null);
 
-  // 1. Fetch initial session & subscribe to changes
+  // 1) Session bootstrap
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
-    });
+    supabase.auth.getSession().then(({ data }) => setSession(data.session || null));
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, newSession) => setSession(newSession)
+      (_evt, s) => setSession(s || null)
     );
     return () => subscription.unsubscribe();
   }, []);
 
-  // 2. Whenever session is ready, load properties and update profile if needed
+  // 2) Load properties for the signed-in user
   useEffect(() => {
     if (!session?.user) {
       setProperties([]);
@@ -31,20 +29,20 @@ export function PropertyProvider({ children }) {
       return;
     }
 
-    const refreshProperties = async () => {
+    const refresh = async () => {
       setLoading(true);
       setError(null);
       try {
         const userId = session.user.id;
 
-        // 1) Fetch all properties owned by this user
+        // Owned properties
         const { data: owned = [], error: ownedErr } = await supabase
           .from('hotels')
           .select('id,name,type')
           .eq('profile_id', userId);
         if (ownedErr) throw ownedErr;
 
-        // 2) Fetch their saved hotel_id from profile
+        // Optional: bring in a saved hotel_id if it’s *not* owned (shared, legacy, etc.)
         const { data: profile, error: profErr } = await supabase
           .from('profiles')
           .select('hotel_id')
@@ -53,8 +51,6 @@ export function PropertyProvider({ children }) {
         if (profErr) throw profErr;
 
         let merged = [...owned];
-
-        // 3) If profile.hotel_id isn't in owned list, fetch and merge it in
         if (profile?.hotel_id && !owned.find(p => p.id === profile.hotel_id)) {
           const { data: extra, error: extraErr } = await supabase
             .from('hotels')
@@ -67,65 +63,50 @@ export function PropertyProvider({ children }) {
 
         setProperties(merged);
 
-        // 4) Pick "current": profile's saved, or first property if not set
-        let initial =
-          merged.find(p => p.id === profile?.hotel_id) ||
-          merged[0] ||
-          null;
-
-        // If user has properties but no hotel_id saved, auto-save their first as default
-        if (merged.length === 1 && !profile?.hotel_id) {
-          // Auto-set hotel_id in profile
-          await supabase
-            .from('profiles')
-            .update({ hotel_id: merged[0].id })
-            .eq('id', userId);
-          initial = merged[0];
-        }
-
-        setCurrent(initial);
+        // IMPORTANT: do NOT auto-select here.
+        // Keep currentProperty as-is; user chooses in PropertyPicker.
       } catch (err) {
-        console.error('PropertyContext.refreshProperties error:', err);
-        setError(err.message);
+        console.error('PropertyContext.refresh error:', err);
+        setError(err.message || 'Failed to load properties');
       } finally {
         setLoading(false);
       }
     };
 
-    refreshProperties();
+    refresh();
   }, [session]);
 
-  // 3. Switch active property (and update profile.hotel_id)
-  const switchProperty = async property => {
+  // 3) Explicit switch (user action). Also persists to profile.
+  const switchProperty = async (property) => {
     setCurrent(property);
     try {
       await supabase
         .from('profiles')
-        .update({ hotel_id: property.id })
+        .update({ hotel_id: property?.id ?? null })
         .eq('id', session.user.id);
     } catch (err) {
       console.error('PropertyContext.switchProperty error:', err);
     }
   };
 
-  // 4. Add new property and set as active
-  const addProperty = async data => {
+  // 4) Create property (then make it current)
+  const addProperty = async (data) => {
     setLoading(true);
     setError(null);
     try {
-      const hotelPayload = { profile_id: session.user.id, ...data };
+      const payload = { profile_id: session.user.id, ...data };
       const { data: newHotel, error: insertErr } = await supabase
         .from('hotels')
-        .insert([hotelPayload])
+        .insert([payload])
         .select('id,name,type')
         .single();
       if (insertErr) throw insertErr;
 
-      // Switch to new property (will update hotel_id in profile too)
       await switchProperty(newHotel);
+      // Caller can navigate to /dashboard/:id
     } catch (err) {
       console.error('PropertyContext.addProperty error:', err);
-      setError(err.message);
+      setError(err.message || 'Failed to add property');
     } finally {
       setLoading(false);
     }
@@ -135,11 +116,11 @@ export function PropertyProvider({ children }) {
     <PropertyContext.Provider
       value={{
         properties,
-        currentProperty,
+        currentProperty,   // null until user selects
         loading,
         error,
         switchProperty,
-        addProperty
+        addProperty,
       }}
     >
       {children}
