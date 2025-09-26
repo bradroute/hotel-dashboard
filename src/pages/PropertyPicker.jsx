@@ -1,4 +1,5 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+// src/pages/PropertyPicker.jsx
+import React, { useContext, useMemo, useState, useEffect } from 'react';
 import { PropertyContext } from '../contexts/PropertyContext';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,17 +18,16 @@ export default function PropertyPicker() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [query, setQuery] = useState('');
 
+  // Do not auto-select any property. Only redirect if the user has none.
   useEffect(() => {
-    if (!loading && properties.length === 1) handleSelect(properties[0]);
-    if (!loading && properties.length === 0) navigate('/onboarding');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [properties, loading]);
+    if (!loading && properties.length === 0) navigate('/onboarding', { replace: true });
+  }, [loading, properties.length, navigate]);
 
   async function handleSelect(property) {
     setSelectingId(property.id);
     try {
-      await switchProperty(property);
-      navigate(`/dashboard/${property.id}`);
+      await switchProperty(property);           // persists to profile
+      navigate(`/dashboard/${property.id}`, { replace: true });
     } finally {
       setSelectingId(null);
     }
@@ -37,7 +37,7 @@ export default function PropertyPicker() {
     const q = query.trim().toLowerCase();
     if (!q) return properties;
     return properties.filter(
-      p =>
+      (p) =>
         p.name?.toLowerCase().includes(q) ||
         p.type?.toLowerCase().includes(q) ||
         String(p.id)?.toLowerCase().includes(q)
@@ -47,7 +47,7 @@ export default function PropertyPicker() {
   return (
     <>
       <main className="relative min-h-screen pt-24 overflow-hidden bg-operon-background">
-        {/* background accents (subtle, no hero text) */}
+        {/* background accents */}
         <div
           aria-hidden="true"
           className="pointer-events-none absolute -top-48 -left-40 h-[34rem] w-[34rem] rounded-full blur-3xl"
@@ -60,7 +60,6 @@ export default function PropertyPicker() {
         />
 
         <div className="max-w-5xl mx-auto px-4 sm:px-6">
-          {/* Title only */}
           <motion.div variants={fade} initial="initial" animate="animate" className="mb-6">
             <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight text-operon-charcoal">
               Select your{' '}
@@ -70,10 +69,8 @@ export default function PropertyPicker() {
             </h1>
           </motion.div>
 
-          {/* Glassy picker card */}
           <motion.section variants={fade} initial="initial" animate="animate" transition={{ delay: 0.05 }}>
             <div className="relative">
-              {/* glow */}
               <div
                 aria-hidden="true"
                 className="absolute -inset-0.5 rounded-2xl blur opacity-70"
@@ -83,12 +80,11 @@ export default function PropertyPicker() {
                 <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
                   <h2 className="text-xl font-semibold text-operon-charcoal">Your properties</h2>
 
-                  {/* Search */}
                   <label className="relative w-full sm:w-64">
                     <input
                       type="text"
                       value={query}
-                      onChange={e => setQuery(e.target.value)}
+                      onChange={(e) => setQuery(e.target.value)}
                       placeholder="Search by name or type"
                       className="w-full bg-white border border-gray-300 rounded-lg px-9 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-operon-blue"
                     />
@@ -101,11 +97,10 @@ export default function PropertyPicker() {
                   </label>
                 </div>
 
-                {/* List */}
                 <div className="mt-5">
                   {loading ? (
                     <ul className="space-y-3">
-                      {[0, 1, 2].map(i => (
+                      {[0, 1, 2].map((i) => (
                         <li key={i} className="animate-pulse rounded-lg border border-gray-200 p-4">
                           <div className="h-4 w-40 bg-gray-200 rounded mb-2" />
                           <div className="h-3 w-24 bg-gray-200 rounded" />
@@ -114,7 +109,7 @@ export default function PropertyPicker() {
                     </ul>
                   ) : (
                     <ul className="space-y-3">
-                      {filtered.map(prop => (
+                      {filtered.map((prop) => (
                         <li
                           key={prop.id}
                           className="rounded-lg border border-gray-200 p-4 flex items-center justify-between hover:shadow-md hover:-translate-y-[1px] transition"
@@ -149,7 +144,6 @@ export default function PropertyPicker() {
                           </button>
                         </li>
                       ))}
-
                       {!loading && filtered.length === 0 && (
                         <li className="text-sm text-gray-500 border border-dashed rounded-lg p-6 text-center">
                           No matches for “{query}”. Try a different search or add a property.
@@ -159,7 +153,6 @@ export default function PropertyPicker() {
                   )}
                 </div>
 
-                {/* Add property CTA */}
                 <div className="mt-6 flex justify-center">
                   <button
                     onClick={() => setShowAddModal(true)}
@@ -177,7 +170,6 @@ export default function PropertyPicker() {
         </div>
       </main>
 
-      {/* Modal */}
       <AnimatePresence>
         {showAddModal && (
           <motion.div

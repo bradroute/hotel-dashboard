@@ -18,27 +18,35 @@ export default function Navbar() {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  // Property context
-  const { properties, currentProperty, switchProperty, loading: propLoading } = useContext(PropertyContext);
+  const { properties, currentProperty, switchProperty, loading: propLoading } =
+    useContext(PropertyContext);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => setSession(session)
-    );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => setSession(session));
     return () => subscription.unsubscribe();
   }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate('/login');
+    navigate('/login', { replace: true });
   };
 
-  const handlePropertyChange = async e => {
-    const selected = properties.find(p => p.id === e.target.value);
-    if (selected) {
-      await switchProperty(selected);
-      navigate(`/dashboard/${selected.id}`);
+  const handlePropertyChange = async (e) => {
+    const id = e.target.value || null;
+    if (!id) return;
+    if (currentProperty?.id === id) return;
+
+    const selected = properties.find((p) => p.id === id);
+    if (!selected) return;
+
+    await switchProperty(selected);
+
+    // Do not auto-navigate while on the picker; the picker handles its own navigation.
+    if (!currentPath.startsWith('/property-picker')) {
+      navigate(`/dashboard/${selected.id}`, { replace: true });
     }
   };
 
@@ -58,16 +66,19 @@ export default function Navbar() {
             <span className="text-xl font-bold text-operon-charcoal hidden sm:block">Operon</span>
           </Link>
 
-          {/* Property selector dropdown */}
+          {/* Property selector (purely user-driven; no auto-select) */}
           {session && !propLoading && properties?.length > 0 && (
             <select
               value={currentProperty?.id || ''}
               onChange={handlePropertyChange}
               className="border rounded px-2 py-1 text-sm"
             >
-              {properties.map(p => (
+              <option value="" disabled>
+                Select property…
+              </option>
+              {properties.map((p) => (
                 <option key={p.id} value={p.id}>
-                  {p.name} ({p.type})
+                  {p.name} ({p.type || 'hotel'})
                 </option>
               ))}
             </select>
@@ -75,7 +86,6 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-6">
-          {/* Only show About/Learn More if NOT logged in */}
           {!session && (
             <>
               <Link
@@ -93,7 +103,6 @@ export default function Navbar() {
             </>
           )}
 
-          {/* Show dashboard, analytics, settings, help for logged in user */}
           {session && currentProperty?.id && (
             <>
               {currentPath !== `/dashboard/${currentProperty.id}` && (
