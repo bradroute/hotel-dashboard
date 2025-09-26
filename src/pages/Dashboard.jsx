@@ -1,3 +1,4 @@
+// src/pages/Dashboard.jsx
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -11,6 +12,7 @@ import {
 import { supabase } from '../utils/supabaseClient';
 import FiltersBar from '../components/FiltersBar';
 import RequestsTable from '../components/RequestsTable';
+import RequestHistory from '../components/RequestHistory'; // ← NEW
 import styles from '../styles/Dashboard.module.css';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BadgeAlert, BadgeCheck, RefreshCw } from 'lucide-react';
@@ -105,7 +107,7 @@ export default function Dashboard() {
     fetchHotel();
     fetchEnabledDepartments();
     fetchRequests();
-    const interval = setInterval(fetchRequests, 60000); // auto-refresh each minute
+    const interval = setInterval(fetchRequests, 60000);
     return () => clearInterval(interval);
   }, [hotelId, fetchHotel, fetchEnabledDepartments, fetchRequests]);
 
@@ -162,35 +164,37 @@ export default function Dashboard() {
 
   // Filtering, search, sort
   const filtered = useMemo(() => {
-    let list = [...requests];
-    if (showActiveOnly) list = list.filter((r) => !r.completed);
-    if (unacknowledgedOnly) list = list.filter((r) => !r.acknowledged);
-    if (selectedDepartment !== 'All') list = list.filter((r) => r.department === selectedDepartment);
-    if (selectedPriority !== 'All')
-      list = list.filter((r) => (r.priority || '').toLowerCase() === selectedPriority.toLowerCase());
-    if (searchTerm.trim()) {
-      const q = searchTerm.toLowerCase();
-      list = list.filter(
-        (r) =>
-          (r.message || '').toLowerCase().includes(q) ||
-          (r.from_phone && r.from_phone.includes(searchTerm)) ||
-          (r.room_number && r.room_number.toString().includes(searchTerm))
-      );
-    }
-    return list.sort((a, b) =>
-      sortOrder === 'oldest'
-        ? new Date(a.created_at) - new Date(b.created_at)
-        : new Date(b.created_at) - new Date(a.created_at)
+  let list = [...requests];
+  if (showActiveOnly) list = list.filter((r) => !r.completed);
+  if (unacknowledgedOnly) list = list.filter((r) => !r.acknowledged);
+  if (selectedDepartment !== 'All') list = list.filter((r) => r.department === selectedDepartment);
+  if (selectedPriority !== 'All')
+    list = list.filter(
+      (r) => (r.priority || '').toLowerCase() === selectedPriority.toLowerCase()
     );
-  }, [
-    requests,
-    showActiveOnly,
-    unacknowledgedOnly,
-    selectedDepartment,
-    selectedPriority,
-    searchTerm,
-    sortOrder,
-  ]);
+  if (searchTerm.trim()) {
+    const q = searchTerm.toLowerCase();
+    list = list.filter(
+      (r) =>
+        (r.message || '').toLowerCase().includes(q) ||
+        (r.from_phone && r.from_phone.includes(searchTerm)) ||
+        (r.room_number && r.room_number.toString().includes(searchTerm))
+    );
+  }
+  return list.sort((a, b) =>
+    sortOrder === 'oldest'
+      ? new Date(a.created_at) - new Date(b.created_at)
+      : new Date(b.created_at) - new Date(a.created_at)
+  );
+}, [
+  requests,
+  showActiveOnly,
+  unacknowledgedOnly,
+  selectedDepartment,
+  selectedPriority,
+  searchTerm,
+  sortOrder,
+]);
 
   if (!hotelId) {
     return <div className="min-h-dvh pt-24 bg-operon-background px-6">No property selected.</div>;
@@ -215,17 +219,12 @@ export default function Dashboard() {
         initial="initial"
         animate="animate"
         exit="exit"
-        // Match Terms: dvh height, horizontal clip only, orbs scroll with page, seam fix
         className="relative min-h-dvh bg-operon-background pt-24 overflow-x-clip"
       >
-        {/* background accents (scroll with page) */}
-        {/* Removed the global top-left orb — we place a local orb behind KPI #1 instead */}
+        {/* background accents */}
         <div
           aria-hidden="true"
-          className="
-            pointer-events-none absolute bottom-[-14rem] right-0
-            h-[38rem] w-[38rem] rounded-full blur-[90px]
-          "
+          className="pointer-events-none absolute bottom-[-14rem] right-0 h-[38rem] w-[38rem] rounded-full blur-[90px]"
           style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
         />
 
@@ -252,19 +251,12 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* KPI tiles with local orb behind the first block */}
+          {/* KPI tiles */}
           <div className="relative mb-6">
-            {/* orb behind KPI #1 */}
             <div
               aria-hidden="true"
-              className="
-                pointer-events-none absolute -z-10
-                -top-8 -left-6 sm:-top-10 sm:-left-8
-                h-72 w-72 sm:h-80 sm:w-80 rounded-full blur-3xl
-              "
-              style={{
-                background: 'radial-gradient(closest-side, rgba(59,130,246,.28), transparent)',
-              }}
+              className="pointer-events-none absolute -z-10 -top-8 -left-6 sm:-top-10 sm:-left-8 h-72 w-72 sm:h-80 sm:w-80 rounded-full blur-3xl"
+              style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.28), transparent)' }}
             />
             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-5 gap-3">
               {[
@@ -274,10 +266,7 @@ export default function Dashboard() {
                 { label: 'Today', value: metrics.today },
                 { label: 'All', value: metrics.total },
               ].map(({ label, value }) => (
-                <div
-                  key={label}
-                  className="rounded-xl bg-white shadow-lg ring-1 ring-black/5 p-4 text-center relative"
-                >
+                <div key={label} className="rounded-xl bg-white shadow-lg ring-1 ring-black/5 p-4 text-center relative">
                   <div className="text-2xl font-bold text-operon-charcoal">{value}</div>
                   <div className="text-xs text-gray-500 mt-1">{label}</div>
                 </div>
@@ -285,16 +274,14 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Glassy card: Filters + Table */}
+          {/* Filters + Table */}
           <div className="relative">
-            {/* glow ring (kept inside bounds to avoid horizontal scrollbars) */}
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-60"
               style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.30), rgba(34,211,238,.22))' }}
             />
             <div className="relative bg-white rounded-2xl shadow-2xl ring-1 ring-black/5">
-              {/* Controls */}
               <div className="p-4 sm:p-5 border-b">
                 <FiltersBar
                   showActiveOnly={showActiveOnly}
@@ -314,7 +301,6 @@ export default function Dashboard() {
                 />
               </div>
 
-              {/* Table */}
               <div className="p-0 sm:p-2">
                 {loading ? (
                   <div className="p-6">
@@ -335,9 +321,7 @@ export default function Dashboard() {
                   />
                 )}
                 {!loading && filtered.length === 0 && (
-                  <div className="p-10 text-center text-sm text-gray-500">
-                    No requests match your filters.
-                  </div>
+                  <div className="p-10 text-center text-sm text-gray-500">No requests match your filters.</div>
                 )}
               </div>
             </div>
@@ -367,7 +351,6 @@ export default function Dashboard() {
               className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
             >
               <div className="relative pointer-events-auto w-11/12 md:w-3/4 lg:w-1/2">
-                {/* glow (kept inside bounds) */}
                 <div
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-60"
@@ -423,7 +406,7 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* Details Modal */}
+      {/* Details Modal (now includes History) */}
       <AnimatePresence>
         {detailsModalOpen && detailsRequest && (
           <>
@@ -444,16 +427,20 @@ export default function Dashboard() {
               transition={{ duration: 0.18, delay: 0.05 }}
               className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none"
             >
-              <div className="relative pointer-events-auto w-11/12 md:w-3/4 lg:w-1/2">
-                {/* glow (kept inside bounds) */}
+              <div className="relative pointer-events-auto w-11/12 md:w-3/4 lg:w-3/4">
                 <div
                   aria-hidden="true"
                   className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-60"
                   style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.30), rgba(34,211,238,.22))' }}
                 />
-                <div className="relative bg-white p-6 rounded-2xl shadow-2xl min-h-[320px]">
+                <div className="relative bg-white p-6 rounded-2xl shadow-2xl min-h-[360px]">
                   <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-semibold text-operon-charcoal">Request Details</h2>
+                    <div>
+                      <h2 className="text-xl font-semibold text-operon-charcoal">Request Details</h2>
+                      <div className="text-xs text-gray-500">
+                        #{detailsRequest.id} • {new Date(detailsRequest.created_at).toLocaleString()} • Room {detailsRequest.room_number || '—'}
+                      </div>
+                    </div>
                     <button
                       onClick={() => setDetailsModalOpen(false)}
                       className="text-gray-500 hover:text-gray-800 text-2xl leading-none"
@@ -462,57 +449,69 @@ export default function Dashboard() {
                       ×
                     </button>
                   </div>
-                  <div className="mt-4 space-y-3">
-                    <div>
-                      <span className="font-semibold">Summary: </span>
-                      <span>{detailsRequest.summary || <em>No summary available</em>}</span>
+
+                  <div className="grid gap-6 md:grid-cols-2">
+                    {/* Left: static facts */}
+                    <div className="space-y-3">
+                      <div>
+                        <span className="font-semibold">Summary: </span>
+                        <span>{detailsRequest.summary || <em>No summary available</em>}</span>
+                      </div>
+                      <div>
+                        <span className="font-semibold">Root Cause: </span>
+                        <span>{detailsRequest.root_cause || <em>N/A</em>}</span>
+                      </div>
+                      <div>
+                        <span className="font-semibold">Sentiment: </span>
+                        <span
+                          className={
+                            detailsRequest.sentiment === 'positive' ? 'text-green-600'
+                            : detailsRequest.sentiment === 'negative' ? 'text-red-600'
+                            : 'text-gray-700'
+                          }
+                        >
+                          {detailsRequest.sentiment || <em>N/A</em>}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-semibold">AI Priority: </span>
+                        <span
+                          className={
+                            (detailsRequest.priority || '').toLowerCase() === 'high' ? 'text-red-600'
+                            : (detailsRequest.priority || '').toLowerCase() === 'low' ? 'text-yellow-500'
+                            : 'text-gray-700'
+                          }
+                        >
+                          {detailsRequest.priority || <em>N/A</em>}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-semibold">Needs Management Attention: </span>
+                        <span>
+                          {detailsRequest.needs_attention ? (
+                            <span className="inline-flex items-center text-red-600 font-bold">
+                              <BadgeAlert className="w-4 h-4 mr-1" />Yes
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center text-green-600 font-bold">
+                              <BadgeCheck className="w-4 h-4 mr-1" />No
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-semibold">Original Message:</span>
+                        <div className="bg-gray-100 rounded p-2 mt-1 text-gray-700">
+                          {detailsRequest.message}
+                        </div>
+                      </div>
                     </div>
+
+                    {/* Right: live audit history */}
                     <div>
-                      <span className="font-semibold">Root Cause: </span>
-                      <span>{detailsRequest.root_cause || <em>N/A</em>}</span>
-                    </div>
-                    <div>
-                      <span className="font-semibold">Sentiment: </span>
-                      <span
-                        className={
-                          detailsRequest.sentiment === 'positive' ? 'text-green-600'
-                          : detailsRequest.sentiment === 'negative' ? 'text-red-600'
-                          : 'text-gray-700'
-                        }
-                      >
-                        {detailsRequest.sentiment || <em>N/A</em>}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="font-semibold">AI Priority: </span>
-                      <span
-                        className={
-                          (detailsRequest.priority || '').toLowerCase() === 'high' ? 'text-red-600'
-                          : (detailsRequest.priority || '').toLowerCase() === 'low' ? 'text-yellow-500'
-                          : 'text-gray-700'
-                        }
-                      >
-                        {detailsRequest.priority || <em>N/A</em>}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="font-semibold">Needs Management Attention: </span>
-                      <span>
-                        {detailsRequest.needs_attention ? (
-                          <span className="inline-flex items-center text-red-600 font-bold">
-                            <BadgeAlert className="w-4 h-4 mr-1" />Yes
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center text-green-600 font-bold">
-                            <BadgeCheck className="w-4 h-4 mr-1" />No
-                          </span>
-                        )}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="font-semibold">Original Message:</span>
-                      <div className="bg-gray-100 rounded p-2 mt-1 text-gray-700">
-                        {detailsRequest.message}
+                      <h3 className="mb-2 text-base font-semibold">History</h3>
+                      <div className="max-h-80 overflow-y-auto pr-1">
+                        <RequestHistory requestId={detailsRequest.id} />
                       </div>
                     </div>
                   </div>

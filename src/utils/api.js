@@ -169,3 +169,33 @@ export async function updateEnabledDepartments(hotelId, departments) {
   }
   return res.json();
 }
+// ── History API ──────────────────────────────────────────────────────────────
+
+/**
+ * Fetch the full audit history for a request.
+ * @param {number|string} requestId
+ */
+export async function getRequestHistory(requestId) {
+  const res = await fetch(`${BASE_URL}/requests/${requestId}/history`);
+  if (!res.ok) throw new Error(`getRequestHistory failed: ${res.status}`);
+  return res.json();
+}
+
+/**
+ * Update allowed free-form fields on a request (summary, root_cause, etc.).
+ * Logs a 'field_changed' audit event in backend.
+ * @param {number|string} requestId
+ * @param {object} patch – e.g. { summary: '...', root_cause: '...' }
+ */
+export async function patchRequest(requestId, patch) {
+  const res = await fetch(`${BASE_URL}/requests/${requestId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'patchRequest failed');
+  }
+  return res.json();
+}
