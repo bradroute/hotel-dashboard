@@ -27,21 +27,32 @@ export default function LoginPage() {
 
     const { data, error: authErr } = await supabase.auth.signInWithPassword({ email, password });
     if (authErr) { setBusy(false); setError(authErr.message); return; }
+
     const userId = data.user.id;
 
+    // Fetch properties owned by this user
     const { data: hotels, error: hotelsErr } = await supabase
-      .from('hotels').select('id').eq('profile_id', userId);
-    if (hotelsErr) { setBusy(false); setError('Login succeeded but failed to fetch properties.'); return; }
+      .from('hotels')
+      .select('id')
+      .eq('profile_id', userId);
 
-    const { data: profile, error: profileErr } = await supabase
-      .from('profiles').select('hotel_id').eq('id', userId).single();
-    if (profileErr) { setBusy(false); setError('Login succeeded but failed to fetch profile.'); return; }
+    if (hotelsErr) {
+      setBusy(false);
+      setError('Login succeeded but failed to fetch properties.');
+      return;
+    }
 
-    if (!hotels || hotels.length === 0) { setBusy(false); navigate('/onboarding'); return; }
-    if (!profile?.hotel_id)           { setBusy(false); navigate('/property-picker'); return; }
+    // Routing rules:
+    // - If user has no properties → onboarding
+    // - Otherwise → ALWAYS go to property picker (do NOT auto-jump to a dashboard)
+    if (!hotels || hotels.length === 0) {
+      setBusy(false);
+      navigate('/onboarding', { replace: true });
+      return;
+    }
 
     setBusy(false);
-    navigate(`/dashboard/${profile.hotel_id}`);
+    navigate('/property-picker', { replace: true });
   }
 
   return (
