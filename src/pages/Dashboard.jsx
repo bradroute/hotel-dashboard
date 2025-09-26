@@ -92,7 +92,7 @@ export default function Dashboard() {
     setLoading(true);
     setError('');
     try {
-      const data = await getAllRequests(hotelId);
+      const data = await getAllRequests(hotelId, { showActiveOnly });
       setRequests(data || []);
       setLastRefreshed(new Date());
     } catch (err) {
@@ -100,7 +100,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [hotelId]);
+  }, [hotelId, showActiveOnly]);
 
   useEffect(() => {
     if (!hotelId) return;

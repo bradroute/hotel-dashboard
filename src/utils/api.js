@@ -9,13 +9,15 @@ const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001';
 
 /**
  * Fetch all requests, optionally scoped to a specific hotel.
- * @param {string} [hotelId] – if provided, only returns requests for that hotel
+ * @param {string} [hotelId]
+ * @param {{ showActiveOnly?: boolean }} [opts]
  */
-export async function getAllRequests(hotelId) {
+export async function getAllRequests(hotelId, opts = {}) {
+  const { showActiveOnly = true } = opts;
   const url = new URL(`${BASE_URL}/requests`);
-  if (hotelId) {
-    url.searchParams.append('hotel_id', hotelId);
-  }
+  if (hotelId) url.searchParams.append('hotel_id', hotelId);
+  // Backend defaults to active-only; pass 0 to include completed
+  url.searchParams.append('show_active_only', showActiveOnly ? '1' : '0');
   const res = await fetch(url);
   if (!res.ok) throw new Error(`getAllRequests failed: ${res.status}`);
   return res.json();
@@ -125,10 +127,9 @@ export async function addNote(requestId, content) {
 }
 
 export async function deleteNote(requestId, noteId) {
-  const res = await fetch(
-    `${BASE_URL}/requests/${requestId}/notes/${noteId}`,
-    { method: 'DELETE' }
-  );
+  const res = await fetch(`${BASE_URL}/requests/${requestId}/notes/${noteId}`, {
+    method: 'DELETE',
+  });
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
     throw new Error(err.error || 'deleteNote failed');
@@ -169,6 +170,7 @@ export async function updateEnabledDepartments(hotelId, departments) {
   }
   return res.json();
 }
+
 // ── History API ──────────────────────────────────────────────────────────────
 
 /**
