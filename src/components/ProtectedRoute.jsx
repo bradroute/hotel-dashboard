@@ -8,8 +8,8 @@ import { supabase } from '../utils/supabaseClient';
  *  • requires auth
  *  • fetches user's properties
  *  • NEVER redirects away from /property-picker
- *  • sends users without any properties to /onboarding
- *  • for all other private paths that aren't property routes, go to /property-picker
+ *  • sends users without any properties to /onboarding (but never bounce picker)
+ *  • non-property private paths fall back to /property-picker
  */
 export default function ProtectedRoute({ children }) {
   const [status, setStatus] = useState({
@@ -76,30 +76,18 @@ export default function ProtectedRoute({ children }) {
   const isSettings       = !!matchPath('/settings/:hotelId', location.pathname);
   const isPropertyRoute  = isDashboard || isAnalytics || isSettings;
 
-  // If user has zero properties → force onboarding (unless already there)
-  if (status.propertyCount === 0 && !isOnboarding) {
+  // ── critical ordering: allow picker/onboarding before zero-properties redirect
+  if (isPropertyPicker) return children;
+  if (isOnboarding)     return children;
+
+  // Zero properties → onboarding (but we already allowed picker above)
+  if (status.propertyCount === 0) {
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Never redirect away from the picker; user must explicitly choose a property
-  if (isPropertyPicker) {
-    return children;
-  }
+  // Property-specific routes are valid
+  if (isPropertyRoute) return children;
 
-  // Property-specific routes are always valid to render as-is
-  if (isPropertyRoute) {
-    return children;
-  }
-
-  // If user tries to hit any other private path, land on the picker (even with a single property)
-  if (!isOnboarding) {
-    return <Navigate to="/property-picker" replace />;
-  }
-
-  // Onboarding page: if they already have properties, send to picker (not to a dashboard)
-  if (isOnboarding && status.propertyCount > 0) {
-    return <Navigate to="/property-picker" replace />;
-  }
-
-  return children;
+  // Any other private path → picker
+  return <Navigate to="/property-picker" replace />;
 }
