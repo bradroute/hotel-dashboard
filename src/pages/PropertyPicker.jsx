@@ -1,8 +1,9 @@
 // src/pages/PropertyPicker.jsx
 import React, { useContext, useMemo, useState, useEffect } from 'react';
 import { PropertyContext } from '../contexts/PropertyContext';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '../utils/supabaseClient';
 import AddPropertyForm from '../components/AddPropertyForm';
 
 const fade = {
@@ -13,17 +14,66 @@ const fade = {
 export default function PropertyPicker() {
   const { properties, switchProperty, loading } = useContext(PropertyContext);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [selectingId, setSelectingId] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [query, setQuery] = useState('');
 
-  // IMPORTANT: do NOT auto-redirect anywhere here.
-  // We purposely avoid bouncing between /onboarding and /property-picker while
-  // properties are still loading/propagating after account creation.
+  // Was this navigation triggered right after onboarding?
+  const fromOnboarding =
+    location.state?.onboarding === true ||
+    new URLSearchParams(location.search).get('from') === 'onboarding';
+
+  // If the user truly has no properties (not just waiting), send to onboarding.
+  // NOTE: When we *are* coming from onboarding, we hold here and show a pending state instead.
   useEffect(() => {
-    // no-op on purpose
-  }, [loading, properties.length]);
+    if (!loading && properties.length === 0 && !fromOnboarding) {
+      navigate('/onboarding', { replace: true });
+    }
+  }, [loading, properties.length, fromOnboarding, navigate]);
+
+  // Light polling for the first property to appear right after onboarding.
+  // Poll every 5s up to 30s; when found, do a soft reload to refresh context.
+  useEffect(() => {
+    if (!fromOnboarding) return;
+    if (properties.length > 0) return;
+
+    let tries = 0;
+    let cancelled = false;
+
+    const poll = async () => {
+      tries += 1;
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data: hotels, error } = await supabase
+        .from('hotels')
+        .select('id')
+        .eq('profile_id', user.id);
+
+      if (!cancelled && !error && (hotels?.length || 0) > 0) {
+        // force a fresh mount so PropertyContext refetches and populates
+        window.location.reload();
+      }
+    };
+
+    // start interval
+    const id = setInterval(() => {
+      if (tries >= 6) { // ~30s
+        clearInterval(id);
+        return;
+      }
+      poll();
+    }, 5000);
+
+    // also fire one immediately
+    poll();
+
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [fromOnboarding, properties.length]);
 
   async function handleSelect(property) {
     setSelectingId(property.id);
@@ -46,7 +96,7 @@ export default function PropertyPicker() {
     );
   }, [properties, query]);
 
-  const showEmptyState = !loading && properties.length === 0;
+  const showPendingSetup = fromOnboarding && !loading && properties.length === 0;
 
   return (
     <>
@@ -111,17 +161,20 @@ export default function PropertyPicker() {
                         </li>
                       ))}
                     </ul>
-                  ) : showEmptyState ? (
-                    <div className="rounded-lg border border-dashed p-8 text-center text-sm text-gray-600">
-                      You don’t have any properties yet.
-                      <div className="mt-4">
-                        <button
-                          onClick={() => setShowAddModal(true)}
-                          className="inline-flex items-center gap-2 bg-operon-blue text-white px-4 py-2 rounded-lg hover:bg-blue-400 transition"
-                        >
-                          Add your first property
-                        </button>
-                      </div>
+                  ) : showPendingSetup ? (
+                    <div className="border border-dashed rounded-lg p-6 text-center">
+                      <div className="mx-auto mb-3 h-6 w-6 rounded-full border-2 border-gray-300 border-t-operon-blue animate-spin" />
+                      <p className="text-sm text-gray-600">
+                        Please wait a few moments while we finish setting up your property…
+                        <br />
+                        This can take ~15–30 seconds after onboarding. We’ll refresh automatically.
+                      </p>
+                      <button
+                        onClick={() => window.location.reload()}
+                        className="mt-3 inline-flex items-center gap-2 rounded-lg bg-operon-blue text-white px-3 py-2 text-sm hover:bg-blue-400"
+                      >
+                        Refresh now
+                      </button>
                     </div>
                   ) : (
                     <ul className="space-y-3">
@@ -161,26 +214,28 @@ export default function PropertyPicker() {
                         </li>
                       ))}
 
-                      {!loading && filtered.length === 0 && properties.length > 0 && (
+                      {!loading && filtered.length === 0 && (
                         <li className="text-sm text-gray-500 border border-dashed rounded-lg p-6 text-center">
-                          No matches for “{query}”. Try a different search.
+                          No matches for “{query}”. Try a different search or add a property.
                         </li>
                       )}
                     </ul>
                   )}
                 </div>
 
-                <div className="mt-6 flex justify-center">
-                  <button
-                    onClick={() => setShowAddModal(true)}
-                    className="inline-flex items-center gap-2 text-operon-blue hover:underline text-sm"
-                  >
-                    <span className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-operon-blue/40">
-                      +
-                    </span>
-                    Add a new property
-                  </button>
-                </div>
+                {!showPendingSetup && (
+                  <div className="mt-6 flex justify-center">
+                    <button
+                      onClick={() => setShowAddModal(true)}
+                      className="inline-flex items-center gap-2 text-operon-blue hover:underline text-sm"
+                    >
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-md border border-operon-blue/40">
+                        +
+                      </span>
+                      Add a new property
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </motion.section>

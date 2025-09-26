@@ -102,12 +102,11 @@ export default function OnboardingPage() {
         })
         .eq('id', userId);
 
-      // 🚀 Navigate immediately so there’s no ping-pong
-      // (ProtectedRoute now allows /property-picker)
-      navigate('/property-picker', { replace: true });
+      // ➜ Immediately go to Property Picker in "pending onboarding" mode.
+      navigate('/property-picker?from=onboarding', { state: { onboarding: true }, replace: true });
 
       // Seed defaults in the background (don’t block navigation)
-      const defaults = getDefaultsFor(profile.type); // expects your util to handle casing
+      const defaults = getDefaultsFor(profile.type);
       const deptSeed = (defaults || []).map(dept => ({
         hotel_id: hotelId, department: dept, enabled: true
       }));
@@ -125,7 +124,7 @@ export default function OnboardingPage() {
       setLoading(false); // stay on page if we errored
       return;
     }
-    // do not setLoading(false) after navigate; we already left the page
+    // Do not setLoading(false) after navigate; we already left the page.
   };
 
   return (
