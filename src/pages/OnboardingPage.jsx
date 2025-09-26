@@ -9,7 +9,7 @@ const US_TIMEZONES = [
   'America/Los_Angeles', 'America/Phoenix', 'America/Anchorage', 'Pacific/Honolulu'
 ];
 
-const SHOW_GRID_BG = false; // toggle subtle grid if you want
+const SHOW_GRID_BG = false;
 
 const fade = {
   initial: { opacity: 0, y: 16 },
@@ -32,16 +32,12 @@ export default function OnboardingPage() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  // Prefill: ensure session; prefill account name (metadata) + timezone from browser if in US list
+  // Prefill account name (from user metadata) + timezone (if in US list)
   useEffect(() => {
     (async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session?.user) {
-        navigate('/login');
-        return;
-      }
-      const user = session.user;
-      const metaName = user.user_metadata?.account_name || '';
+      if (!session?.user) { navigate('/login'); return; }
+      const metaName = session.user.user_metadata?.account_name || '';
       const browserTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
       setProfile(prev => ({
         ...prev,
@@ -54,20 +50,18 @@ export default function OnboardingPage() {
   const handleChange = (field, value) =>
     setProfile(prev => ({ ...prev, [field]: value }));
 
-  const canSubmit = useMemo(() => {
-    // Require name, type, timezone, propertyCount at minimum
-    return (
-      profile.accountName.trim().length > 1 &&
-      !!profile.type &&
-      !!profile.timezone &&
-      !!propertyCount &&
-      !loading
-    );
-  }, [profile, propertyCount, loading]);
+  const canSubmit = useMemo(() => (
+    profile.accountName.trim().length > 1 &&
+    !!profile.type &&
+    !!profile.timezone &&
+    !!propertyCount &&
+    !loading
+  ), [profile, propertyCount, loading]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!canSubmit) return;
+
     setError('');
     setLoading(true);
     try {
@@ -77,7 +71,7 @@ export default function OnboardingPage() {
       // Ensure profile exists
       await supabase.from('profiles').upsert({ id: userId }, { onConflict: 'id' });
 
-      // Insert new hotel with full fields
+      // Create the hotel
       const { data: hotel, error: hotelErr } = await supabase
         .from('hotels')
         .insert([{
@@ -85,19 +79,21 @@ export default function OnboardingPage() {
           name: profile.accountName,
           type: profile.type,
           timezone: profile.timezone,
-          phone_number: profile.phone_number,
-          address: profile.address,
-          city: profile.city,
-          state: profile.state,
-          zip_code: profile.zip_code
+          phone_number: profile.phone_number || null,
+          address: profile.address || null,
+          city: profile.city || null,
+          state: profile.state || null,
+          zip_code: profile.zip_code || null
         }])
         .select('id')
         .single();
       if (hotelErr) throw hotelErr;
+
       const hotelId = hotel.id;
 
-      // Update profile record with property count estimate & active hotel
-      await supabase.from('profiles')
+      // Save selection + count estimate on profile
+      await supabase
+        .from('profiles')
         .update({
           account_name: profile.accountName,
           property_type: profile.type,
@@ -106,29 +102,30 @@ export default function OnboardingPage() {
         })
         .eq('id', userId);
 
-      // Seed default departments and SLA
-      const defaults = getDefaultsFor(profile.type);
-      const deptSeed = defaults.map(dept => ({ hotel_id: hotelId, department: dept, enabled: true }));
-      await supabase.from('department_settings').upsert(deptSeed, { onConflict: ['hotel_id','department'] });
+      // 🚀 Navigate immediately so there’s no ping-pong
+      // (ProtectedRoute now allows /property-picker)
+      navigate('/property-picker', { replace: true });
 
-      const slaSeed = defaults.map(dept => ({
-        hotel_id: hotelId,
-        department: dept,
-        ack_time_minutes: 5,
-        res_time_minutes: 30,
-        is_active: false
+      // Seed defaults in the background (don’t block navigation)
+      const defaults = getDefaultsFor(profile.type); // expects your util to handle casing
+      const deptSeed = (defaults || []).map(dept => ({
+        hotel_id: hotelId, department: dept, enabled: true
       }));
-      await supabase.from('sla_settings').upsert(slaSeed, { onConflict: ['hotel_id','department'] });
-
-      // If your router uses /dashboard/:id, swap:
-      // navigate(`/dashboard/${hotelId}`);
-      navigate('/dashboard');
+      const slaSeed = (defaults || []).map(dept => ({
+        hotel_id: hotelId, department: dept,
+        ack_time_minutes: 5, res_time_minutes: 30, is_active: false
+      }));
+      Promise.allSettled([
+        deptSeed.length ? supabase.from('department_settings').upsert(deptSeed, { onConflict: ['hotel_id','department'] }) : Promise.resolve(),
+        slaSeed.length ? supabase.from('sla_settings').upsert(slaSeed, { onConflict: ['hotel_id','department'] }) : Promise.resolve(),
+      ]).catch((e) => console.warn('Seeding defaults failed:', e));
     } catch (err) {
       console.error('Onboarding error:', err);
       setError(err.message || 'Onboarding failed');
-    } finally {
-      setLoading(false);
+      setLoading(false); // stay on page if we errored
+      return;
     }
+    // do not setLoading(false) after navigate; we already left the page
   };
 
   return (
@@ -160,7 +157,7 @@ export default function OnboardingPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-start">
-          {/* ---------- Left: hero / benefits ---------- */}
+          {/* Left: hero */}
           <motion.section variants={fade} initial="initial" animate="animate">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 bg-white/10 text-xs text-operon-muted tracking-wide mb-4">
               Step 1 of 1 • Property setup
@@ -168,9 +165,7 @@ export default function OnboardingPage() {
 
             <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight text-operon-charcoal">
               Let’s set up your{' '}
-              <span className="bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent">
-                first property
-              </span>
+              <span className="bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent">first property</span>
             </h1>
 
             <p className="mt-4 text-[17px] text-operon-muted max-w-2xl leading-relaxed">
@@ -178,14 +173,9 @@ export default function OnboardingPage() {
             </p>
 
             <ul className="mt-6 space-y-2">
-              {[
-                'AI-ready from day one',
-                'Role-based access & audit trail',
-                'Change anytime in Settings',
-              ].map((t) => (
+              {['AI-ready from day one', 'Role-based access & audit trail', 'Change anytime in Settings'].map((t) => (
                 <li key={t} className="flex items-center gap-3 text-sm text-operon-muted">
-                  <span className="h-2 w-2 rounded-full bg-blue-400" />
-                  {t}
+                  <span className="h-2 w-2 rounded-full bg-blue-400" /> {t}
                 </li>
               ))}
             </ul>
@@ -201,28 +191,16 @@ export default function OnboardingPage() {
             </div>
           </motion.section>
 
-          {/* ---------- Right: glassy form card ---------- */}
-          <motion.section
-            variants={fade}
-            initial="initial"
-            animate="animate"
-            transition={{ delay: 0.05 }}
-            className="w-full"
-          >
+          {/* Right: form card */}
+          <motion.section variants={fade} initial="initial" animate="animate" transition={{ delay: 0.05 }} className="w-full">
             <div className="relative">
-              {/* glow */}
               <div
                 aria-hidden="true"
                 className="absolute -inset-0.5 rounded-2xl blur opacity-70"
                 style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.35), rgba(34,211,238,.25))' }}
               />
-              <form
-                onSubmit={handleSubmit}
-                className="relative bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 p-6 sm:p-8 max-w-lg mx-auto space-y-5"
-              >
-                <h2 className="text-2xl font-semibold text-operon-charcoal text-center">
-                  Property details
-                </h2>
+              <form onSubmit={handleSubmit} className="relative bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 p-6 sm:p-8 max-w-lg mx-auto space-y-5">
+                <h2 className="text-2xl font-semibold text-operon-charcoal text-center">Property details</h2>
 
                 {error && (
                   <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700" role="alert">
