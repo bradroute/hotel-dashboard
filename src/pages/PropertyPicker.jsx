@@ -18,15 +18,17 @@ export default function PropertyPicker() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [query, setQuery] = useState('');
 
-  // Do not auto-select any property. Only redirect if the user has none.
+  // IMPORTANT: do NOT auto-redirect anywhere here.
+  // We purposely avoid bouncing between /onboarding and /property-picker while
+  // properties are still loading/propagating after account creation.
   useEffect(() => {
-    if (!loading && properties.length === 0) navigate('/onboarding', { replace: true });
-  }, [loading, properties.length, navigate]);
+    // no-op on purpose
+  }, [loading, properties.length]);
 
   async function handleSelect(property) {
     setSelectingId(property.id);
     try {
-      await switchProperty(property);           // persists to profile
+      await switchProperty(property); // persists to profile
       navigate(`/dashboard/${property.id}`, { replace: true });
     } finally {
       setSelectingId(null);
@@ -43,6 +45,8 @@ export default function PropertyPicker() {
         String(p.id)?.toLowerCase().includes(q)
     );
   }, [properties, query]);
+
+  const showEmptyState = !loading && properties.length === 0;
 
   return (
     <>
@@ -107,6 +111,18 @@ export default function PropertyPicker() {
                         </li>
                       ))}
                     </ul>
+                  ) : showEmptyState ? (
+                    <div className="rounded-lg border border-dashed p-8 text-center text-sm text-gray-600">
+                      You don’t have any properties yet.
+                      <div className="mt-4">
+                        <button
+                          onClick={() => setShowAddModal(true)}
+                          className="inline-flex items-center gap-2 bg-operon-blue text-white px-4 py-2 rounded-lg hover:bg-blue-400 transition"
+                        >
+                          Add your first property
+                        </button>
+                      </div>
+                    </div>
                   ) : (
                     <ul className="space-y-3">
                       {filtered.map((prop) => (
@@ -144,9 +160,10 @@ export default function PropertyPicker() {
                           </button>
                         </li>
                       ))}
-                      {!loading && filtered.length === 0 && (
+
+                      {!loading && filtered.length === 0 && properties.length > 0 && (
                         <li className="text-sm text-gray-500 border border-dashed rounded-lg p-6 text-center">
-                          No matches for “{query}”. Try a different search or add a property.
+                          No matches for “{query}”. Try a different search.
                         </li>
                       )}
                     </ul>
