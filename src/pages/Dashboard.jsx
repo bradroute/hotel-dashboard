@@ -215,7 +215,7 @@ export default function Dashboard() {
     return (
       <div className="min-h-dvh pt-24 bg-operon-background px-6">
         <div className="max-w-5xl mx-auto">
-          <div className="rounded-xl border border-red-2 00 bg-red-50 text-red-700 p-4">
+          <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 p-4">
             <div className="font-semibold">Something went wrong</div>
             <div className="text-sm mt-1">{error}</div>
           </div>
@@ -470,9 +470,7 @@ export default function Dashboard() {
                     <div>
                       <h2 className="text-xl font-semibold text-operon-charcoal">Request Details</h2>
                       <div className="text-xs text-gray-500">
-                        #{detailsRequest.id} •{' '}
-                        {new Date(detailsRequest.created_at).toLocaleString()} • Room{' '}
-                        {detailsRequest.room_number || '—'}
+                        #{detailsRequest.id} • {new Date(detailsRequest.created_at).toLocaleString()} • Room {detailsRequest.room_number || '—'}
                       </div>
                     </div>
                     <button
@@ -485,75 +483,78 @@ export default function Dashboard() {
                   </div>
 
                   <div className="grid gap-6 md:grid-cols-2">
-                    {/* Left: static facts */}
-                    <div className="space-y-3">
-                      <div>
-                        <span className="font-semibold">Summary: </span>
-                        <span>{detailsRequest.summary || <em>No summary available</em>}</span>
-                      </div>
-                      <div>
-                        <span className="font-semibold">Root Cause: </span>
-                        <span>{detailsRequest.root_cause || <em>N/A</em>}</span>
-                      </div>
-                      <div>
-                        <span className="font-semibold">Sentiment: </span>
-                        <span
-                          className={
-                            detailsRequest.sentiment === 'positive'
-                              ? 'text-green-600'
-                              : detailsRequest.sentiment === 'negative'
-                              ? 'text-red-600'
-                              : 'text-gray-700'
-                          }
-                        >
-                          {detailsRequest.sentiment || <em>N/A</em>}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="font-semibold">AI Priority: </span>
-                        <span
-                          className={
-                            (detailsRequest.priority || '').toLowerCase() === 'high'
-                              ? 'text-red-600'
-                              : (detailsRequest.priority || '').toLowerCase() === 'low'
-                              ? 'text-yellow-500'
-                              : 'text-gray-700'
-                          }
-                        >
-                          {detailsRequest.priority || <em>N/A</em>}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="font-semibold">Needs Management Attention: </span>
-                        <span>
-                          {detailsRequest.needs_attention ? (
-                            <span className="inline-flex items-center text-red-600 font-bold">
-                              <BadgeAlert className="w-4 h-4 mr-1" />
-                              Yes
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center text-green-600 font-bold">
-                              <BadgeCheck className="w-4 h-4 mr-1" />
-                              No
-                            </span>
-                          )}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="font-semibold">Original Message:</span>
-                        <div className="bg-gray-100 rounded p-2 mt-1 text-gray-700">
-                          {detailsRequest.message}
+                    {/* Left: static facts with matching header */}
+                    <section className="grid grid-rows-[auto,1fr]">
+                      <h3 className="mb-2 text-base font-semibold">Details</h3>
+                      <div className="space-y-3">
+                        <div>
+                          <span className="font-semibold">Summary: </span>
+                          <span>{detailsRequest.summary || <em>No summary available</em>}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold">Root Cause: </span>
+                          <span>{detailsRequest.root_cause || <em>N/A</em>}</span>
+                        </div>
+                        <div>
+                          <span className="font-semibold">Sentiment: </span>
+                          <span
+                            className={
+                              detailsRequest.sentiment === 'positive'
+                                ? 'text-green-600'
+                                : detailsRequest.sentiment === 'negative'
+                                ? 'text-red-600'
+                                : 'text-gray-700'
+                            }
+                          >
+                            {detailsRequest.sentiment || <em>N/A</em>}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-semibold">AI Priority: </span>
+                          <span
+                            className={
+                              (detailsRequest.priority || '').toLowerCase() === 'high'
+                                ? 'text-red-600'
+                                : (detailsRequest.priority || '').toLowerCase() === 'low'
+                                ? 'text-yellow-500'
+                                : 'text-gray-700'
+                            }
+                          >
+                            {detailsRequest.priority || <em>N/A</em>}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-semibold">Needs Management Attention: </span>
+                          <span>
+                            {detailsRequest.needs_attention ? (
+                              <span className="inline-flex items-center text-red-600 font-bold">
+                                <BadgeAlert className="w-4 h-4 mr-1" />
+                                Yes
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center text-green-600 font-bold">
+                                <BadgeCheck className="w-4 h-4 mr-1" />
+                                No
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="font-semibold">Original Message:</span>
+                          <div className="bg-gray-100 rounded p-2 mt-1 text-gray-700">
+                            {detailsRequest.message}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    </section>
 
-                    {/* Right: live audit history */}
-                    <div>
+                    {/* Right: live audit history with matching header */}
+                    <section className="grid grid-rows-[auto,1fr]">
                       <h3 className="mb-2 text-base font-semibold">History</h3>
                       <div className="max-h-80 overflow-y-auto pr-1">
                         <RequestHistory requestId={detailsRequest.id} />
                       </div>
-                    </div>
+                    </section>
                   </div>
                 </div>
               </div>
