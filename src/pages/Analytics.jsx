@@ -28,6 +28,21 @@ function fmtCurrency(n) {
   }
 }
 
+// Simple moving average over objects with { date, value }
+function movingAverage(rows, windowSize) {
+  const w = Math.max(3, Math.min(windowSize, rows.length || 3));
+  const out = [];
+  let sum = 0;
+  const buf = [];
+  for (const r of rows) {
+    buf.push(r.value);
+    sum += r.value;
+    if (buf.length > w) sum -= buf.shift();
+    out.push({ date: r.date, value: sum / buf.length });
+  }
+  return out;
+}
+
 export default function Analytics() {
   const { hotelId } = useParams();
   const propertyId = hotelId;
@@ -108,22 +123,19 @@ export default function Analytics() {
   const scoreTrendData  = serviceScoreTrend.map(d => ({ period: d.period, score: d.avgServiceScore }));
   const repeatTrendData = repeatGuestTrend.map(d => ({ period: d.period, repeatPct: d.repeatPct }));
   const perRoomData     = requestsPerOccupiedRoom.map(d => ({ date: d.date, value: d.requestsPerRoom }));
-  const sentimentData   = sentimentTrend.map(d => ({
-    date: d.date, positive: d.positive || 0, neutral: d.neutral || 0, negative: d.negative || 0,
-  }));
 
-  // Sentiment Category Trend (categorical: Negative=-1, Neutral=0, Positive=1)
-  const catFromCounts = (pos, neu, neg) => {
-    if (pos > neg && pos > neu) return 1;        // Positive
-    if (neg > pos && neg > neu) return -1;       // Negative
-    return 0;                                    // Neutral or tie
-  };
-  const catLabel = (v) => (v === 1 ? 'Positive' : v === -1 ? 'Negative' : 'Neutral');
-  const sentimentCategoryData = sentimentTrend.map(d => {
-    const pos = d.positive || 0, neu = d.neutral || 0, neg = d.negative || 0;
-    const idx = catFromCounts(pos, neu, neg);
-    return { date: d.date, idx, label: catLabel(idx) };
+  // Sentiment trend (continuous, smoothed):
+  // index per day = (pos - neg) / total  in [-1..1]; then rolling average.
+  const sentimentIndexDaily = (sentimentTrend || []).map(d => {
+    const pos = d.positive || 0;
+    const neg = d.negative || 0;
+    const neu = d.neutral  || 0;
+    const total = pos + neg + neu;
+    const value = total ? (pos - neg) / total : 0;
+    return { date: d.date, value };
   });
+  const windowSize = Math.min(7, Math.max(3, dayCount)); // smooth but responsive
+  const sentimentIndexMA = movingAverage(sentimentIndexDaily, windowSize);
 
   return (
     <motion.main
@@ -322,15 +334,25 @@ export default function Analytics() {
               </ResponsiveContainer>
             </ChartSection>
 
-            {/* Categorical sentiment trend: Positive / Neutral / Negative */}
+            {/* Smoothed continuous sentiment index: Negative ← -1 … 0 … +1 → Positive */}
             <ChartSection title="Guest Sentiment Trend">
               <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={sentimentCategoryData}>
+                <LineChart data={sentimentIndexMA}>
                   <XAxis dataKey="date" />
-                  <YAxis domain={[-1, 1]} ticks={[-1, 0, 1]} tickFormatter={(v) => (v === 1 ? 'Positive' : v === -1 ? 'Negative' : 'Neutral')} />
+                  <YAxis
+                    domain={[-1, 1]}
+                    ticks={[-1, -0.5, 0, 0.5, 1]}
+                    tickFormatter={(v) => (v === 1 ? 'Positive' : v === 0 ? 'Neutral' : v === -1 ? 'Negative' : '')}
+                  />
                   <CartesianGrid strokeDasharray="3 3" />
-                  <Tooltip formatter={(_, __, item) => [item?.payload?.label, 'Sentiment']} />
-                  <Line type="stepAfter" dataKey="idx" stroke={COLORS[5]} strokeWidth={2} dot />
+                  <Tooltip
+                    formatter={(v) => [
+                      v > 0.1 ? 'Positive' : v < -0.1 ? 'Negative' : 'Neutral',
+                      'Sentiment',
+                    ]}
+                  />
+                  {/* faint raw line for context */}
+                  <Line type="monotone" dataKey="value" stroke={COLORS[5]} strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
             </ChartSection>
@@ -344,7 +366,6 @@ export default function Analytics() {
 function StatCard({ title, value }) {
   return (
     <div className="relative">
-      {/* glow */}
       <div
         aria-hidden="true"
         className="absolute -inset-0.5 rounded-2xl blur opacity-60"
@@ -361,13 +382,11 @@ function StatCard({ title, value }) {
 function ChartSection({ title, children }) {
   return (
     <div className="relative">
-      {/* glow */}
       <div
         aria-hidden="true"
         className="absolute -inset-0.5 rounded-2xl blur opacity-60"
         style={{ background: 'linear-gradient(135deg, rgba(59,130,246,.30), rgba(34,211,238,.22))' }}
       />
-      {/* min-h ensures uniform tile height (≈ title + 250px chart area) */}
       <div className="relative bg-white rounded-2xl shadow-2xl ring-1 ring-black/5 p-4 min-h-[300px]">
         <h2 className="text-lg font-semibold text-operon-charcoal mb-2">{title}</h2>
         {children}
