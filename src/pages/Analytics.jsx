@@ -112,6 +112,16 @@ export default function Analytics() {
     date: d.date, positive: d.positive || 0, neutral: d.neutral || 0, negative: d.negative || 0,
   }));
 
+  // Sentiment Line (net sentiment index: (pos - neg) / total → -100..100)
+  const sentimentLineData = sentimentTrend.map(d => {
+    const pos = d.positive || 0;
+    const neg = d.negative || 0;
+    const neu = d.neutral  || 0;
+    const total = pos + neg + neu;
+    const score = total ? Math.round(((pos - neg) / total) * 100) : 0; // % net sentiment
+    return { date: d.date, score };
+  });
+
   return (
     <motion.main
       variants={pageVariants}
@@ -310,16 +320,16 @@ export default function Analytics() {
               </ResponsiveContainer>
             </ChartSection>
 
-            <ChartSection title="Guest Sentiment Trend">
+            {/* Replaced stacked bars with a single line index (-100..100) */}
+            <ChartSection title="Guest Sentiment Trend (Net %)">
               <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={sentimentData}>
+                <LineChart data={sentimentLineData}>
                   <XAxis dataKey="date" />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="positive" stackId="s" fill={COLORS[2]} />
-                  <Bar dataKey="neutral"  stackId="s" fill={COLORS[5]} />
-                  <Bar dataKey="negative" stackId="s" fill={COLORS[4]} />
-                </BarChart>
+                  <YAxis domain={[-100, 100]} tickFormatter={(v) => `${v}%`} />
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <Tooltip formatter={(v) => [`${v}%`, 'Net Sentiment']} />
+                  <Line type="monotone" dataKey="score" stroke={COLORS[5]} strokeWidth={2} dot={false} />
+                </LineChart>
               </ResponsiveContainer>
             </ChartSection>
           </div>
