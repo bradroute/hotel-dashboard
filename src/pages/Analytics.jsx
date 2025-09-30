@@ -112,14 +112,17 @@ export default function Analytics() {
     date: d.date, positive: d.positive || 0, neutral: d.neutral || 0, negative: d.negative || 0,
   }));
 
-  // Sentiment Line (net sentiment index: (pos - neg) / total → -100..100)
-  const sentimentLineData = sentimentTrend.map(d => {
-    const pos = d.positive || 0;
-    const neg = d.negative || 0;
-    const neu = d.neutral  || 0;
-    const total = pos + neg + neu;
-    const score = total ? Math.round(((pos - neg) / total) * 100) : 0; // % net sentiment
-    return { date: d.date, score };
+  // Sentiment Category Trend (categorical: Negative=-1, Neutral=0, Positive=1)
+  const catFromCounts = (pos, neu, neg) => {
+    if (pos > neg && pos > neu) return 1;        // Positive
+    if (neg > pos && neg > neu) return -1;       // Negative
+    return 0;                                    // Neutral or tie
+  };
+  const catLabel = (v) => (v === 1 ? 'Positive' : v === -1 ? 'Negative' : 'Neutral');
+  const sentimentCategoryData = sentimentTrend.map(d => {
+    const pos = d.positive || 0, neu = d.neutral || 0, neg = d.negative || 0;
+    const idx = catFromCounts(pos, neu, neg);
+    return { date: d.date, idx, label: catLabel(idx) };
   });
 
   return (
@@ -256,7 +259,6 @@ export default function Analytics() {
               </ResponsiveContainer>
             </ChartSection>
 
-            {/* ---- Percent Complete now same size as others ---- */}
             <ChartSection title="Percent Complete">
               <div className="h-[250px] w-full flex items-center justify-center">
                 <div className="space-y-2 text-center">
@@ -320,15 +322,15 @@ export default function Analytics() {
               </ResponsiveContainer>
             </ChartSection>
 
-            {/* Replaced stacked bars with a single line index (-100..100) */}
-            <ChartSection title="Guest Sentiment Trend (Net %)">
+            {/* Categorical sentiment trend: Positive / Neutral / Negative */}
+            <ChartSection title="Guest Sentiment Trend">
               <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={sentimentLineData}>
+                <LineChart data={sentimentCategoryData}>
                   <XAxis dataKey="date" />
-                  <YAxis domain={[-100, 100]} tickFormatter={(v) => `${v}%`} />
+                  <YAxis domain={[-1, 1]} ticks={[-1, 0, 1]} tickFormatter={(v) => (v === 1 ? 'Positive' : v === -1 ? 'Negative' : 'Neutral')} />
                   <CartesianGrid strokeDasharray="3 3" />
-                  <Tooltip formatter={(v) => [`${v}%`, 'Net Sentiment']} />
-                  <Line type="monotone" dataKey="score" stroke={COLORS[5]} strokeWidth={2} dot={false} />
+                  <Tooltip formatter={(_, __, item) => [item?.payload?.label, 'Sentiment']} />
+                  <Line type="stepAfter" dataKey="idx" stroke={COLORS[5]} strokeWidth={2} dot />
                 </LineChart>
               </ResponsiveContainer>
             </ChartSection>
