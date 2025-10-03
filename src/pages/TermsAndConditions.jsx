@@ -21,31 +21,12 @@ export default function TermsAndConditions() {
   );
 
   return (
-    // Only horizontal is clipped (for glows). Vertical scroll belongs to the window.
-    <main className="relative min-h-dvh pt-24 overflow-x-clip bg-operon-background">
-
-      {/* background accents — absolute so they scroll with content */}
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none absolute top-[-12rem] left-0 -ml-px -translate-x-24
-          h-[34rem] w-[34rem] rounded-full blur-3xl
-        "
-        style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
-      />
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none absolute bottom-[-14rem] right-0
-          h-[38rem] w-[38rem] rounded-full blur-[90px]
-        "
-        style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
-      />
-
+    // Global background/orbs handled in App; no local clipping
+    <main className="relative min-h-dvh pt-24">
       {SHOW_GRID_BG && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[.25]"
+          className="pointer-events-none absolute inset-0 opacity-[.25] z-0"
           style={{
             backgroundImage:
               'linear-gradient(rgba(17,24,39,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(17,24,39,0.08) 1px, transparent 1px)',
@@ -57,7 +38,7 @@ export default function TermsAndConditions() {
       )}
 
       {/* content */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 pb-8">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 pb-8">
         <motion.section variants={fade} initial="initial" animate="animate" className="relative">
           {/* glow kept inside the card bounds */}
           <div
@@ -70,7 +51,6 @@ export default function TermsAndConditions() {
             {/* header */}
             <div className="flex items-center gap-3 mb-2">
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-operon-blue">
-                {/* document icon */}
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
                   <path d="M6 2h8l4 4v16a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="2"/>
                   <path d="M14 2v6h6" stroke="currentColor" strokeWidth="2"/>
@@ -202,7 +182,6 @@ export default function TermsAndConditions() {
                     href="mailto:info@operonops.com?subject=Terms%20Inquiry"
                     className="inline-flex items-center gap-2 text-operon-blue hover:underline"
                   >
-                    {/* mail icon */}
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
                       <path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" strokeWidth="2"/>
                       <path d="m22 7-10 7L2 7" stroke="currentColor" strokeWidth="2"/>
