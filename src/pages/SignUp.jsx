@@ -50,7 +50,6 @@ export default function SignUp() {
     }
 
     setBusy(true);
-    // Pass account name into user metadata so it’s available after confirm
     const { error: signUpErr } = await supabase.auth.signUp({
       email,
       password,
@@ -70,29 +69,12 @@ export default function SignUp() {
   }
 
   return (
-    // Match Terms: dvh height, horizontal clip only, orbs scroll with page, seam fix
-    <main className="relative min-h-dvh pt-24 overflow-x-clip bg-operon-background">
-      {/* background accents (scroll with page) */}
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none absolute top-[-12rem] left-0 -ml-px -translate-x-24
-          h-[34rem] w-[34rem] rounded-full blur-3xl
-        "
-        style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
-      />
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none absolute bottom-[-14rem] right-0
-          h-[38rem] w-[38rem] rounded-full blur-[90px]
-        "
-        style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
-      />
+    // Global background/orbs handled in App; no local clipping or page orbs
+    <main className="relative min-h-dvh pt-24">
       {SHOW_GRID_BG && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[.25]"
+          className="pointer-events-none absolute inset-0 opacity-[.25] z-0"
           style={{
             backgroundImage:
               'linear-gradient(rgba(17,24,39,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(17,24,39,0.08) 1px, transparent 1px)',
@@ -103,7 +85,7 @@ export default function SignUp() {
         />
       )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8 relative z-10">
         <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* -------- Left: hero -------- */}
           <motion.section variants={fade} initial="initial" animate="animate">
@@ -153,7 +135,7 @@ export default function SignUp() {
             className="w-full"
           >
             <div className="relative">
-              {/* glow (kept inside card bounds to avoid horizontal scrollbars) */}
+              {/* glow within card bounds */}
               <div
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-70"
