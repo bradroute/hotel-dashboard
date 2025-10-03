@@ -109,7 +109,7 @@ export default function SignUp() {
 
             <p className="mt-4 text-[17px] text-operon-muted max-w-2xl leading-relaxed">
               Set up your account, invite your team, and start resolving requests faster.
-              No long onboarding—just results.
+              No long onboarding - just results.
             </p>
 
             <ul className="mt-6 space-y-2">

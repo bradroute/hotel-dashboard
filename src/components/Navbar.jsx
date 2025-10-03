@@ -44,7 +44,6 @@ export default function Navbar() {
 
     await switchProperty(selected);
 
-    // Do not auto-navigate while on the picker; the picker handles its own navigation.
     if (!currentPath.startsWith('/property-picker')) {
       navigate(`/dashboard/${selected.id}`, { replace: true });
     }
@@ -52,118 +51,119 @@ export default function Navbar() {
 
   return (
     <AnimatePresence mode="wait">
-      <motion.nav
+      <motion.header
         key={location.pathname}
-        className="w-full flex items-center justify-between px-6 py-4 bg-white shadow-sm fixed top-0 left-0 z-10"
         variants={navVariants}
         initial="initial"
         animate="animate"
         exit="exit"
+        className="fixed inset-x-0 top-0 z-50 bg-white/70 supports-[backdrop-filter]:bg-white/60 backdrop-blur border-b border-black/5"
       >
-        <div className="flex items-center gap-4">
-          <Link to="/" className="flex items-center gap-2">
-            <img src={logoFull} alt="Operon Logo" className="h-8 sm:h-10" />
-            <span className="text-xl font-bold text-operon-charcoal hidden sm:block">Operon</span>
-          </Link>
+        <nav className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link to="/" className="flex items-center gap-2">
+              <img src={logoFull} alt="Operon Logo" className="h-8 sm:h-10" />
+              <span className="text-xl font-bold text-operon-charcoal hidden sm:block">Operon</span>
+            </Link>
 
-          {/* Property selector (purely user-driven; no auto-select) */}
-          {session && !propLoading && properties?.length > 0 && (
-            <select
-              value={currentProperty?.id || ''}
-              onChange={handlePropertyChange}
-              className="border rounded px-2 py-1 text-sm"
-            >
-              <option value="" disabled>
-                Select property…
-              </option>
-              {properties.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} ({p.type || 'hotel'})
+            {session && !propLoading && properties?.length > 0 && (
+              <select
+                value={currentProperty?.id || ''}
+                onChange={handlePropertyChange}
+                className="border rounded px-2 py-1 text-sm"
+              >
+                <option value="" disabled>
+                  Select property…
                 </option>
-              ))}
-            </select>
-          )}
-        </div>
+                {properties.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({p.type || 'hotel'})
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
 
-        <div className="flex items-center gap-6">
-          {!session && (
-            <>
-              <Link
-                to="/about"
-                className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
+          <div className="flex items-center gap-6">
+            {!session && (
+              <>
+                <Link
+                  to="/about"
+                  className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
+                >
+                  About
+                </Link>
+                <Link
+                  to="/learn-more"
+                  className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
+                >
+                  Learn More
+                </Link>
+              </>
+            )}
+
+            {session && currentProperty?.id && (
+              <>
+                {currentPath !== `/dashboard/${currentProperty.id}` && (
+                  <Link
+                    to={`/dashboard/${currentProperty.id}`}
+                    className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
+                  >
+                    Dashboard
+                  </Link>
+                )}
+                {currentPath !== `/analytics/${currentProperty.id}` && (
+                  <Link
+                    to={`/analytics/${currentProperty.id}`}
+                    className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
+                  >
+                    Analytics
+                  </Link>
+                )}
+                {currentPath !== `/settings/${currentProperty.id}` && (
+                  <Link
+                    to={`/settings/${currentProperty.id}`}
+                    className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
+                  >
+                    Settings
+                  </Link>
+                )}
+                {currentPath !== '/help' && (
+                  <Link
+                    to="/help"
+                    className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
+                  >
+                    Help
+                  </Link>
+                )}
+              </>
+            )}
+
+            {session ? (
+              <button
+                onClick={handleLogout}
+                className="bg-operon-blue text-white font-medium px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
               >
-                About
-              </Link>
+                Logout
+              </button>
+            ) : currentPath === '/signup' ? (
               <Link
-                to="/learn-more"
-                className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
+                to="/login"
+                className="bg-operon-blue text-white font-medium px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
               >
-                Learn More
+                Login
               </Link>
-            </>
-          )}
-
-          {session && currentProperty?.id && (
-            <>
-              {currentPath !== `/dashboard/${currentProperty.id}` && (
-                <Link
-                  to={`/dashboard/${currentProperty.id}`}
-                  className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
-                >
-                  Dashboard
-                </Link>
-              )}
-              {currentPath !== `/analytics/${currentProperty.id}` && (
-                <Link
-                  to={`/analytics/${currentProperty.id}`}
-                  className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
-                >
-                  Analytics
-                </Link>
-              )}
-              {currentPath !== `/settings/${currentProperty.id}` && (
-                <Link
-                  to={`/settings/${currentProperty.id}`}
-                  className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
-                >
-                  Settings
-                </Link>
-              )}
-              {currentPath !== '/help' && (
-                <Link
-                  to="/help"
-                  className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
-                >
-                  Help
-                </Link>
-              )}
-            </>
-          )}
-
-          {session ? (
-            <button
-              onClick={handleLogout}
-              className="bg-operon-blue text-white font-medium px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
-            >
-              Logout
-            </button>
-          ) : currentPath === '/signup' ? (
-            <Link
-              to="/login"
-              className="bg-operon-blue text-white font-medium px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
-            >
-              Login
-            </Link>
-          ) : (
-            <Link
-              to="/signup"
-              className="bg-operon-blue text-white font-medium px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
-            >
-              Sign Up
-            </Link>
-          )}
-        </div>
-      </motion.nav>
+            ) : (
+              <Link
+                to="/signup"
+                className="bg-operon-blue text-white font-medium px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
+              >
+                Sign Up
+              </Link>
+            )}
+          </div>
+        </nav>
+      </motion.header>
     </AnimatePresence>
   );
 }
