@@ -12,27 +12,8 @@ const fade = {
 
 export default function LearnMore() {
   return (
-    // Match Terms: dvh height, horizontal clip only; 'isolate' creates a stacking context
-    <main className="relative min-h-dvh pt-24">
-      {/* background accents (scroll with page, forced behind via -z-10) */}
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none absolute -z-10
-          top-[-12rem] left-0 -ml-px -translate-x-24
-          h-[34rem] w-[34rem] rounded-full blur-3xl
-        "
-        style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
-      />
-      <div
-        aria-hidden="true"
-        className="
-          pointer-events-none absolute -z-10
-          bottom-[-14rem] right-0
-          h-[38rem] w-[38rem] rounded-full blur-[90px]
-        "
-        style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
-      />
+    // Full-bleed background handled globally; no local clipping or orbs
+    <main className="relative isolate min-h-dvh pt-24">
       {SHOW_GRID_BG && (
         <div
           aria-hidden="true"
@@ -47,11 +28,11 @@ export default function LearnMore() {
         />
       )}
 
-      {/* z-10 ensures all content layers above the -z-10 orbs */}
+      {/* z-10 ensures all content layers above any global orbs */}
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pb-8">
         {/* ---------- Hero card ---------- */}
         <motion.section variants={fade} initial="initial" animate="animate" className="relative">
-          {/* keep glow inside bounds (no negative inset) */}
+          {/* keep glow inside bounds */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-70"
