@@ -43,7 +43,6 @@ export default function Navbar() {
     if (!selected) return;
 
     await switchProperty(selected);
-
     if (!currentPath.startsWith('/property-picker')) {
       navigate(`/dashboard/${selected.id}`, { replace: true });
     }
@@ -59,9 +58,11 @@ export default function Navbar() {
         exit="exit"
         className="fixed inset-x-0 top-0 z-50 bg-white/70 supports-[backdrop-filter]:bg-white/60 backdrop-blur border-b border-black/5"
       >
-        <nav className="mx-auto max-w-7xl px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link to="/" className="flex items-center gap-2">
+        {/* Full-bleed bar; no centered max-width so items hug the edges */}
+        <nav className="w-full h-16 px-3 sm:px-4 md:px-6 flex items-center justify-between">
+          {/* Left cluster */}
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            <Link to="/" className="flex items-center gap-2 shrink-0">
               <img src={logoFull} alt="Operon Logo" className="h-8 sm:h-10" />
               <span className="text-xl font-bold text-operon-charcoal hidden sm:block">Operon</span>
             </Link>
@@ -70,7 +71,7 @@ export default function Navbar() {
               <select
                 value={currentProperty?.id || ''}
                 onChange={handlePropertyChange}
-                className="border rounded px-2 py-1 text-sm"
+                className="border rounded px-2 py-1 text-sm max-w-[220px] truncate"
               >
                 <option value="" disabled>
                   Select property…
@@ -84,7 +85,8 @@ export default function Navbar() {
             )}
           </div>
 
-          <div className="flex items-center gap-6">
+          {/* Right cluster */}
+          <div className="flex items-center gap-4 md:gap-6 shrink-0">
             {!session && (
               <>
                 <Link
@@ -142,21 +144,21 @@ export default function Navbar() {
             {session ? (
               <button
                 onClick={handleLogout}
-                className="bg-operon-blue text-white font-medium px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
+                className="bg-operon-blue text-white font-medium px-3 sm:px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
               >
                 Logout
               </button>
             ) : currentPath === '/signup' ? (
               <Link
                 to="/login"
-                className="bg-operon-blue text-white font-medium px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
+                className="bg-operon-blue text-white font-medium px-3 sm:px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
               >
                 Login
               </Link>
             ) : (
               <Link
                 to="/signup"
-                className="bg-operon-blue text-white font-medium px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
+                className="bg-operon-blue text-white font-medium px-3 sm:px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
               >
                 Sign Up
               </Link>
