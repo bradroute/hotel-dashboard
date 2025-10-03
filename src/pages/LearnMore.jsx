@@ -13,7 +13,7 @@ const fade = {
 export default function LearnMore() {
   return (
     // Match Terms: dvh height, horizontal clip only; 'isolate' creates a stacking context
-    <main className="relative isolate min-h-dvh pt-24 overflow-x-clip bg-operon-background">
+    <main className="relative min-h-dvh pt-24">
       {/* background accents (scroll with page, forced behind via -z-10) */}
       <div
         aria-hidden="true"
