@@ -27,10 +27,10 @@ import Navbar from './components/Navbar';
 import { supabase } from './utils/supabaseClient';
 import { AnimatePresence } from 'framer-motion';
 
-/** Full-bleed, fixed background so glows never clip or reveal white */
+/** Global, full-bleed background glows. Never clip, never reveal body white. */
 function BackgroundOrbs() {
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-visible">
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-visible">
       <div
         className="absolute top-[-14rem] left-[-28rem] h-[44rem] w-[44rem] rounded-full blur-3xl"
         style={{
@@ -61,12 +61,12 @@ function AppContent({ session }) {
     '/privacy-policy',
     '/terms',
     '/help'
-    // keep /reset excluded for a distraction-free recovery screen
   ];
   const showFooter = publicPaths.includes(location.pathname);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    // Establish stacking context and keep all app content above the z-0 orbs
+    <div className="relative z-10 flex flex-col min-h-screen">
       <BackgroundOrbs />
 
       {!isReset && <Navbar />}

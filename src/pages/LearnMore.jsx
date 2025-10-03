@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import logoMark from '../assets/logo-icon2.png';
 
-const SHOW_GRID_BG = false; // toggle the faint grid if you want
+const SHOW_GRID_BG = false;
 
 const fade = {
   initial: { opacity: 0, y: 16 },
@@ -12,12 +12,12 @@ const fade = {
 
 export default function LearnMore() {
   return (
-    // Full-bleed background handled globally; no local clipping or orbs
+    // Full-bleed handled globally; no local orbs or clipping
     <main className="relative isolate min-h-dvh pt-24">
       {SHOW_GRID_BG && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 opacity-[.25] -z-10"
+          className="pointer-events-none absolute inset-0 opacity-[.25] z-0"
           style={{
             backgroundImage:
               'linear-gradient(rgba(17,24,39,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(17,24,39,0.08) 1px, transparent 1px)',
@@ -28,11 +28,10 @@ export default function LearnMore() {
         />
       )}
 
-      {/* z-10 ensures all content layers above any global orbs */}
+      {/* content above global orbs */}
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pb-8">
         {/* ---------- Hero card ---------- */}
         <motion.section variants={fade} initial="initial" animate="animate" className="relative">
-          {/* keep glow inside bounds */}
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-0 rounded-2xl blur opacity-70"
