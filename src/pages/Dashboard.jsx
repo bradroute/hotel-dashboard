@@ -53,7 +53,6 @@ export default function Dashboard() {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [detailsRequest, setDetailsRequest] = useState(null);
 
-  // Fetch hotel info
   const fetchHotel = useCallback(async () => {
     if (!hotelId) return;
     setError('');
@@ -70,7 +69,6 @@ export default function Dashboard() {
     }
   }, [hotelId]);
 
-  // Fetch enabled departments
   const fetchEnabledDepartments = useCallback(async () => {
     if (!hotelId) return;
     try {
@@ -86,7 +84,6 @@ export default function Dashboard() {
     }
   }, [hotelId]);
 
-  // Fetch requests
   const fetchRequests = useCallback(async () => {
     if (!hotelId) return;
     setLoading(true);
@@ -111,7 +108,6 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [hotelId, fetchHotel, fetchEnabledDepartments, fetchRequests]);
 
-  // Notes modal handlers
   const openNotesModal = async (id) => {
     setCurrentRequestId(id);
     setNotesLoading(true);
@@ -137,13 +133,11 @@ export default function Dashboard() {
     setNotes(await getNotes(currentRequestId));
   };
 
-  // Details modal handler
   const openDetailsModal = (req) => {
     setDetailsRequest(req);
     setDetailsModalOpen(true);
   };
 
-  // Derived metrics
   const metrics = useMemo(() => {
     const active = requests.filter((r) => !r.completed);
     const unacked = active.filter((r) => !r.acknowledged);
@@ -162,18 +156,14 @@ export default function Dashboard() {
     };
   }, [requests]);
 
-  // Filtering, search, sort
   const filtered = useMemo(() => {
     let list = [...requests];
 
-    // Unacknowledged queue takes precedence: actionable = not acknowledged and not completed
     if (unacknowledgedOnly) {
       list = list.filter((r) => !r.acknowledged && !r.completed);
     } else if (showActiveOnly) {
-      // Otherwise show only active if toggled
       list = list.filter((r) => !r.completed);
     }
-    // else include all
 
     if (selectedDepartment !== 'All') {
       list = list.filter((r) => r.department === selectedDepartment);
@@ -209,11 +199,11 @@ export default function Dashboard() {
   ]);
 
   if (!hotelId) {
-    return <div className="min-h-dvh pt-24 bg-operon-background px-6">No property selected.</div>;
+    return <div className="min-h-dvh pt-24 px-6">No property selected.</div>;
   }
   if (error) {
     return (
-      <div className="min-h-dvh pt-24 bg-operon-background px-6">
+      <div className="min-h-dvh pt-24 px-6">
         <div className="max-w-5xl mx-auto">
           <div className="rounded-xl border border-red-200 bg-red-50 text-red-700 p-4">
             <div className="font-semibold">Something went wrong</div>
@@ -231,15 +221,9 @@ export default function Dashboard() {
         initial="initial"
         animate="animate"
         exit="exit"
-        className="relative min-h-dvh bg-operon-background pt-24 overflow-x-clip"
+        // Global background/orbs handled in App; no local orbs or horizontal clipping
+        className="relative min-h-dvh pt-24"
       >
-        {/* background accents */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute bottom-[-14rem] right-0 h-[38rem] w-[38rem] rounded-full blur-[90px]"
-          style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
-        />
-
         <div className={`${styles.container} w-full max-w-7xl mx-auto px-4 sm:px-6 pb-8`}>
           {/* Header row */}
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
@@ -263,7 +247,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* KPI tiles */}
+          {/* KPI tiles (glow kept inside this block) */}
           <div className="relative mb-6">
             <div
               aria-hidden="true"
@@ -436,7 +420,7 @@ export default function Dashboard() {
         )}
       </AnimatePresence>
 
-      {/* Details Modal (includes History) */}
+      {/* Details Modal */}
       <AnimatePresence>
         {detailsModalOpen && detailsRequest && (
           <>
@@ -483,7 +467,6 @@ export default function Dashboard() {
                   </div>
 
                   <div className="grid gap-6 md:grid-cols-2">
-                    {/* Left: static facts with matching header */}
                     <section className="grid grid-rows-[auto,1fr]">
                       <h3 className="mb-2 text-base font-semibold">Details</h3>
                       <div className="space-y-3">
@@ -548,7 +531,6 @@ export default function Dashboard() {
                       </div>
                     </section>
 
-                    {/* Right: live audit history with matching header */}
                     <section className="grid grid-rows-[auto,1fr]">
                       <h3 className="mb-2 text-base font-semibold">History</h3>
                       <div className="max-h-80 overflow-y-auto pr-1">

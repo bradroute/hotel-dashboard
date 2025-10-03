@@ -20,21 +20,16 @@ export default function PropertyPicker() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [query, setQuery] = useState('');
 
-  // Was this navigation triggered right after onboarding?
   const fromOnboarding =
     location.state?.onboarding === true ||
     new URLSearchParams(location.search).get('from') === 'onboarding';
 
-  // If the user truly has no properties (not just waiting), send to onboarding.
-  // NOTE: When we *are* coming from onboarding, we hold here and show a pending state instead.
   useEffect(() => {
     if (!loading && properties.length === 0 && !fromOnboarding) {
       navigate('/onboarding', { replace: true });
     }
   }, [loading, properties.length, fromOnboarding, navigate]);
 
-  // Light polling for the first property to appear right after onboarding.
-  // Poll every 5s up to 30s; when found, do a soft reload to refresh context.
   useEffect(() => {
     if (!fromOnboarding) return;
     if (properties.length > 0) return;
@@ -52,21 +47,18 @@ export default function PropertyPicker() {
         .eq('profile_id', user.id);
 
       if (!cancelled && !error && (hotels?.length || 0) > 0) {
-        // force a fresh mount so PropertyContext refetches and populates
         window.location.reload();
       }
     };
 
-    // start interval
     const id = setInterval(() => {
-      if (tries >= 6) { // ~30s
+      if (tries >= 6) {
         clearInterval(id);
         return;
       }
       poll();
     }, 5000);
 
-    // also fire one immediately
     poll();
 
     return () => {
@@ -78,7 +70,7 @@ export default function PropertyPicker() {
   async function handleSelect(property) {
     setSelectingId(property.id);
     try {
-      await switchProperty(property); // persists to profile
+      await switchProperty(property);
       navigate(`/dashboard/${property.id}`, { replace: true });
     } finally {
       setSelectingId(null);
@@ -100,20 +92,9 @@ export default function PropertyPicker() {
 
   return (
     <>
-      <main className="relative min-h-screen pt-24 overflow-hidden bg-operon-background">
-        {/* background accents */}
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -top-48 -left-40 h-[34rem] w-[34rem] rounded-full blur-3xl"
-          style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -bottom-56 -right-40 h-[38rem] w-[38rem] rounded-full blur-[90px]"
-          style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
-        />
-
-        <div className="max-w-5xl mx-auto px-4 sm:px-6">
+      {/* Global background handled in App; no local orbs/clipping */}
+      <main className="relative min-h-dvh pt-24">
+        <div className="relative z-10 max-w-5xl mx-auto px-4 sm:px-6">
           <motion.div variants={fade} initial="initial" animate="animate" className="mb-6">
             <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight text-operon-charcoal">
               Select your{' '}

@@ -124,8 +124,7 @@ export default function Analytics() {
   const repeatTrendData = repeatGuestTrend.map(d => ({ period: d.period, repeatPct: d.repeatPct }));
   const perRoomData     = requestsPerOccupiedRoom.map(d => ({ date: d.date, value: d.requestsPerRoom }));
 
-  // Sentiment trend (continuous, smoothed):
-  // index per day = (pos - neg) / total  in [-1..1]; then rolling average.
+  // Sentiment trend
   const sentimentIndexDaily = (sentimentTrend || []).map(d => {
     const pos = d.positive || 0;
     const neg = d.negative || 0;
@@ -134,7 +133,7 @@ export default function Analytics() {
     const value = total ? (pos - neg) / total : 0;
     return { date: d.date, value };
   });
-  const windowSize = Math.min(7, Math.max(3, dayCount)); // smooth but responsive
+  const windowSize = Math.min(7, Math.max(3, dayCount));
   const sentimentIndexMA = movingAverage(sentimentIndexDaily, windowSize);
 
   return (
@@ -143,20 +142,9 @@ export default function Analytics() {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="relative min-h-dvh bg-operon-background pt-24 overflow-x-clip"
+      // Global orbs handled in App; no local orbs or horizontal clipping here
+      className="relative min-h-dvh pt-24"
     >
-      {/* background accents */}
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -top-48 -left-40 h-[34rem] w-[34rem] rounded-full blur-3xl"
-        style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-56 -right-40 h-[38rem] w-[38rem] rounded-full blur-[90px]"
-        style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
-      />
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-3 mb-6">
@@ -334,7 +322,6 @@ export default function Analytics() {
               </ResponsiveContainer>
             </ChartSection>
 
-            {/* Smoothed continuous sentiment index: Negative ← -1 … 0 … +1 → Positive */}
             <ChartSection title="Guest Sentiment Trend">
               <ResponsiveContainer width="100%" height={250}>
                 <LineChart data={sentimentIndexMA}>
@@ -351,7 +338,6 @@ export default function Analytics() {
                       'Sentiment',
                     ]}
                   />
-                  {/* faint raw line for context */}
                   <Line type="monotone" dataKey="value" stroke={COLORS[5]} strokeWidth={2} dot={false} />
                 </LineChart>
               </ResponsiveContainer>
