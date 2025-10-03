@@ -2,6 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  @apply bg-operon-background text-operon-charcoal font-sans antialiased;
+/* Global page background so transparent layers never show white */
+@layer base {
+  html, body, #root {
+    @apply min-h-screen bg-operon-background text-operon-charcoal font-sans antialiased;
+  }
+
+  /* Reduce edge flash on bounce/overscroll */
+  html, body {
+    overscroll-behavior: none;
+  }
 }

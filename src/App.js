@@ -27,6 +27,28 @@ import Navbar from './components/Navbar';
 import { supabase } from './utils/supabaseClient';
 import { AnimatePresence } from 'framer-motion';
 
+/** Full-bleed, fixed background so glows never clip or reveal white */
+function BackgroundOrbs() {
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-visible">
+      <div
+        className="absolute top-[-14rem] left-[-28rem] h-[44rem] w-[44rem] rounded-full blur-3xl"
+        style={{
+          background:
+            'radial-gradient(closest-side, rgba(59,130,246,.25), rgba(59,130,246,0))'
+        }}
+      />
+      <div
+        className="absolute bottom-[-16rem] right-[-22rem] h-[46rem] w-[46rem] rounded-full blur-[90px]"
+        style={{
+          background:
+            'radial-gradient(closest-side, rgba(34,211,238,.22), rgba(34,211,238,0))'
+        }}
+      />
+    </div>
+  );
+}
+
 function AppContent({ session }) {
   const location = useLocation();
   const isReset = location.pathname.startsWith('/reset');
@@ -45,7 +67,10 @@ function AppContent({ session }) {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <BackgroundOrbs />
+
       {!isReset && <Navbar />}
+
       <main className="flex-1 w-full px-4">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
@@ -122,6 +147,7 @@ function AppContent({ session }) {
           </Routes>
         </AnimatePresence>
       </main>
+
       {showFooter && <Footer />}
     </div>
   );

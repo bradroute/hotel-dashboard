@@ -56,7 +56,7 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="relative min-h-dvh pt-24 overflow-x-clip bg-operon-background">
+    <main className="relative min-h-dvh pt-24">
       {/* background accents */}
       <div
         aria-hidden="true"
