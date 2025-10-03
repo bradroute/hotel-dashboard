@@ -30,25 +30,37 @@ export default function LoginPage() {
 
     const userId = data.user.id;
 
+    // Fetch properties owned by this user
     const { data: hotels, error: hotelsErr } = await supabase
       .from('hotels')
       .select('id')
       .eq('profile_id', userId);
 
-    if (hotelsErr) { setBusy(false); setError('Login succeeded but failed to fetch properties.'); return; }
+    if (hotelsErr) {
+      setBusy(false);
+      setError('Login succeeded but failed to fetch properties.');
+      return;
+    }
 
-    if (!hotels || hotels.length === 0) { setBusy(false); navigate('/onboarding', { replace: true }); return; }
+    // Routing rules:
+    // - If user has no properties → onboarding
+    // - Otherwise → ALWAYS go to property picker (do NOT auto-jump to a dashboard)
+    if (!hotels || hotels.length === 0) {
+      setBusy(false);
+      navigate('/onboarding', { replace: true });
+      return;
+    }
 
     setBusy(false);
     navigate('/property-picker', { replace: true });
   }
 
   return (
-    <main className="relative min-h-dvh pt-24 overflow-hidden bg-operon-background">
+    <main className="relative min-h-dvh pt-24 overflow-x-clip bg-operon-background">
       {/* background accents */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute top-[-12rem] left-[-22rem] h-[34rem] w-[34rem] rounded-full blur-3xl"
+        className="pointer-events-none absolute top-[-12rem] left-0 -ml-px -translate-x-24 h-[34rem] w-[34rem] rounded-full blur-3xl"
         style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
       />
       <div
