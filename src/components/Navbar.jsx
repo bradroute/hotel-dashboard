@@ -60,7 +60,6 @@ export default function Navbar() {
         exit="exit"
         className="fixed inset-x-0 top-0 z-50 bg-white/90 backdrop-blur border-b border-black/5"
       >
-        {/* Full-bleed bar; items hug edges */}
         <nav className="w-full h-16 px-3 sm:px-4 md:px-6 flex items-center justify-between">
           {/* Left cluster */}
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
@@ -69,7 +68,6 @@ export default function Navbar() {
               <span className="text-xl font-bold text-operon-charcoal hidden sm:block">Operon</span>
             </Link>
 
-            {/* Property switcher only when authenticated and properties loaded */}
             {session && !propLoading && properties?.length > 0 && (
               <select
                 value={currentProperty?.id || ''}
@@ -90,7 +88,6 @@ export default function Navbar() {
 
           {/* Right cluster */}
           <div className="flex items-center gap-3 md:gap-5 shrink-0">
-            {/* Public links when logged out */}
             {!session && (
               <>
                 <Link to="/about" className={linkBase}>About</Link>
@@ -102,7 +99,7 @@ export default function Navbar() {
                   Log in
                 </Link>
                 <a
-                  href="/book"
+                  href="mailto:info@operonops.com?subject=Operon%20Demo%20Request"
                   className="bg-operon-blue text-white font-medium px-3 sm:px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
                 >
                   Book demo
@@ -110,7 +107,6 @@ export default function Navbar() {
               </>
             )}
 
-            {/* App links when authenticated */}
             {session && (
               <>
                 {currentProperty?.id ? (
@@ -144,7 +140,6 @@ export default function Navbar() {
                     )}
                   </>
                 ) : (
-                  // If authed but no property chosen yet
                   currentPath !== '/property-picker' && (
                     <Link to="/property-picker" className={linkBase}>
                       Choose Property
