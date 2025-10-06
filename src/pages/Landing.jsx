@@ -1,8 +1,8 @@
 // src/pages/Landing.jsx
 import React from 'react';
 import { Link } from 'react-router-dom';
-import logoFull from '../assets/logo-icon2.png';
 import { motion } from 'framer-motion';
+import Navbar from '../components/Navbar';
 
 const fade = {
   initial: { opacity: 0, y: 16 },
@@ -12,35 +12,8 @@ const fade = {
 export default function Landing() {
   return (
     <main className="relative min-h-dvh">
-      {/* NAV — full-width, identical to login */}
-      <header className="sticky top-0 z-50">
-        <div className="h-16 w-full bg-white/90 backdrop-blur border-b border-black/5">
-          <div className="max-w-7xl mx-auto h-full px-3 sm:px-4 md:px-6 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src={logoFull} alt="Operon" className="h-9 sm:h-10" />
-              <span className="text-xs sm:text-sm text-gray-600 hidden sm:block">
-                Modern property operations
-              </span>
-            </div>
-            <div className="flex items-center gap-3 md:gap-5">
-              <Link to="/about" className="font-medium text-sm sm:text-base text-operon-blue hover:underline">About</Link>
-              <Link to="/learn-more" className="font-medium text-sm sm:text-base text-operon-blue hover:underline">Learn More</Link>
-              <Link
-                to="/login"
-                className="px-3 py-1.5 rounded-md border border-gray-300 text-gray-800 hover:border-operon-blue hover:text-operon-blue text-sm sm:text-base"
-              >
-                Log in
-              </Link>
-              <a
-                href="/book"
-                className="bg-operon-blue text-white font-medium px-3 sm:px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
-              >
-                Book demo
-              </a>
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Shared site navbar */}
+      <Navbar />
 
       {/* background accents */}
       <div
@@ -54,7 +27,7 @@ export default function Landing() {
         style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
       />
 
-      {/* content container */}
+      {/* content container (pad for fixed navbar height) */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8 pt-10">
         <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* HERO */}
@@ -75,10 +48,16 @@ export default function Landing() {
             </p>
 
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
-              <a href="/book" className="px-5 py-2.5 rounded-lg bg-operon-blue text-white hover:bg-blue-400 transition text-sm sm:text-base text-center">
+              <a
+                href="/book"
+                className="px-5 py-2.5 rounded-lg bg-operon-blue text-white hover:bg-blue-400 transition text-sm sm:text-base text-center"
+              >
                 Book a 15-min demo
               </a>
-              <a href="/walkthrough" className="px-5 py-2.5 rounded-lg border border-operon-blue text-operon-blue hover:bg-blue-50 transition text-sm sm:text-base text-center">
+              <a
+                href="/walkthrough"
+                className="px-5 py-2.5 rounded-lg border border-operon-blue text-operon-blue hover:bg-blue-50 transition text-sm sm:text-base text-center"
+              >
                 See 90-sec walkthrough
               </a>
             </div>
@@ -99,12 +78,21 @@ export default function Landing() {
               </div>
             </div>
 
-            <p className="mt-5 text-sm italic text-gray-500">“Operon cut our response times in half.” — Front Desk Manager</p>
+            <p className="mt-5 text-sm italic text-gray-500">
+              “Operon cut our response times in half.” — Front Desk Manager
+            </p>
 
             <ul className="mt-6 flex flex-wrap gap-2">
-              {['Real-time Dashboard','AI Classification','Analytics & SLAs','Role-based Access','Secure & Compliant'].map(pill=>(
-                <li key={pill} className="text-xs text-operon-muted px-3 py-1 rounded-full border border-white/15 bg-white/5">{pill}</li>
-              ))}
+              {['Real-time Dashboard','AI Classification','Analytics & SLAs','Role-based Access','Secure & Compliant'].map(
+                (pill) => (
+                  <li
+                    key={pill}
+                    className="text-xs text-operon-muted px-3 py-1 rounded-full border border-white/15 bg-white/5"
+                  >
+                    {pill}
+                  </li>
+                )
+              )}
             </ul>
           </motion.section>
 
@@ -152,8 +140,12 @@ export default function Landing() {
         <section className="mt-12 mb-20 text-center">
           <h3 className="text-2xl font-semibold">Ready to clear your queue?</h3>
           <div className="mt-4 flex items-center justify-center gap-3">
-            <a href="/book" className="px-5 py-2.5 rounded-lg bg-operon-blue text-white hover:bg-blue-400 transition">Book demo</a>
-            <Link to="/login" className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-800 hover:border-operon-blue hover:text-operon-blue">Log in</Link>
+            <a href="/book" className="px-5 py-2.5 rounded-lg bg-operon-blue text-white hover:bg-blue-400 transition">
+              Book demo
+            </a>
+            <Link to="/login" className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-800 hover:border-operon-blue hover:text-operon-blue">
+              Log in
+            </Link>
           </div>
         </section>
       </div>
