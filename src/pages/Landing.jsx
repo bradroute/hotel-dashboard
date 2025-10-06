@@ -70,7 +70,7 @@ export default function Landing() {
       />
 
       {/* content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-20">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-24 pb-20">
         <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* HERO COPY */}
           <motion.section variants={fade} initial="initial" animate="animate" className="relative">
