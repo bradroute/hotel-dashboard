@@ -18,12 +18,8 @@ export default function Navbar() {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const {
-    properties,
-    currentProperty,
-    switchProperty,
-    loading: propLoading,
-  } = useContext(PropertyContext);
+  const { properties, currentProperty, switchProperty, loading: propLoading } =
+    useContext(PropertyContext);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
@@ -51,6 +47,9 @@ export default function Navbar() {
     }
   };
 
+  const linkBase =
+    'font-medium text-sm sm:text-base text-operon-blue hover:text-operon-blue underline-offset-4 hover:underline';
+
   return (
     <AnimatePresence mode="wait">
       <motion.header
@@ -59,7 +58,7 @@ export default function Navbar() {
         initial="initial"
         animate="animate"
         exit="exit"
-        className="fixed inset-x-0 top-0 z-50 bg-white/70 supports-[backdrop-filter]:bg-white/60 backdrop-blur border-b border-black/5"
+        className="fixed inset-x-0 top-0 z-50 bg-white/90 backdrop-blur border-b border-black/5"
       >
         {/* Full-bleed bar; items hug edges */}
         <nav className="w-full h-16 px-3 sm:px-4 md:px-6 flex items-center justify-between">
@@ -75,7 +74,7 @@ export default function Navbar() {
               <select
                 value={currentProperty?.id || ''}
                 onChange={handlePropertyChange}
-                className="border rounded px-2 py-1 text-sm max-w-[240px] truncate"
+                className="border border-gray-300 bg-white text-gray-800 rounded px-2 py-1 text-sm max-w-[240px] truncate focus:outline-none focus:ring-2 focus:ring-operon-blue"
               >
                 <option value="" disabled>
                   Select property…
@@ -94,26 +93,14 @@ export default function Navbar() {
             {/* Public links when logged out */}
             {!session && (
               <>
-                <Link
-                  to="/about"
-                  className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
-                >
-                  About
-                </Link>
-                <Link
-                  to="/learn-more"
-                  className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
-                >
-                  Learn More
-                </Link>
-                {/* Secondary auth link */}
+                <Link to="/about" className={linkBase}>About</Link>
+                <Link to="/learn-more" className={linkBase}>Learn More</Link>
                 <Link
                   to="/login"
-                  className="text-operon-blue/90 hover:text-operon-blue font-medium text-sm sm:text-base"
+                  className="px-3 py-1.5 rounded-md border border-gray-300 text-gray-800 hover:border-operon-blue hover:text-operon-blue text-sm sm:text-base"
                 >
                   Log in
                 </Link>
-                {/* Primary CTA: Book demo (marketing-first) */}
                 <a
                   href="/book"
                   className="bg-operon-blue text-white font-medium px-3 sm:px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
@@ -124,40 +111,49 @@ export default function Navbar() {
             )}
 
             {/* App links when authenticated */}
-            {session && currentProperty?.id && (
+            {session && (
               <>
-                {currentPath !== `/dashboard/${currentProperty.id}` && (
-                  <Link
-                    to={`/dashboard/${currentProperty.id}`}
-                    className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
-                  >
-                    Dashboard
-                  </Link>
+                {currentProperty?.id ? (
+                  <>
+                    {currentPath !== `/dashboard/${currentProperty.id}` && (
+                      <Link
+                        to={`/dashboard/${currentProperty.id}`}
+                        className={linkBase}
+                        aria-current={currentPath.includes('/dashboard') ? 'page' : undefined}
+                      >
+                        Dashboard
+                      </Link>
+                    )}
+                    {currentPath !== `/analytics/${currentProperty.id}` && (
+                      <Link
+                        to={`/analytics/${currentProperty.id}`}
+                        className={linkBase}
+                        aria-current={currentPath.includes('/analytics') ? 'page' : undefined}
+                      >
+                        Analytics
+                      </Link>
+                    )}
+                    {currentPath !== `/settings/${currentProperty.id}` && (
+                      <Link
+                        to={`/settings/${currentProperty.id}`}
+                        className={linkBase}
+                        aria-current={currentPath.includes('/settings') ? 'page' : undefined}
+                      >
+                        Settings
+                      </Link>
+                    )}
+                  </>
+                ) : (
+                  // If authed but no property chosen yet
+                  currentPath !== '/property-picker' && (
+                    <Link to="/property-picker" className={linkBase}>
+                      Choose Property
+                    </Link>
+                  )
                 )}
-                {currentPath !== `/analytics/${currentProperty.id}` && (
-                  <Link
-                    to={`/analytics/${currentProperty.id}`}
-                    className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
-                  >
-                    Analytics
-                  </Link>
-                )}
-                {currentPath !== `/settings/${currentProperty.id}` && (
-                  <Link
-                    to={`/settings/${currentProperty.id}`}
-                    className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
-                  >
-                    Settings
-                  </Link>
-                )}
-                {currentPath !== '/help' && (
-                  <Link
-                    to="/help"
-                    className="text-operon-blue hover:underline font-medium text-sm sm:text-base"
-                  >
-                    Help
-                  </Link>
-                )}
+
+                {currentPath !== '/help' && <Link to="/help" className={linkBase}>Help</Link>}
+
                 <button
                   onClick={handleLogout}
                   className="bg-operon-blue text-white font-medium px-3 sm:px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
