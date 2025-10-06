@@ -11,7 +11,37 @@ const fade = {
 
 export default function Landing() {
   return (
-    <main className="relative min-h-dvh pt-24">
+    <main className="relative min-h-dvh">
+      {/* NAV — full-width, identical to login */}
+      <header className="sticky top-0 z-50">
+        <div className="h-16 w-full bg-white/90 backdrop-blur border-b border-black/5">
+          <div className="max-w-7xl mx-auto h-full px-3 sm:px-4 md:px-6 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <img src={logoFull} alt="Operon" className="h-9 sm:h-10" />
+              <span className="text-xs sm:text-sm text-gray-600 hidden sm:block">
+                Modern property operations
+              </span>
+            </div>
+            <div className="flex items-center gap-3 md:gap-5">
+              <Link to="/about" className="font-medium text-sm sm:text-base text-operon-blue hover:underline">About</Link>
+              <Link to="/learn-more" className="font-medium text-sm sm:text-base text-operon-blue hover:underline">Learn More</Link>
+              <Link
+                to="/login"
+                className="px-3 py-1.5 rounded-md border border-gray-300 text-gray-800 hover:border-operon-blue hover:text-operon-blue text-sm sm:text-base"
+              >
+                Log in
+              </Link>
+              <a
+                href="/book"
+                className="bg-operon-blue text-white font-medium px-3 sm:px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
+              >
+                Book demo
+              </a>
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* background accents */}
       <div
         aria-hidden="true"
@@ -24,48 +54,8 @@ export default function Landing() {
         style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
-        {/* NAV — mirror Auth navbar */}
-        <header className="sticky top-0 z-50 -mt-24 pt-24">
-          <div className="h-16 w-full bg-white/90 backdrop-blur border-b border-black/5">
-            <div className="max-w-7xl mx-auto h-full px-3 sm:px-4 md:px-6 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <img src={logoFull} alt="Operon" className="h-9 sm:h-10" />
-                <span className="text-xs sm:text-sm text-gray-600 hidden sm:block">
-                  Modern property operations
-                </span>
-              </div>
-
-              <div className="flex items-center gap-3 md:gap-5">
-                <Link
-                  to="/about"
-                  className="font-medium text-sm sm:text-base text-operon-blue hover:underline"
-                >
-                  About
-                </Link>
-                <Link
-                  to="/learn-more"
-                  className="font-medium text-sm sm:text-base text-operon-blue hover:underline"
-                >
-                  Learn More
-                </Link>
-                <Link
-                  to="/login"
-                  className="px-3 py-1.5 rounded-md border border-gray-300 text-gray-800 hover:border-operon-blue hover:text-operon-blue text-sm sm:text-base"
-                >
-                  Log in
-                </Link>
-                <a
-                  href="/book"
-                  className="bg-operon-blue text-white font-medium px-3 sm:px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
-                >
-                  Book demo
-                </a>
-              </div>
-            </div>
-          </div>
-        </header>
-
+      {/* content container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8 pt-10">
         <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
           {/* HERO */}
           <motion.section variants={fade} initial="initial" animate="animate">
@@ -85,21 +75,15 @@ export default function Landing() {
             </p>
 
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
-              <a
-                href="/book"
-                className="px-5 py-2.5 rounded-lg bg-operon-blue text-white hover:bg-blue-400 transition text-sm sm:text-base text-center"
-              >
+              <a href="/book" className="px-5 py-2.5 rounded-lg bg-operon-blue text-white hover:bg-blue-400 transition text-sm sm:text-base text-center">
                 Book a 15-min demo
               </a>
-              <a
-                href="/walkthrough"
-                className="px-5 py-2.5 rounded-lg border border-operon-blue text-operon-blue hover:bg-blue-50 transition text-sm sm:text-base text-center"
-              >
+              <a href="/walkthrough" className="px-5 py-2.5 rounded-lg border border-operon-blue text-operon-blue hover:bg-blue-50 transition text-sm sm:text-base text-center">
                 See 90-sec walkthrough
               </a>
             </div>
 
-            {/* Proof counters — replace Xs with live values later */}
+            {/* Proof counters */}
             <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl">
               <div className="px-4 py-3 rounded-xl border border-white/10 bg-white/5">
                 <strong className="text-2xl">62%</strong>
@@ -115,21 +99,12 @@ export default function Landing() {
               </div>
             </div>
 
-            <p className="mt-5 text-sm italic text-gray-500">
-              “Operon cut our response times in half.” — Front Desk Manager
-            </p>
+            <p className="mt-5 text-sm italic text-gray-500">“Operon cut our response times in half.” — Front Desk Manager</p>
 
             <ul className="mt-6 flex flex-wrap gap-2">
-              {['Real-time Dashboard', 'AI Classification', 'Analytics & SLAs', 'Role-based Access', 'Secure & Compliant'].map(
-                (pill) => (
-                  <li
-                    key={pill}
-                    className="text-xs text-operon-muted px-3 py-1 rounded-full border border-white/15 bg-white/5"
-                  >
-                    {pill}
-                  </li>
-                )
-              )}
+              {['Real-time Dashboard','AI Classification','Analytics & SLAs','Role-based Access','Secure & Compliant'].map(pill=>(
+                <li key={pill} className="text-xs text-operon-muted px-3 py-1 rounded-full border border-white/15 bg-white/5">{pill}</li>
+              ))}
             </ul>
           </motion.section>
 
@@ -153,9 +128,7 @@ export default function Landing() {
               <h4 className="font-semibold">30-day pilot snapshot</h4>
               <p className="text-sm text-operon-muted mt-1">212 requests • 0 dropped • 62% faster acks.</p>
               <div className="mt-3">
-                <a href="/proof" className="text-sm text-operon-blue underline">
-                  See methodology
-                </a>
+                <a href="/proof" className="text-sm text-operon-blue underline">See methodology</a>
               </div>
             </div>
           </motion.section>
@@ -179,18 +152,8 @@ export default function Landing() {
         <section className="mt-12 mb-20 text-center">
           <h3 className="text-2xl font-semibold">Ready to clear your queue?</h3>
           <div className="mt-4 flex items-center justify-center gap-3">
-            <a
-              href="/book"
-              className="px-5 py-2.5 rounded-lg bg-operon-blue text-white hover:bg-blue-400 transition"
-            >
-              Book demo
-            </a>
-            <Link
-              to="/login"
-              className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-800 hover:border-operon-blue hover:text-operon-blue"
-            >
-              Log in
-            </Link>
+            <a href="/book" className="px-5 py-2.5 rounded-lg bg-operon-blue text-white hover:bg-blue-400 transition">Book demo</a>
+            <Link to="/login" className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-800 hover:border-operon-blue hover:text-operon-blue">Log in</Link>
           </div>
         </section>
       </div>
@@ -198,9 +161,7 @@ export default function Landing() {
       {/* Sticky mobile CTA */}
       <div className="fixed left-3 right-3 bottom-3 md:hidden flex items-center justify-between gap-3 px-3 py-2 rounded-xl border border-white/10 bg-white/10 backdrop-blur">
         <span className="text-sm">Slash guest wait time.</span>
-        <a href="/book" className="px-3 py-1.5 rounded-md bg-operon-blue text-white">
-          Book demo
-        </a>
+        <a href="/book" className="px-3 py-1.5 rounded-md bg-operon-blue text-white">Book demo</a>
       </div>
     </main>
   );
