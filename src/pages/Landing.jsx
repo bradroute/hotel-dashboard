@@ -49,7 +49,7 @@ export default function Landing() {
 
             <div className="mt-7 flex flex-col sm:flex-row gap-3">
               <a
-                href="/book"
+                href="mailto:info@operonops.com?subject=Operon%20Demo%20Request"
                 className="px-5 py-2.5 rounded-lg bg-operon-blue text-white hover:bg-blue-400 transition text-sm sm:text-base text-center"
               >
                 Book a 15-min demo
@@ -140,10 +140,16 @@ export default function Landing() {
         <section className="mt-12 mb-20 text-center">
           <h3 className="text-2xl font-semibold">Ready to clear your queue?</h3>
           <div className="mt-4 flex items-center justify-center gap-3">
-            <a href="/book" className="px-5 py-2.5 rounded-lg bg-operon-blue text-white hover:bg-blue-400 transition">
+            <a
+              href="mailto:info@operonops.com?subject=Operon%20Demo%20Request"
+              className="px-5 py-2.5 rounded-lg bg-operon-blue text-white hover:bg-blue-400 transition"
+            >
               Book demo
             </a>
-            <Link to="/login" className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-800 hover:border-operon-blue hover:text-operon-blue">
+            <Link
+              to="/login"
+              className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-800 hover:border-operon-blue hover:text-operon-blue"
+            >
               Log in
             </Link>
           </div>
@@ -153,7 +159,12 @@ export default function Landing() {
       {/* Sticky mobile CTA */}
       <div className="fixed left-3 right-3 bottom-3 md:hidden flex items-center justify-between gap-3 px-3 py-2 rounded-xl border border-white/10 bg-white/10 backdrop-blur">
         <span className="text-sm">Slash guest wait time.</span>
-        <a href="/book" className="px-3 py-1.5 rounded-md bg-operon-blue text-white">Book demo</a>
+        <a
+          href="mailto:info@operonops.com?subject=Operon%20Demo%20Request"
+          className="px-3 py-1.5 rounded-md bg-operon-blue text-white"
+        >
+          Book demo
+        </a>
       </div>
     </main>
   );
