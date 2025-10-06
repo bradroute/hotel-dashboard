@@ -25,28 +25,43 @@ export default function Landing() {
       />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8">
-        {/* NAV — solid, readable on hover */}
-        <header className="sticky top-0 z-50 -mt-24 pt-24 pb-3 bg-white/90 backdrop-blur border-b border-black/5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src={logoFull} alt="Operon" className="h-9 sm:h-10" />
-              <span className="text-xs sm:text-sm text-gray-600 hidden sm:block">
-                Modern property operations
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Link
-                to="/login"
-                className="px-3 py-2 text-sm rounded-md border border-black/10 text-gray-800 hover:text-operon-blue hover:border-operon-blue"
-              >
-                Log in
-              </Link>
-              <a
-                href="/book"
-                className="px-4 py-2 text-sm rounded-md bg-operon-blue text-white hover:bg-blue-400"
-              >
-                Book demo
-              </a>
+        {/* NAV — mirror Auth navbar */}
+        <header className="sticky top-0 z-50 -mt-24 pt-24">
+          <div className="h-16 w-full bg-white/90 backdrop-blur border-b border-black/5">
+            <div className="max-w-7xl mx-auto h-full px-3 sm:px-4 md:px-6 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <img src={logoFull} alt="Operon" className="h-9 sm:h-10" />
+                <span className="text-xs sm:text-sm text-gray-600 hidden sm:block">
+                  Modern property operations
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3 md:gap-5">
+                <Link
+                  to="/about"
+                  className="font-medium text-sm sm:text-base text-operon-blue hover:underline"
+                >
+                  About
+                </Link>
+                <Link
+                  to="/learn-more"
+                  className="font-medium text-sm sm:text-base text-operon-blue hover:underline"
+                >
+                  Learn More
+                </Link>
+                <Link
+                  to="/login"
+                  className="px-3 py-1.5 rounded-md border border-gray-300 text-gray-800 hover:border-operon-blue hover:text-operon-blue text-sm sm:text-base"
+                >
+                  Log in
+                </Link>
+                <a
+                  href="/book"
+                  className="bg-operon-blue text-white font-medium px-3 sm:px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
+                >
+                  Book demo
+                </a>
+              </div>
             </div>
           </div>
         </header>
