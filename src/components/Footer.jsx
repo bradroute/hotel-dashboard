@@ -11,7 +11,6 @@ const footerVariants = {
 
 export default function Footer() {
   const year = new Date().getFullYear();
-
   const linkClass =
     'text-gray-600 hover:text-operon-blue transition inline-flex items-center gap-2';
 
@@ -44,9 +43,14 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2">
               <li><Link to="/learn-more" className={linkClass}>Learn More</Link></li>
+              <li>
+                <a href="/book" className={linkClass}>
+                  Book Demo
+                </a>
+              </li>
               <li><Link to="/signup" className={linkClass}>Get Started</Link></li>
+              <li><Link to="/login" className={linkClass}>Log In</Link></li>
               <li><Link to="/help" className={linkClass}>Help Center</Link></li>
-              <li><Link to="/about" className={linkClass}>About</Link></li>
             </ul>
           </div>
 
@@ -61,6 +65,7 @@ export default function Footer() {
                   Contact Support
                 </a>
               </li>
+              <li><Link to="/about" className={linkClass}>About</Link></li>
               <li><Link to="/terms" className={linkClass}>Terms &amp; Conditions</Link></li>
               <li><Link to="/privacy-policy" className={linkClass}>Privacy Policy</Link></li>
             </ul>
@@ -72,10 +77,22 @@ export default function Footer() {
               Follow
             </h3>
             <div className="flex items-center gap-3">
-              <a href="#" aria-label="LinkedIn" className="p-2 rounded border hover:border-operon-blue hover:text-operon-blue text-gray-600">
+              <a
+                href="#"
+                aria-label="LinkedIn"
+                className="p-2 rounded border hover:border-operon-blue hover:text-operon-blue text-gray-600"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M4.98 3.5C4.98 4.88 3.86 6 2.5 6S0 4.88 0 3.5 1.12 1 2.5 1 4.98 2.12 4.98 3.5zM.5 8h4V23h-4zM8.5 8h3.8v2.05h.05c.53-1 1.85-2.05 3.8-2.05 4.07 0 4.82 2.68 4.82 6.16V23h-4v-7.1c0-1.69-.03-3.86-2.35-3.86-2.35 0-2.71 1.84-2.71 3.75V23h-4z"/></svg>
               </a>
-              <a href="#" aria-label="Twitter / X" className="p-2 rounded border hover:border-operon-blue hover:text-operon-blue text-gray-600">
+              <a
+                href="#"
+                aria-label="Twitter / X"
+                className="p-2 rounded border hover:border-operon-blue hover:text-operon-blue text-gray-600"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2H21.5l-7.5 8.566L23.5 22h-6.09l-4.76-5.59L6.9 22H3.64l8.02-9.173L1.5 2h6.25l4.3 5.148L18.244 2Zm-1.07 18h1.783L7.92 4H6.137L17.173 20Z"/></svg>
               </a>
             </div>

@@ -18,8 +18,12 @@ export default function Navbar() {
   const location = useLocation();
   const currentPath = location.pathname;
 
-  const { properties, currentProperty, switchProperty, loading: propLoading } =
-    useContext(PropertyContext);
+  const {
+    properties,
+    currentProperty,
+    switchProperty,
+    loading: propLoading,
+  } = useContext(PropertyContext);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => setSession(session));
@@ -36,8 +40,7 @@ export default function Navbar() {
 
   const handlePropertyChange = async (e) => {
     const id = e.target.value || null;
-    if (!id) return;
-    if (currentProperty?.id === id) return;
+    if (!id || currentProperty?.id === id) return;
 
     const selected = properties.find((p) => p.id === id);
     if (!selected) return;
@@ -58,7 +61,7 @@ export default function Navbar() {
         exit="exit"
         className="fixed inset-x-0 top-0 z-50 bg-white/70 supports-[backdrop-filter]:bg-white/60 backdrop-blur border-b border-black/5"
       >
-        {/* Full-bleed bar; no centered max-width so items hug the edges */}
+        {/* Full-bleed bar; items hug edges */}
         <nav className="w-full h-16 px-3 sm:px-4 md:px-6 flex items-center justify-between">
           {/* Left cluster */}
           <div className="flex items-center gap-3 sm:gap-4 min-w-0">
@@ -67,11 +70,12 @@ export default function Navbar() {
               <span className="text-xl font-bold text-operon-charcoal hidden sm:block">Operon</span>
             </Link>
 
+            {/* Property switcher only when authenticated and properties loaded */}
             {session && !propLoading && properties?.length > 0 && (
               <select
                 value={currentProperty?.id || ''}
                 onChange={handlePropertyChange}
-                className="border rounded px-2 py-1 text-sm max-w-[220px] truncate"
+                className="border rounded px-2 py-1 text-sm max-w-[240px] truncate"
               >
                 <option value="" disabled>
                   Select property…
@@ -86,7 +90,8 @@ export default function Navbar() {
           </div>
 
           {/* Right cluster */}
-          <div className="flex items-center gap-4 md:gap-6 shrink-0">
+          <div className="flex items-center gap-3 md:gap-5 shrink-0">
+            {/* Public links when logged out */}
             {!session && (
               <>
                 <Link
@@ -101,9 +106,24 @@ export default function Navbar() {
                 >
                   Learn More
                 </Link>
+                {/* Secondary auth link */}
+                <Link
+                  to="/login"
+                  className="text-operon-blue/90 hover:text-operon-blue font-medium text-sm sm:text-base"
+                >
+                  Log in
+                </Link>
+                {/* Primary CTA: Book demo (marketing-first) */}
+                <a
+                  href="/book"
+                  className="bg-operon-blue text-white font-medium px-3 sm:px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
+                >
+                  Book demo
+                </a>
               </>
             )}
 
+            {/* App links when authenticated */}
             {session && currentProperty?.id && (
               <>
                 {currentPath !== `/dashboard/${currentProperty.id}` && (
@@ -138,30 +158,13 @@ export default function Navbar() {
                     Help
                   </Link>
                 )}
+                <button
+                  onClick={handleLogout}
+                  className="bg-operon-blue text-white font-medium px-3 sm:px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
+                >
+                  Logout
+                </button>
               </>
-            )}
-
-            {session ? (
-              <button
-                onClick={handleLogout}
-                className="bg-operon-blue text-white font-medium px-3 sm:px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
-              >
-                Logout
-              </button>
-            ) : currentPath === '/signup' ? (
-              <Link
-                to="/login"
-                className="bg-operon-blue text-white font-medium px-3 sm:px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
-              >
-                Login
-              </Link>
-            ) : (
-              <Link
-                to="/signup"
-                className="bg-operon-blue text-white font-medium px-3 sm:px-4 py-1.5 rounded hover:bg-blue-400 text-sm sm:text-base"
-              >
-                Sign Up
-              </Link>
             )}
           </div>
         </nav>

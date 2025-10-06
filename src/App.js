@@ -8,10 +8,13 @@ import {
   useLocation
 } from 'react-router-dom';
 import { PropertyProvider } from './contexts/PropertyContext';
+
+import Landing from './pages/Landing';
+import AuthLogin from './pages/AuthLogin';
+
 import Dashboard from './pages/Dashboard';
 import Analytics from './pages/Analytics';
 import SettingsPage from './pages/SettingsPage';
-import LoginPage from './pages/LoginPage';
 import SignUp from './pages/SignUp';
 import About from './pages/About';
 import LearnMore from './pages/LearnMore';
@@ -21,6 +24,7 @@ import OnboardingPage from './pages/OnboardingPage';
 import PropertyPicker from './pages/PropertyPicker';
 import Help from './pages/Help';
 import ResetPasswordPage from './pages/ResetPassword';
+
 import ProtectedRoute from './components/ProtectedRoute';
 import Footer from './components/Footer';
 import Navbar from './components/Navbar';
@@ -52,8 +56,11 @@ function BackgroundOrbs() {
 function AppContent({ session }) {
   const location = useLocation();
   const isReset = location.pathname.startsWith('/reset');
+  const isLanding = location.pathname === '/';
+  const hideGlobalOrbs = isLanding; // Landing has its own visual background
 
   const publicPaths = [
+    '/',               // landing
     '/about',
     '/learn-more',
     '/login',
@@ -62,32 +69,37 @@ function AppContent({ session }) {
     '/terms',
     '/help'
   ];
-  const showFooter = publicPaths.includes(location.pathname);
+
+  const showFooter = isLanding || publicPaths.includes(location.pathname);
 
   return (
     // Establish stacking context and keep all app content above the z-0 orbs
     <div className="relative z-10 flex flex-col min-h-screen">
-      <BackgroundOrbs />
+      {!hideGlobalOrbs && <BackgroundOrbs />}
 
-      {!isReset && <Navbar />}
+      {!isReset && !isLanding && <Navbar />}
 
       <main className="flex-1 w-full px-4">
         <AnimatePresence mode="wait">
           <Routes location={location} key={location.pathname}>
-            {/* Public */}
+            {/* Public marketing */}
+            <Route path="/" element={<Landing />} />
             <Route path="/about" element={<About />} />
             <Route path="/learn-more" element={<LearnMore />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsAndConditions />} />
             <Route path="/help" element={<Help />} />
+
+            {/* Auth */}
             <Route
               path="/login"
-              element={session ? <Navigate to="/property-picker" replace /> : <LoginPage />}
+              element={session ? <Navigate to="/property-picker" replace /> : <AuthLogin />}
             />
             <Route
               path="/signup"
               element={session ? <Navigate to="/property-picker" replace /> : <SignUp />}
             />
+
             {/* Password reset (public) */}
             <Route path="/reset" element={<ResetPasswordPage />} />
 
@@ -141,7 +153,9 @@ function AppContent({ session }) {
             <Route
               path="*"
               element={
-                session ? <Navigate to="/property-picker" replace /> : <Navigate to="/login" replace />
+                session
+                  ? <Navigate to="/property-picker" replace />
+                  : <Navigate to="/" replace />
               }
             />
           </Routes>
