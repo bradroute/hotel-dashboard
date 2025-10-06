@@ -3,6 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Navbar from '../components/Navbar';
+import heroDesktop from '../assets/hero-desktop.png'; // export a crisp dashboard screenshot
 
 const fade = {
   initial: { opacity: 0, y: 16 },
@@ -13,15 +14,19 @@ const float = {
   initial: { y: 0 },
   animate: {
     y: [-4, 4, -4],
-    transition: { duration: 6, repeat: Infinity, ease: 'easeInOut' },
+    transition: { duration: 8, repeat: Infinity, ease: 'easeInOut' },
   },
 };
 
-function HeroPreview() {
-  // “Designed-by-Apple” style: crisp, airy, glass cards with subtle motion.
+function RealAppPreviewImage() {
   return (
-    <div className="relative mx-auto w-full max-w-xl">
-      {/* soft glow plate */}
+    <motion.div
+      variants={float}
+      initial="initial"
+      animate="animate"
+      className="relative mx-auto w-full max-w-xl"
+    >
+      {/* ambient glow */}
       <div
         aria-hidden
         className="absolute -inset-6 rounded-[2rem] blur-2xl opacity-80"
@@ -30,71 +35,17 @@ function HeroPreview() {
             'radial-gradient(60% 60% at 50% 40%, rgba(59,130,246,.18), rgba(34,211,238,.12) 45%, transparent 70%)',
         }}
       />
-      {/* phone frame */}
-      <motion.div
-        variants={float}
-        initial="initial"
-        animate="animate"
-        className="relative mx-auto w-[17rem] rounded-[2.2rem] border border-black/10 bg-gradient-to-b from-white to-white/90 p-3 shadow-xl"
-      >
-        <div className="aspect-[9/19.5] w-full rounded-[1.8rem] bg-white ring-1 ring-black/5 overflow-hidden">
-          {/* chat header */}
-          <div className="h-10 flex items-center justify-center text-[11px] font-medium text-gray-600 border-b border-black/5">
-            Guest SMS — Room 418
-          </div>
-          {/* chat body */}
-          <div className="p-3 space-y-2 text-[12px]">
-            <div className="max-w-[75%] rounded-2xl rounded-bl-sm bg-gray-100 px-3 py-2 text-gray-800 shadow-sm">
-              Hi, AC isn’t cooling.
-            </div>
-            <div className="max-w-[75%] ml-auto rounded-2xl rounded-br-sm bg-blue-500/90 text-white px-3 py-2 shadow-sm">
-              Got it. Tech en route in 10 min.
-            </div>
-            <div className="max-w-[75%] rounded-2xl rounded-bl-sm bg-gray-100 px-3 py-2 text-gray-800 shadow-sm">
-              Thank you!
-            </div>
-          </div>
-          {/* status footer */}
-          <div className="mt-1 grid grid-cols-3 gap-1 p-2">
-            {['ACK 1m', 'ROUTED Eng', 'SLA ✅'].map((t) => (
-              <div
-                key={t}
-                className="text-[10px] text-gray-600 rounded-lg border border-black/5 bg-white px-2 py-1 text-center shadow-xs"
-              >
-                {t}
-              </div>
-            ))}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* floating KPI cards */}
-      <motion.div
-        variants={float}
-        initial="initial"
-        animate="animate"
-        transition={{ ...float.animate.transition, duration: 7 }}
-        className="absolute -right-6 top-1/3 w-40 rounded-2xl border border-black/10 bg-white/90 backdrop-blur px-3 py-2 shadow-lg"
-      >
-        <div className="text-[10px] text-gray-500">Today</div>
-        <div className="text-2xl font-semibold tracking-tight">62%</div>
-        <div className="text-[11px] text-gray-600">faster acks</div>
-      </motion.div>
-
-      <motion.div
-        variants={float}
-        initial="initial"
-        animate="animate"
-        transition={{ ...float.animate.transition, duration: 8 }}
-        className="absolute -left-8 -bottom-5 w-48 rounded-2xl border border-black/10 bg-white/90 backdrop-blur px-3 py-2 shadow-lg"
-      >
-        <div className="text-[10px] text-gray-500">Queue health</div>
-        <div className="mt-1 h-2 w-full overflow-hidden rounded bg-gray-200">
-          <div className="h-full w-[78%] bg-blue-500" />
-        </div>
-        <div className="mt-1 text-[11px] text-gray-600">78% within SLA</div>
-      </motion.div>
-    </div>
+      {/* framed screenshot */}
+      <div className="relative rounded-2xl border border-black/10 bg-white/90 shadow-2xl ring-1 ring-black/5 overflow-hidden">
+        <img
+          src={heroDesktop}
+          alt="Operon dashboard — live queue, routing, and SLA metrics"
+          className="block w-full h-auto"
+          loading="eager"
+          fetchpriority="high"
+        />
+      </div>
+    </motion.div>
   );
 }
 
@@ -168,7 +119,7 @@ export default function Landing() {
             </div>
           </motion.section>
 
-          {/* HERO VISUAL */}
+          {/* HERO VISUAL (real screenshot) */}
           <motion.section
             variants={fade}
             initial="initial"
@@ -176,7 +127,7 @@ export default function Landing() {
             transition={{ delay: 0.06 }}
             className="relative"
           >
-            <HeroPreview />
+            <RealAppPreviewImage />
           </motion.section>
         </div>
 
