@@ -6,149 +6,258 @@ import Navbar from '../components/Navbar';
 
 const fade = {
   initial: { opacity: 0, y: 16 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.35, ease: 'easeOut' } },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeOut' } },
 };
+
+const float = {
+  initial: { y: 0 },
+  animate: {
+    y: [-4, 4, -4],
+    transition: { duration: 6, repeat: Infinity, ease: 'easeInOut' },
+  },
+};
+
+function HeroPreview() {
+  // “Designed-by-Apple” style: crisp, airy, glass cards with subtle motion.
+  return (
+    <div className="relative mx-auto w-full max-w-xl">
+      {/* soft glow plate */}
+      <div
+        aria-hidden
+        className="absolute -inset-6 rounded-[2rem] blur-2xl opacity-80"
+        style={{
+          background:
+            'radial-gradient(60% 60% at 50% 40%, rgba(59,130,246,.18), rgba(34,211,238,.12) 45%, transparent 70%)',
+        }}
+      />
+      {/* phone frame */}
+      <motion.div
+        variants={float}
+        initial="initial"
+        animate="animate"
+        className="relative mx-auto w-[17rem] rounded-[2.2rem] border border-black/10 bg-gradient-to-b from-white to-white/90 p-3 shadow-xl"
+      >
+        <div className="aspect-[9/19.5] w-full rounded-[1.8rem] bg-white ring-1 ring-black/5 overflow-hidden">
+          {/* chat header */}
+          <div className="h-10 flex items-center justify-center text-[11px] font-medium text-gray-600 border-b border-black/5">
+            Guest SMS — Room 418
+          </div>
+          {/* chat body */}
+          <div className="p-3 space-y-2 text-[12px]">
+            <div className="max-w-[75%] rounded-2xl rounded-bl-sm bg-gray-100 px-3 py-2 text-gray-800 shadow-sm">
+              Hi, AC isn’t cooling.
+            </div>
+            <div className="max-w-[75%] ml-auto rounded-2xl rounded-br-sm bg-blue-500/90 text-white px-3 py-2 shadow-sm">
+              Got it. Tech en route in 10 min.
+            </div>
+            <div className="max-w-[75%] rounded-2xl rounded-bl-sm bg-gray-100 px-3 py-2 text-gray-800 shadow-sm">
+              Thank you!
+            </div>
+          </div>
+          {/* status footer */}
+          <div className="mt-1 grid grid-cols-3 gap-1 p-2">
+            {['ACK 1m', 'ROUTED Eng', 'SLA ✅'].map((t) => (
+              <div
+                key={t}
+                className="text-[10px] text-gray-600 rounded-lg border border-black/5 bg-white px-2 py-1 text-center shadow-xs"
+              >
+                {t}
+              </div>
+            ))}
+          </div>
+        </div>
+      </motion.div>
+
+      {/* floating KPI cards */}
+      <motion.div
+        variants={float}
+        initial="initial"
+        animate="animate"
+        transition={{ ...float.animate.transition, duration: 7 }}
+        className="absolute -right-6 top-1/3 w-40 rounded-2xl border border-black/10 bg-white/90 backdrop-blur px-3 py-2 shadow-lg"
+      >
+        <div className="text-[10px] text-gray-500">Today</div>
+        <div className="text-2xl font-semibold tracking-tight">62%</div>
+        <div className="text-[11px] text-gray-600">faster acks</div>
+      </motion.div>
+
+      <motion.div
+        variants={float}
+        initial="initial"
+        animate="animate"
+        transition={{ ...float.animate.transition, duration: 8 }}
+        className="absolute -left-8 -bottom-5 w-48 rounded-2xl border border-black/10 bg-white/90 backdrop-blur px-3 py-2 shadow-lg"
+      >
+        <div className="text-[10px] text-gray-500">Queue health</div>
+        <div className="mt-1 h-2 w-full overflow-hidden rounded bg-gray-200">
+          <div className="h-full w-[78%] bg-blue-500" />
+        </div>
+        <div className="mt-1 text-[11px] text-gray-600">78% within SLA</div>
+      </motion.div>
+    </div>
+  );
+}
 
 export default function Landing() {
   return (
     <main className="relative min-h-dvh">
-      {/* Shared site navbar */}
       <Navbar />
 
       {/* background accents */}
       <div
-        aria-hidden="true"
-        className="pointer-events-none absolute top-[-12rem] left-0 -ml-px -translate-x-24 h-[34rem] w-[34rem] rounded-full blur-3xl"
-        style={{ background: 'radial-gradient(closest-side, rgba(59,130,246,.25), transparent)' }}
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 -top-24 h-[38rem] rounded-b-[4rem] blur-2xl"
+        style={{
+          background:
+            'radial-gradient(60% 60% at 20% 0%, rgba(59,130,246,.22), transparent 60%), radial-gradient(55% 55% at 80% 0%, rgba(34,211,238,.18), transparent 60%)',
+        }}
       />
       <div
-        aria-hidden="true"
-        className="pointer-events-none absolute bottom-[-14rem] right-0 h-[38rem] w-[38rem] rounded-full blur-[90px]"
-        style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.22), transparent)' }}
+        aria-hidden
+        className="pointer-events-none absolute bottom-[-14rem] right-0 h-[38rem] w-[38rem] rounded-full blur-[100px]"
+        style={{ background: 'radial-gradient(closest-side, rgba(34,211,238,.18), transparent)' }}
       />
 
-      {/* content container (pad for fixed navbar height) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pb-8 pt-10">
+      {/* content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-16 pb-20">
         <div className="grid md:grid-cols-2 gap-12 lg:gap-16 items-center">
-          {/* HERO */}
-          <motion.section variants={fade} initial="initial" animate="animate">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-white/20 bg-white/10 text-xs text-operon-muted tracking-wide mb-4">
+          {/* HERO COPY */}
+          <motion.section variants={fade} initial="initial" animate="animate" className="relative">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-black/10 bg-white/70 backdrop-blur text-xs text-gray-600 tracking-wide mb-5">
               Hotels • Apartments • Condos • Restaurants
             </div>
 
-            <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight text-operon-charcoal">
-              Slash guest wait time.{' '}
+            <h1 className="text-[2.75rem] sm:text-6xl font-black leading-tight tracking-tight text-gray-900">
+              Order from chaos.
+              <br />
               <span className="bg-gradient-to-r from-blue-500 to-cyan-400 bg-clip-text text-transparent">
                 Zero requests lost.
               </span>
             </h1>
 
-            <p className="mt-4 text-[17px] text-operon-muted max-w-2xl leading-relaxed">
-              AI-routed SMS + staff app that clears backlogs and proves it with live metrics.
+            <p className="mt-5 text-[17px] text-gray-600 max-w-2xl leading-relaxed">
+              Guests text. Operon auto-routes, timestamps, and proves it with live SLAs. Managers see
+              reality—teams move faster.
             </p>
 
-            <div className="mt-7 flex flex-col sm:flex-row gap-3">
+            <div className="mt-8 flex flex-col sm:flex-row gap-3">
               <a
                 href="mailto:info@operonops.com?subject=Operon%20Demo%20Request"
-                className="px-5 py-2.5 rounded-lg bg-operon-blue text-white hover:bg-blue-400 transition text-sm sm:text-base text-center"
+                className="group relative inline-flex items-center justify-center overflow-hidden rounded-xl px-6 py-3 text-base font-medium text-white"
               >
-                Book a 15-min demo
+                <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400 transition-opacity group-hover:opacity-90" />
+                <span className="relative">Book a 15-min demo</span>
               </a>
-              <a
-                href="/walkthrough"
-                className="px-5 py-2.5 rounded-lg border border-operon-blue text-operon-blue hover:bg-blue-50 transition text-sm sm:text-base text-center"
+              <Link
+                to="/learn-more"
+                className="rounded-xl border border-blue-300/70 px-6 py-3 text-base font-medium text-blue-600 hover:bg-blue-50"
               >
                 See 90-sec walkthrough
-              </a>
+              </Link>
             </div>
 
-            {/* Proof counters */}
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-xl">
-              <div className="px-4 py-3 rounded-xl border border-white/10 bg-white/5">
-                <strong className="text-2xl">62%</strong>
-                <div className="text-sm text-operon-muted">faster acknowledgements</div>
-              </div>
-              <div className="px-4 py-3 rounded-xl border border-white/10 bg-white/5">
-                <strong className="text-2xl">–48%</strong>
-                <div className="text-sm text-operon-muted">missed SLAs</div>
-              </div>
-              <div className="px-4 py-3 rounded-xl border border-white/10 bg-white/5">
-                <strong className="text-2xl">$X</strong>
-                <div className="text-sm text-operon-muted">saved / room / mo</div>
-              </div>
+            {/* trust bar */}
+            <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-gray-500">
+              <span className="inline-flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Secure by design
+              </span>
+              <span>•</span>
+              <span>Role-based access</span>
+              <span>•</span>
+              <span>Analytics & SLAs</span>
             </div>
-
-            <p className="mt-5 text-sm italic text-gray-500">
-              “Operon cut our response times in half.” — Front Desk Manager
-            </p>
-
-            <ul className="mt-6 flex flex-wrap gap-2">
-              {['Real-time Dashboard','AI Classification','Analytics & SLAs','Role-based Access','Secure & Compliant'].map(
-                (pill) => (
-                  <li
-                    key={pill}
-                    className="text-xs text-operon-muted px-3 py-1 rounded-full border border-white/15 bg-white/5"
-                  >
-                    {pill}
-                  </li>
-                )
-              )}
-            </ul>
           </motion.section>
 
-          {/* Outcome cards */}
-          <motion.section variants={fade} initial="initial" animate="animate" transition={{ delay: 0.05 }}>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[
-                { t: 'Faster first response', d: 'Auto-route by department & priority.' },
-                { t: 'Cleaner handoffs', d: 'Escalations and timestamps by default.' },
-                { t: 'Fewer phone loops', d: 'Guests text; staff see a single queue.' },
-                { t: 'Manager visibility', d: 'Live metrics for owners & GMs.' },
-              ].map(({ t, d }) => (
-                <article key={t} className="p-4 rounded-2xl border border-white/10 bg-white/5">
-                  <h3 className="font-semibold">{t}</h3>
-                  <p className="text-sm text-operon-muted mt-1">{d}</p>
-                </article>
-              ))}
-            </div>
-
-            <div className="mt-6 p-5 rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/0">
-              <h4 className="font-semibold">30-day pilot snapshot</h4>
-              <p className="text-sm text-operon-muted mt-1">212 requests • 0 dropped • 62% faster acks.</p>
-              <div className="mt-3">
-                <a href="/proof" className="text-sm text-operon-blue underline">See methodology</a>
-              </div>
-            </div>
+          {/* HERO VISUAL */}
+          <motion.section
+            variants={fade}
+            initial="initial"
+            animate="animate"
+            transition={{ delay: 0.06 }}
+            className="relative"
+          >
+            <HeroPreview />
           </motion.section>
         </div>
 
-        {/* Simple FAQ strip */}
-        <section className="mt-16 grid md:grid-cols-3 gap-3">
+        {/* Proof tiles */}
+        <motion.section
+          variants={fade}
+          initial="initial"
+          animate="animate"
+          transition={{ delay: 0.12 }}
+          className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4"
+        >
           {[
-            ['How fast to launch?', 'Same day without a PMS. Pilot first.'],
-            ['Do guests need an app?', 'No. SMS day one. App optional.'],
-            ['Data ownership?', 'You own it. Export anytime.'],
+            ['62%', 'faster acknowledgements'],
+            ['–48%', 'missed SLAs'],
+            ['$X', 'saved / room / mo'],
+          ].map(([kpi, label]) => (
+            <div
+              key={label}
+              className="rounded-2xl border border-black/10 bg-white/70 backdrop-blur px-5 py-4 shadow-sm"
+            >
+              <div className="text-3xl font-semibold tracking-tight text-gray-900">{kpi}</div>
+              <div className="text-sm text-gray-600">{label}</div>
+            </div>
+          ))}
+        </motion.section>
+
+        {/* Outcomes + pilot card */}
+        <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[
+            ['Faster first response', 'Auto-route by department & priority.'],
+            ['Cleaner handoffs', 'Escalations and timestamps by default.'],
+            ['Fewer phone loops', 'Guests text; staff see a single queue.'],
+            ['Manager visibility', 'Live metrics for owners & GMs.'],
+            ['SLA awareness', 'Targets, breaches, and trend lines.'],
+            ['Data ownership', 'Export anytime. Your data stays yours.'],
+          ].map(([t, d]) => (
+            <div key={t} className="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-5">
+              <div className="font-semibold text-gray-900">{t}</div>
+              <div className="mt-1 text-sm text-gray-600">{d}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-black/10 bg-gradient-to-br from-white/80 to-white/60 backdrop-blur p-5 shadow-sm">
+          <div className="font-semibold text-gray-900">30-day pilot snapshot</div>
+          <div className="text-sm text-gray-600 mt-1">212 requests • 0 dropped • 62% faster acks.</div>
+          <div className="mt-2">
+            <Link to="/learn-more" className="text-sm text-blue-600 underline">
+              See methodology
+            </Link>
+          </div>
+        </div>
+
+        {/* FAQ strip */}
+        <section className="mt-16 grid md:grid-cols-3 gap-4">
+          {[
+            ['How fast to launch?', 'Same day. Start with a pilot. No PMS required.'],
+            ['Do guests need an app?', 'No. SMS day one. Staff app optional.'],
+            ['What about IT?', 'SSO-ready. Least-privilege roles. Audit trails.'],
           ].map(([q, a]) => (
-            <div key={q} className="p-4 rounded-xl border border-white/10 bg-white/5">
-              <div className="font-medium">{q}</div>
-              <div className="text-sm text-operon-muted mt-1">{a}</div>
+            <div key={q} className="rounded-2xl border border-black/10 bg-white/70 backdrop-blur p-5">
+              <div className="font-medium text-gray-900">{q}</div>
+              <div className="text-sm text-gray-600 mt-1">{a}</div>
             </div>
           ))}
         </section>
 
         {/* Final CTA */}
-        <section className="mt-12 mb-20 text-center">
-          <h3 className="text-2xl font-semibold">Ready to clear your queue?</h3>
+        <section className="mt-14 text-center">
+          <h3 className="text-2xl font-semibold text-gray-900">Ready to clear your queue?</h3>
           <div className="mt-4 flex items-center justify-center gap-3">
             <a
               href="mailto:info@operonops.com?subject=Operon%20Demo%20Request"
-              className="px-5 py-2.5 rounded-lg bg-operon-blue text-white hover:bg-blue-400 transition"
+              className="relative inline-flex items-center justify-center overflow-hidden rounded-xl px-6 py-3 text-white"
             >
-              Book demo
+              <span className="absolute inset-0 rounded-xl bg-gradient-to-r from-blue-500 to-cyan-400" />
+              <span className="relative">Book demo</span>
             </a>
             <Link
               to="/login"
-              className="px-5 py-2.5 rounded-lg border border-gray-300 text-gray-800 hover:border-operon-blue hover:text-operon-blue"
+              className="rounded-xl border border-gray-300 px-6 py-3 text-gray-800 hover:border-blue-400 hover:text-blue-600"
             >
               Log in
             </Link>
@@ -157,11 +266,11 @@ export default function Landing() {
       </div>
 
       {/* Sticky mobile CTA */}
-      <div className="fixed left-3 right-3 bottom-3 md:hidden flex items-center justify-between gap-3 px-3 py-2 rounded-xl border border-white/10 bg-white/10 backdrop-blur">
-        <span className="text-sm">Slash guest wait time.</span>
+      <div className="fixed left-3 right-3 bottom-3 md:hidden flex items-center justify-between gap-3 px-3 py-2 rounded-xl border border-black/10 bg-white/80 backdrop-blur">
+        <span className="text-sm">Zero requests lost.</span>
         <a
           href="mailto:info@operonops.com?subject=Operon%20Demo%20Request"
-          className="px-3 py-1.5 rounded-md bg-operon-blue text-white"
+          className="px-3 py-1.5 rounded-md bg-blue-500 text-white"
         >
           Book demo
         </a>
